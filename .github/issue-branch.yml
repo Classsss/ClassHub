@@ -1,0 +1,4 @@
+defaultBranch: 'master'
+autoCloseIssue: true
+openDraftPR: true
+branchName: 'issue${issue.number}-${issue.title}'
