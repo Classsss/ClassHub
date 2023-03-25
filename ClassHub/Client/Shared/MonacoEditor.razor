@@ -1,4 +1,16 @@
-﻿<!--Monaco Editor 컴포넌트 생성-->
+﻿<!--코드 에디터를 변경시키는 드롭다운 메뉴-->
+<div>
+    <div style="margin:10px 0;">
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+</div>
+
+<!--Monaco Editor 컴포넌트 생성-->
 <StandaloneCodeEditor @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
 
 <!--Monaco Editor css 설정-->
@@ -47,5 +59,11 @@
     // 에디터에 우클릭 시 수행할 로직을 정의한다.
     private void OnContextMenu(EditorMouseEvent eventArg) {
         Console.WriteLine("OnContextMenu : " + System.Text.Json.JsonSerializer.Serialize(eventArg));
+    }
+
+    // Theme Select를 변경했을 때 호출된다.
+    // 선택한 옵션에 따라 에디터의 Theme을 변경한다.
+    private async Task ChangeTheme(ChangeEventArgs e) {
+        await Global.SetTheme(e.Value?.ToString());
     }
 }   
