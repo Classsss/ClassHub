@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassHub.Server", "Server\ClassHub.Server.csproj", "{38AAE145-B7F1-42C4-B5ED-2BD56A7712FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassHub.Server", "Server\ClassHub.Server.csproj", "{38AAE145-B7F1-42C4-B5ED-2BD56A7712FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassHub.Client", "Client\ClassHub.Client.csproj", "{FB5C432F-A419-4EA4-9C91-9121063EBFF5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassHub.Client", "Client\ClassHub.Client.csproj", "{FB5C432F-A419-4EA4-9C91-9121063EBFF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassHub.Shared", "Shared\ClassHub.Shared.csproj", "{E909EC4E-F951-41A7-99FA-CD13B9D9C650}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassHub.Shared", "Shared\ClassHub.Shared.csproj", "{E909EC4E-F951-41A7-99FA-CD13B9D9C650}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

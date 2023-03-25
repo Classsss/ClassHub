@@ -1,0 +1,89 @@
+﻿<!--코드 에디터를 변경시키는 드롭다운 메뉴-->
+<div>
+    <div style="margin:10px 0;">
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+    <div style="margin:10px 0;">
+        Language:
+        <select @onchange="ChangeLanguage">
+            <!--TODO : Language 옵션 추가-->
+            <option value="python">Python</option>
+            <option value="c">C</option>
+            <option value="cpp">C++</option>
+            <option value="csharp">C#</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+            <option value="html">Html</option>
+        </select>
+    </div>
+</div>
+
+<!--Monaco Editor 컴포넌트 생성-->
+<StandaloneCodeEditor @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+
+<!--Monaco Editor css 설정-->
+<style>
+    .my-editor-class {
+        height: 500px;
+        width: 100%;
+        border: 1px solid black;
+    }
+</style>
+
+@code {
+    // monaco editor 참조 변수
+    private StandaloneCodeEditor editor = null;
+    private string[] decorationIds = new string[0];
+
+    // monaco editor의 Construction 옵션을 정의하여 반환한다.
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor) {
+        // TODO : 추후 사양에 따라 에디터 옵션 수정 필요
+        return new StandaloneEditorConstructionOptions {
+                Language = "c",
+                GlyphMargin = true,
+                Value = ""
+            };
+    }
+
+    // didInitEditor 이벤트가 발생할 때 호출된다.
+    private async Task EditorOnDidInit() {
+        // 코드에 시각효과를 주는 Decoration을 정의한다.
+        // TODO : 추후 사양에 따라 옵션 수정 필요
+        var newDecorations = new ModelDeltaDecoration[] {
+            new ModelDeltaDecoration {
+                Range = new BlazorMonaco.Range(3, 1, 3, 1),
+                Options = new ModelDecorationOptions {
+                    IsWholeLine = true,
+                    ClassName = "decorationContentClass",
+                    GlyphMarginClassName = "decorationGlyphMarginClass"
+                }
+            }
+    };
+
+        // 정의한 Decoration을 에디터에 적용한다.
+        decorationIds = await editor.DeltaDecorations(null, newDecorations);
+    }
+
+    // 에디터에 우클릭 시 수행할 로직을 정의한다.
+    private void OnContextMenu(EditorMouseEvent eventArg) {
+        Console.WriteLine("OnContextMenu : " + System.Text.Json.JsonSerializer.Serialize(eventArg));
+    }
+
+    // Theme Select를 변경했을 때 호출된다.
+    // 선택한 옵션에 따라 에디터의 Theme을 변경한다.
+    private async Task ChangeTheme(ChangeEventArgs e) {
+        await Global.SetTheme(e.Value?.ToString());
+    }
+
+    // Language Select를 변경했을 때 호출된다.
+    // 선택한 옵션에 따라 에디터의 Language를 변경한다.
+    private async Task ChangeLanguage(ChangeEventArgs e) {
+        var model = await editor.GetModel();
+        await Global.SetModelLanguage(model, e.Value?.ToString());
+    }
+}   
