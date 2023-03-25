@@ -8,6 +8,19 @@
             <option value="hc-black">High Contrast Black</option>
         </select>
     </div>
+    <div style="margin:10px 0;">
+        Language:
+        <select @onchange="ChangeLanguage">
+            <!--TODO : Language 옵션 추가-->
+            <option value="python">Python</option>
+            <option value="c">C</option>
+            <option value="cpp">C++</option>
+            <option value="csharp">C#</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+            <option value="html">Html</option>
+        </select>
+    </div>
 </div>
 
 <!--Monaco Editor 컴포넌트 생성-->
@@ -65,5 +78,12 @@
     // 선택한 옵션에 따라 에디터의 Theme을 변경한다.
     private async Task ChangeTheme(ChangeEventArgs e) {
         await Global.SetTheme(e.Value?.ToString());
+    }
+
+    // Language Select를 변경했을 때 호출된다.
+    // 선택한 옵션에 따라 에디터의 Language를 변경한다.
+    private async Task ChangeLanguage(ChangeEventArgs e) {
+        var model = await editor.GetModel();
+        await Global.SetModelLanguage(model, e.Value?.ToString());
     }
 }   
