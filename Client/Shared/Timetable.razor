@@ -1,0 +1,71 @@
+﻿@using ClassHub.Client.Models
+@using System.Linq
+@inject IJSRuntime JSRuntime
+
+<style>
+    .timetable td, .timetable th {
+        width: 14.2857%; /* 100% / 7 (시간 + 5개의 평일 요일) */
+        height: 50px; /* 원하는 높이로 설정하세요. */
+        text-align: center; /* 가운데 정렬 */
+        vertical-align: middle; /* 수직 가운데 정렬 */
+    }
+
+    .timetable th {
+        background-color: ghostwhite;
+    }
+</style>
+
+@if(Courses == null) {
+    <p><em>Loading...</em></p>
+} else {
+    <table class="table table-bordered timetable">
+        <thead>
+            <tr>
+                <th>Time</th>
+                @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
+                    <th>@dayOfWeek.ToString().Substring(0, 3)</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for(int hour = StartHour; hour <= EndHour; hour++) {
+                <tr>
+                    <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
+                    @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
+                        <td>
+                            @foreach(var course in Courses.Where(c => c.StartTime.DayOfWeek == dayOfWeek && c.StartTime.Hour == hour)) {
+                                <button class="btn btn-primary btn-sm btn-block" @onclick="() => CourseSelected(course)" style="width: 100%;">
+                                    @course.Name
+                                    <br />
+                                    @course.Instructor
+                                    <br />
+                                    @course.ClassRoom
+                                </button>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public List<Course> Courses { get; set; }
+
+    // 시간표 시작 시간과 종료 시간을 설정하세요.
+    private int StartHour => 9;
+    private int EndHour => 19;
+
+    private void CourseSelected(Course course) {
+        // 해당 강의를 선택했을 때 수행할 작업을 정의하세요.
+        Console.WriteLine($"Selected course: {course.Name}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if(firstRender) {
+            await JSRuntime.InvokeVoidAsync("setUniformRowHeight");
+        }
+    }
+}
