@@ -32,8 +32,14 @@
                 <tr>
                     <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
                     @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
-                        <td>
-                            @foreach(var course in Courses.Where(c => c.Day == dayOfWeek && c.StartTime == hour)) {
+                        bool flag = true;
+                        @foreach(var course in Courses.Where(c => c.Day == dayOfWeek && c.StartTime <= hour && hour < c.EndTime)) {
+                            if(course.StartTime != hour) {
+                                flag = false;
+                                break;
+                            }
+                            int span = course.EndTime - course.StartTime;
+                            <td rowspan=@span>
                                 <button class="btn btn-primary btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
                                     @course.Name
                                     <br />
@@ -41,8 +47,13 @@
                                     <br />
                                     @course.ClassRoom
                                 </button>
-                            }
-                        </td>
+                            </td>
+                            flag = false;
+                            break;
+                        }
+                        if(flag) {
+                            <td />
+                        }
                     }
                 </tr>
             }
