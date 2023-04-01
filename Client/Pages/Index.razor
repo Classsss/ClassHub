@@ -1,4 +1,6 @@
 ﻿@page "/"
+@inject AuthenticationService AuthService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Index</PageTitle>
 
@@ -9,3 +11,9 @@ Welcome to your new app.
 <SurveyPrompt Title="How is Blazor working for you?" />
 
 <MonacoEditor />
+
+@code {
+    protected override void OnInitialized() {
+        if(AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+    }
+}
