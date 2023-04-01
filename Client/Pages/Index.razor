@@ -4,10 +4,9 @@
 <Timetable Courses="Courses" />
 
 @code {
-    private List<Course> Courses = new List<Course>
-        {
-        new Course { Name = "Math", Instructor = "Prof. A", StartTime = DateTime.Today.AddHours(9), EndTime = DateTime.Today.AddHours(10), ClassRoom = "Y1234" },
-        new Course { Name = "Physics", Instructor = "Prof. B", StartTime = DateTime.Today.AddHours(11), EndTime = DateTime.Today.AddHours(13), ClassRoom = "Y1234" },
+    private List<Course> Courses = new List<Course> {
+        new Course { Name = "Math", Instructor = "Prof. A", Day = DayOfWeek.Monday, StartTime = 9, EndTime = 10, ClassRoom = "Y1234" },
+        new Course { Name = "Physics", Instructor = "Prof. B", Day = DayOfWeek.Wednesday, StartTime = 11, EndTime = 13, ClassRoom = "Y1234" },
         // 다른 강의 데이터를 추가하세요.
     };
 }
