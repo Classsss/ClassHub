@@ -1,23 +1,53 @@
 ﻿@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
 
-<ul>
-    @foreach (var announcement in Announcements)
-    {
-        <li>
-            <a href="@NavigationManager.Uri" @onclick="() => ShowAnnouncement(announcement)">
-                @announcement.Title
-            </a>
-        </li>
-    }
-</ul>
+<h3>공지사항</h3>
+<br />
+
+<div class="row">
+	@foreach (var announcement in Announcements)
+	{
+		<div class="card mb-3 border-2">
+			<div class="row g-0">
+				<div class="col-md-1 text-center">
+					<div class="card-body">
+						<p class="card-text">
+							<small class="text-muted">@announcement.Id</small>
+						</p>
+					</div>
+				</div>
+				<div class="col-md-7">
+					<div class="card-body">
+						<h5 class="card-title">@announcement.Title</h5>
+						<!--		<p class="card-text">@announcement.Content</p>  콘텐츠 내용-->
+						<p class="card-text">
+							<small class="text-muted">@announcement.Author</small>
+						</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="card-body">
+						<p class="card-text">
+							<small class="text-muted">등록일: @announcement.StartDate.ToString("yyyy-MM-dd tt HH:mm")</small>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+</div>
 
 @code {
-    [Parameter]
-    public List<_Announcement> Announcements { get; set; }
+	[Parameter]
+	public List<_Announcement> Announcements { get; set; }
 
-    private void ShowAnnouncement(_Announcement announcement)
-    {
-        Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
-    }
+	protected override void OnInitialized()
+	{
+		Announcements = Announcements.OrderByDescending(a => a.Id).ToList();
+	}
+
+	private void ShowAnnouncement(_Announcement announcement)
+	{
+		Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
+	}
 }

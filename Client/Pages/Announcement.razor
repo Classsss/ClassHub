@@ -1,22 +1,19 @@
 ﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement"
 @layout MainLayout
 @using ClassHub.Client.Models
-
-<h3>Announcements</h3>
-
-<AnnouncementList Announcements="Announcements" />
-
+<AnnouncementList Announcements="@Announcements" />
 @code {
-    [Parameter]
-    public int Year { get; set; }
-    [Parameter]
-    public int Semester { get; set; }
-    [Parameter]
-    public int Number { get; set; }
+	[Parameter]
+	public int Year { get; set; }
+	[Parameter]
+	public int Semester { get; set; }
+	[Parameter]
+	public int Number { get; set; }
 
-    private List<_Announcement> Announcements = new List<_Announcement> {
-        new _Announcement { Id = 1, Title = "공지사항1", Content = "내용1" },
-        new _Announcement { Id = 2, Title = "공지사항2", Content = "내용2" },
-        new _Announcement { Id = 3, Title = "공지사항3", Content = "내용3" }
-    };
+	private List<_Announcement> Announcements = new List<_Announcement> {
+		new _Announcement { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = "내용 1" , Author = "조민경", StartDate = new DateTime(2023,03,03,09,02,0)},
+		new _Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,03,03,10,42,0)},
+		new _Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0)},
+		new _Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0)}
+	};
 }
