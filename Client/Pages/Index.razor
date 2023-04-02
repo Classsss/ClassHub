@@ -1,8 +1,13 @@
 ﻿@page "/"
 @inject AuthenticationService AuthService
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@using ClassHub.Client.Models
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
 @using Microsoft.AspNetCore.WebUtilities;
+@using Microsoft.JSInterop;
+@using System.Text;
+@using System.Text.Json;
 
 <Timetable Courses="Courses" />
 
@@ -19,8 +24,28 @@
         {
             Console.WriteLine($"인증 코드: {code}");
             AuthService.IsLoggedIn = true;
+
+            exchangeToken(code);
         }
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+    }
+
+    protected async Task exchangeToken(String code)
+    {
+        var client = new HttpClient();
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7182/TokenExchange/submit-code");
+
+        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = code }), Encoding.UTF8, "application/json");
+        try
+        {
+            var response = await client.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during request: " + ex.Message);
+        }
     }
 }
