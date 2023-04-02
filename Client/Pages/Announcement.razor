@@ -1,7 +1,10 @@
 ﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement"
 @layout MainLayout
+@using ClassHub.Client.Models
 
-<h3>Announcement</h3>
+<h3>Announcements</h3>
+
+<AnnouncementList Announcements="Announcements" />
 
 @code {
     [Parameter]
@@ -10,4 +13,10 @@
     public int Semester { get; set; }
     [Parameter]
     public int Number { get; set; }
+
+    private List<_Announcement> Announcements = new List<_Announcement> {
+        new _Announcement { Id = 1, Title = "공지사항1", Content = "내용1" },
+        new _Announcement { Id = 2, Title = "공지사항2", Content = "내용2" },
+        new _Announcement { Id = 3, Title = "공지사항3", Content = "내용3" }
+    };
 }
