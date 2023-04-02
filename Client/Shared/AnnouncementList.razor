@@ -1,10 +1,11 @@
-﻿@using ClassHub.Client.Models
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
 
 <ul>
     @foreach (var announcement in Announcements)
     {
         <li>
-            <a href="#" @onclick="() => ShowAnnouncement(announcement)">
+            <a href="@NavigationManager.Uri" @onclick="() => ShowAnnouncement(announcement)">
                 @announcement.Title
             </a>
         </li>
