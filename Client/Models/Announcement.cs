@@ -1,5 +1,5 @@
 ﻿namespace ClassHub.Client.Models {
-    public class _Announcement {
+    public class Announcement {
         public int Id { get; set; } // 공지사항 번호
         public string Title { get; set; } // 공지사항 제목
         public string Content { get; set; } // 공지사항 내용
@@ -10,6 +10,5 @@
         // public List<string> Attachments { get; set; } // 첨부 파일 정보
         // public string Category { get; set; } // 분류
         // public bool IsImportant { get; set; } // 중요 여부
-
     }
 }

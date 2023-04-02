@@ -38,16 +38,16 @@
 </div>
 
 @code {
-	[Parameter]
-	public List<_Announcement> Announcements { get; set; }
+    [Parameter]
+    public List<Announcement> Announcements { get; set; }
 
 	protected override void OnInitialized()
 	{
 		Announcements = Announcements.OrderByDescending(a => a.Id).ToList();
 	}
 
-	private void ShowAnnouncement(_Announcement announcement)
-	{
-		Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
-	}
+    private void ShowAnnouncement(Announcement announcement)
+    {
+        Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
+    }
 }
