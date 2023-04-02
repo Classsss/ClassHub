@@ -2,9 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Text;
-using static System.Net.WebRequestMethods;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace ClassHub.Server.Controllers
 {
@@ -12,42 +9,42 @@ namespace ClassHub.Server.Controllers
     [ApiController]
     public class JudgeController : ControllerBase
     {
+        // POST <JudgeController>
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] JudgeRequest request)
         {
+            // 채점 서버에 채점 요청
+            HttpClient Http = new HttpClient();
+            var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var response = await Http.PostAsync("https://classhubjudge.azurewebsites.net/Judge", content);
 
-            //test출력
-            Console.WriteLine("#문제 번호 : " + request.TaskId);
-            Console.WriteLine("#언어 : " + request.Language);
-            Console.WriteLine("#코드 : " + request.Code);
-               
-            
-            using HttpClient httpClient = new HttpClient();
-            string apiUrl = "https://localhost:7024/Judge";
-
-            // db에서 받아서 request에 채점 데이터를 추가함
-
-
-  
-            using StringContent content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await httpClient.PostAsync(apiUrl, content);
-
-
-            // 통신 여부에 따라 구분
-            if (response.IsSuccessStatusCode) 
+            // Post 요청 및 응답 받기 성공
+            if (response.IsSuccessStatusCode)
             {
-                JudgeResult? judgeData = await response.Content.ReadFromJsonAsync<JudgeResult>();
+                Console.WriteLine("Data posted successfully");
 
-                Console.WriteLine("메모리 사용량 : " + judgeData.MemoryUsage);
-                Console.WriteLine("시간 : " + judgeData.ExecutionTime);
-                return Ok(judgeData);
-             }
-             else
-             {
-                 return StatusCode((int)response.StatusCode, "Error in Judge server");
-             }
-             
-            return Ok();
+                JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
+
+                // Valid response
+                if (judgeResult != null)
+                {
+                    return Ok(judgeResult);
+                }
+                // Invalid response
+                else
+                {
+                    // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
+                    Console.WriteLine("Invalid response");
+                    return BadRequest("JudgeServer와 통신 실패");
+                }
+            }
+            // Post 요청 실패
+            else
+            {
+                Console.WriteLine("Failed to post data " + response.StatusCode);
+                // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
+                return BadRequest("JudgeServer와 통신 실패");
+            }
         }
     }
 }

@@ -6,16 +6,18 @@
 @inject HttpClient httpClient
 @inject HttpClient Http
 
-    <h3>Practice</h3>
-    <MonacoEditor />
 
-    <button class="btn btn-primary" @onclick="Test">Click me</button>
-    <div id="output-number">
-        <h3>@Output</h3>
-    </div>
+<h3>Practice</h3>
+<MonacoEditor @ref="MonacoEditorReference" />
 
-    @code {
+<!--채점 서버로 요청을 보내는 버튼-->
+<button class="btn btn-primary" @onclick="SubmitCode">코드 제출</button>
 
+<div id="output-number">
+    <h3>결과: @Output</h3>
+</div>
+
+@code {
     [Parameter]
     public int Year { get; set; }
     [Parameter]
@@ -23,85 +25,94 @@
     [Parameter]
     public int Number { get; set; }
 
+    // 채점 결과를 표시할 변수
+    private string Output = "";
 
-        private string Output = "";
+    // MonacoEditor 컴포넌트 참조 변수
+    private MonacoEditor? MonacoEditorReference;
 
-        private async Task Test()
+    // 채점 서버로 요청을 보냄
+    private async Task SubmitCode()
+    {
+        // 채점 요청을 전송하기 위한 객체 생성
+        JudgeRequest request = new JudgeRequest();
+        request.Code = await MonacoEditorReference.editor.GetValue();
+        request.Id = "1";
+        var model = await MonacoEditorReference.editor.GetModel();
+        var language = await model.GetLanguageId();
+        request.Language = language;
+
+        // 직렬화
+        var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        // 전송
+        HttpResponseMessage response = await Http.PostAsync("Judge", content);
+
+        // 통신 성공 여부에 따라 구분
+        if (response.IsSuccessStatusCode)
         {
-            // 임시 제출 예제 생성
-            JudgeRequest request = new JudgeRequest();
-            // request.Code = await editor.GetValue();
-            request.TaskId = "1";
-            request.Language = "java";
-            request.Code = "import java.util.Scanner;\n\n"
-            + "public class Main {\n"
-            + "    public static void main(String[] args) {\n"
-            + "        Scanner scanner = new Scanner(System.in);\n"
-            //    + "        int a[] = new int[1]\n"
-            //    + "        int a[2] = scanner.nextInt();\n"
-            + "        int num1 = scanner.nextInt();\n"
-            + "        int num2 = scanner.nextInt();\n"
-            + "        int result = num1+num2;\n"
-            + "        System.out.println(result);\n"
-            + "        scanner.close();\n"
-            + "    }\n"
-            + "}";
+            JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
 
-            // 직렬화
-            var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-
-            // 전송
-            HttpResponseMessage response = await httpClient.PostAsync("Judge", content);
-
-
-            // 통신 성공 여부에 따라 구분
-            if (response.IsSuccessStatusCode)
+            // Valid response
+            if (judgeResult != null)
             {
-                JudgeResult? judgeData = await response.Content.ReadFromJsonAsync<JudgeResult>();
-
-                // 정답
-                if (judgeData.Result == JudgeResult.JResult.Accepted)
+                switch (judgeResult.Result)
                 {
-                    Output = "맞았습니다!";
+                    case JudgeResult.JResult.Accepted:
+                        Output = "맞았습니다.\n실행 시간(ms) : " + judgeResult.ExecutionTime + "\n메모리 사용량(KB) : " + judgeResult.MemoryUsage;
+                        Console.WriteLine("맞았습니다.");
+                        Console.WriteLine("실행 시간(ms) : " + judgeResult.ExecutionTime);
+                        Console.WriteLine("메모리 사용량(KB) : " + judgeResult.MemoryUsage);
+                        break;
+                    case JudgeResult.JResult.WrongAnswer:
+                        Output = "틀렸습니다.";
+                        Console.WriteLine("틀렸습니다.");
+                        break;
+                    case JudgeResult.JResult.CompileError:
+                        Output = "컴파일 에러";
+                        Console.WriteLine("컴파일 에러");
+                        break;
+                    case JudgeResult.JResult.RuntimeError:
+                        Output = "런타임 에러";
+                        Console.WriteLine("런타임 에러");
+                        break;
+                    case JudgeResult.JResult.TimeLimitExceeded:
+                        Output = "시간 초과";
+                        Console.WriteLine("시간 초과");
+                        break;
+                    case JudgeResult.JResult.MemoryLimitExceeded:
+                        Output = "메모리 초과";
+                        Console.WriteLine("메모리 초과");
+                        break;
+                    case JudgeResult.JResult.PresentationError:
+                        Output = "출력 형식 오류";
+                        Console.WriteLine("출력 형식 오류");
+                        break;
+                    case JudgeResult.JResult.OutputLimitExceeded:
+                        Output = "출력 한도 초과";
+                        Console.WriteLine("출력 한도 초과");
+                        break;
+                    case JudgeResult.JResult.JudgementFailed:
+                        Output = "채점 실패";
+                        Console.WriteLine("채점 실패");
+                        break;
+                    case JudgeResult.JResult.Pending:
+                        Output = "채점 미완료";
+                        Console.WriteLine("채점 미완료");
+                        break;
                 }
-
-                // 컴파일 에러
-                else if (judgeData.Result == JudgeResult.JResult.CompileError)
-                {
-
-                    Output = "컴파일 에러" + judgeData.Message;
-                }
-
-                // 런타임 에러
-                else if (judgeData.Result == JudgeResult.JResult.RuntimeError)
-                {
-                    Output = "런타임 에러" + judgeData.Message;
-                }
-
-                // 메모리 초과
-                else if (judgeData.Result == JudgeResult.JResult.MemoryLimitExceeded)
-                {
-                    Output = "메모리 초과";
-                }
-
-                // 시간 초과
-                else if (judgeData.Result == JudgeResult.JResult.TimeLimitExceeded)
-                {
-                    Output = "시간 초과";
-                }
-
-                // 오답
-                else if (judgeData.Result == JudgeResult.JResult.WrongAnswer)
-                {
-                    Output = "틀렸습니다.";
-                }
-
             }
+            // Invalid Response
             else
             {
-                Console.WriteLine("Error in Judge server");
+                // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
+                Console.WriteLine("Invalid response");
             }
         }
+        // Post 요청 실패
+        else
+        {
+            // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
+            Console.WriteLine("Failed to post data " + response.StatusCode);
+        }
     }
-    
 }
