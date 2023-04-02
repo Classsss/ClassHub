@@ -1,7 +1,14 @@
 ﻿@page "/"
+@layout IndexLayout
 @inject AuthenticationService AuthService
+@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@using ClassHub.Client.Models
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
+@using Microsoft.AspNetCore.WebUtilities;
+@using Microsoft.JSInterop;
+@using System.Text;
+@using System.Text.Json
 
 <Timetable Courses="Courses" />
 
@@ -12,7 +19,37 @@
         // 다른 강의 데이터를 추가하세요.
     };
 
-    protected override void OnInitialized() {
-        if(AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+    protected async override void OnInitialized() {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code))
+        {
+            AuthService.IsLoggedIn = true;
+            exchangeToken(code);
+        }
+
+        // 로컬 스토리지에서 AccessToken이 있는지 확인
+        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+        if (!string.IsNullOrEmpty(accessToken)) AuthService.IsLoggedIn = true;
+
+        if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+    }
+
+    protected async Task exchangeToken(String code)
+    {
+        var client = new HttpClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        var request = new HttpRequestMessage(HttpMethod.Post, "TokenExchange/submit-code");
+
+        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = code }), Encoding.UTF8, "application/json");
+        try
+        {
+            var response = await client.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during request: " + ex.Message);
+        }
     }
 }
