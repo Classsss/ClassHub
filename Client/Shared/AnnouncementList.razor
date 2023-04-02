@@ -1,46 +1,24 @@
-﻿<h3>AnnouncementList</h3>
+﻿@using ClassHub.Client.Models
+
+<h3>AnnouncementList</h3>
 
 <ul>
-    @foreach (var notice in Notices)
+    @foreach (var announcement in Announcements)
     {
         <li>
-            <a href="#" @onclick="() => ShowNoticeMessage(notice)" class="@((SelectedNotice != null && SelectedNotice.Id == notice.Id) ? "font-bold" : "")">
-                @notice.Title
+            <a href="#" @onclick="() => ShowAnnouncement(announcement)">
+                @announcement.Title
             </a>
         </li>
     }
 </ul>
-@if (SelectedNotice != null)
-{
-    <div>
-        <h4>@SelectedNotice.Title</h4>
-        <p>@SelectedNotice.Content</p>
-    </div>
-}
 
 @code {
-    private List<Notice> Notices = new List<Notice> {
-        new Notice { Id = 1, Title = "공지사항1", Content = "내용1" },
-        new Notice { Id = 2, Title = "공지사항2", Content = "내용2" },
-        new Notice { Id = 3, Title = "공지사항3", Content = "내용3" }
-    };
-    private Notice SelectedNotice;
+    [Parameter]
+    public List<_Announcement> Announcements { get; set; }
 
-    private void ShowNoticeMessage(Notice notice)
+    private void ShowAnnouncement(_Announcement announcement)
     {
-        SelectedNotice = notice;
+        Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
     }
-
-    public class Notice
-    {
-        public int Id { get; set; }
-        public string Title { get; set; }
-        public string Content { get; set; }
-    }
-
-
 }
-
-
-
-
