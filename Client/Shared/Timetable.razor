@@ -73,7 +73,7 @@
     private void CourseSelected(Course course) {
         // 해당 강의를 선택했을 때 수행할 작업을 정의하세요.
         Console.WriteLine($"Selected course: {course.Name}");
-        NavigationManager.NavigateTo($"/classroom/{course.Year}/{course.Semester}/{course.Number}");
+        NavigationManager.NavigateTo($"/{course.Year}/{course.Semester}/{course.Number}/classroom");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
