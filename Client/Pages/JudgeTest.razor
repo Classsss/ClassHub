@@ -7,26 +7,32 @@
 @inject HttpClient Http
 
 <h3>JudgeTest</h3>
+<MonacoEditor @ref="editor"/>
 
 <button class="btn btn-primary" @onclick="Test">Click me</button>
 <div id="output-number">
     <h3>@Output</h3>
 </div>
+
 @code {
     private string Output = "";
-    // private GradingRequest request;
-    //private GradingResult result;
+    private MonacoEditor editor;
+
     private async Task Test()
     {
+       
 
         // 임시 제출 예제 생성
         JudgeRequest request = new JudgeRequest();
+       // request.Code = await editor.GetValue();
         request.TaskId = "1";
         request.Language = "java";
-        request.Code = "import java.util.Scanner;\n\n"
+            request.Code = "import java.util.Scanner;\n\n"
             + "public class Main {\n"
             + "    public static void main(String[] args) {\n"
             + "        Scanner scanner = new Scanner(System.in);\n"
+        //    + "        int a[] = new int[1]\n"
+        //    + "        int a[2] = scanner.nextInt();\n"
             + "        int num1 = scanner.nextInt();\n"
             + "        int num2 = scanner.nextInt();\n"
             + "        int result = num1+num2;\n"
@@ -47,46 +53,52 @@
         {
             JudgeResult? judgeData = await response.Content.ReadFromJsonAsync<JudgeResult>();
 
-            // Correct로 구분
-            if (judgeData.IsCorrect == true) { Output = "맞았습니다!"; }
-            else 
-            {
-                // 컴파일 에러
-                if (judgeData.CompileErrorMsg != null)
-                {
-
-                    Output = "컴파일 에러" + judgeData.CompileErrorMsg;;
-                }
-
-                // 런타임 에러
-                else if (judgeData.RuntimeErrorMsg != null)
-                {
-                    Output = "런타임 에러" + judgeData.RuntimeErrorMsg;
-                }
-
-                // 메모리 초과
-                else if (judgeData.IsExceedMemory)
-                {
-                    Output = "메모리 초과";
-                }
-
-                // 시간 초과
-                else if (judgeData.IsTimeOut)
-                {
-                    Output = "시간 초과";
-                }
-
-                // 오답
-                else
-                {
-                    Output = "틀렸습니다.";
-                }
+            // 정답
+            if (judgeData.Result == JudgeResult.JResult.Accepted) 
+            { 
+                Output = "맞았습니다!"; 
             }
+
+            // 컴파일 에러
+            else if (judgeData.Result == JudgeResult.JResult.CompileError)
+            {
+
+                Output = "컴파일 에러" + judgeData.Message;
+            }
+
+            // 런타임 에러
+            else if (judgeData.Result == JudgeResult.JResult.RuntimeError)
+            {
+                Output = "런타임 에러" + judgeData.Message;
+            }
+
+            // 메모리 초과
+            else if (judgeData.Result == JudgeResult.JResult.MemoryLimitExceeded)
+            {
+                Output = "메모리 초과";
+            }
+
+            // 시간 초과
+            else if (judgeData.Result == JudgeResult.JResult.TimeLimitExceeded)
+            {
+                Output = "시간 초과";
+            }
+
+            // 오답   
+            else if (judgeData.Result == JudgeResult.JResult.WrongAnswer)
+            {
+                Output = "틀렸습니다.";
+            }
+
         }
         else
         {
             Console.WriteLine( "Error in Judge server");
         }
-            
+
+    }
+
+
+
     }
 }

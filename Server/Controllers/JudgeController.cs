@@ -37,8 +37,7 @@ namespace ClassHub.Server.Controllers
             if (response.IsSuccessStatusCode) 
             {
                 JudgeResult? judgeData = await response.Content.ReadFromJsonAsync<JudgeResult>();
-        
-                Console.WriteLine("정답 여부 : " + judgeData.IsCorrect);
+
                 Console.WriteLine("메모리 사용량 : " + judgeData.MemoryUsage);
                 Console.WriteLine("시간 : " + judgeData.ExecutionTime);
                 return Ok(judgeData);
