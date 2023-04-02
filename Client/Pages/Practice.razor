@@ -1,8 +1,15 @@
 ﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice"
 @layout MainLayout
+@using ClassHub.Shared
+@using System.Text.Json
+@using System.Text
+@inject HttpClient Http
 
 <h3>Practice</h3>
-<MonacoEditor />
+<MonacoEditor @ref="MonacoEditorReference" />
+
+<!--채점 서버로 요청을 보내는 버튼-->
+<button class="btn btn-primary" @onclick="SubmitCode">코드 제출</button>
 
 @code {
     [Parameter]
@@ -11,4 +18,12 @@
     public int Semester { get; set; }
     [Parameter]
     public int Number { get; set; }
+
+    // MonacoEditor 컴포넌트 참조 변수
+    private MonacoEditor? MonacoEditorReference;
+
+    // 채점 서버로 요청을 보냄
+    private async Task SubmitCode() {
+        
+    }
 }
