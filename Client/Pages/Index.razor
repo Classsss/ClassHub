@@ -1,13 +1,14 @@
 ﻿@page "/"
+@layout IndexLayout
 @inject AuthenticationService AuthService
-@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using ClassHub.Client.Models;
 @using ClassHub.Shared;
 @using Microsoft.AspNetCore.WebUtilities;
 @using Microsoft.JSInterop;
 @using System.Text;
-@using System.Text.Json;
+@using System.Text.Json
 
 <Timetable Courses="Courses" />
 

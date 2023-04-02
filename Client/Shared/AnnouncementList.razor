@@ -1,0 +1,23 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+
+<ul>
+    @foreach (var announcement in Announcements)
+    {
+        <li>
+            <a href="@NavigationManager.Uri" @onclick="() => ShowAnnouncement(announcement)">
+                @announcement.Title
+            </a>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public List<_Announcement> Announcements { get; set; }
+
+    private void ShowAnnouncement(_Announcement announcement)
+    {
+        Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
+    }
+}
