@@ -1,0 +1,15 @@
+﻿@page "/login"
+@inject AuthenticationService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="d-flex align-items-center justify-content-center" style="height: 100vh;">
+    <button class="btn btn-primary" @onclick="Login">Login</button>
+</div>
+
+@code {
+    private void Login() {
+        // TODO: 통합 로그인 페이지 이동 구현
+        AuthService.IsLoggedIn = true;
+        NavigationManager.NavigateTo("/");
+    }
+}

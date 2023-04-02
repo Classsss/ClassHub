@@ -1,4 +1,7 @@
 ﻿@page "/"
+@layout MainLayout
+@inject AuthenticationService AuthService
+@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
 
 <Timetable Courses="Courses" />
@@ -9,4 +12,8 @@
         new Course { Name = "Physics", Instructor = "Prof. B", Day = DayOfWeek.Wednesday, StartTime = 11, EndTime = 13, ClassRoom = "Y1234" },
         // 다른 강의 데이터를 추가하세요.
     };
+
+    protected override void OnInitialized() {
+        if(AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+    }
 }
