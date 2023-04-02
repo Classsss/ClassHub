@@ -1,10 +1,8 @@
-﻿namespace ClassHub.Shared
-{
-    public class JudgeResult
-    {
+
+﻿namespace ClassHub.Shared {
+    public class JudgeResult {
         // 채점 결과
-        public enum JResult
-        {
+        public enum JResult {
             Accepted,               // 모든 테스트 케이스 통과
             WrongAnswer,            // 테스트 케이스와 실행 결과 불일치
             CompileError,           // 컴파일 에러

@@ -32,8 +32,7 @@
     private MonacoEditor? MonacoEditorReference;
 
     // 채점 서버로 요청을 보냄
-    private async Task SubmitCode()
-    {
+    private async Task SubmitCode() {
         // 채점 요청을 전송하기 위한 객체 생성
         JudgeRequest request = new JudgeRequest();
         request.Code = await MonacoEditorReference.editor.GetValue();
@@ -48,15 +47,13 @@
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 
         // 통신 성공 여부에 따라 구분
-        if (response.IsSuccessStatusCode)
-        {
+
+        if (response.IsSuccessStatusCode) {
             JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
 
             // Valid response
-            if (judgeResult != null)
-            {
-                switch (judgeResult.Result)
-                {
+            if (judgeResult != null) {
+                switch (judgeResult.Result) {
                     case JudgeResult.JResult.Accepted:
                         Output = "맞았습니다.\n실행 시간(ms) : " + judgeResult.ExecutionTime + "\n메모리 사용량(KB) : " + judgeResult.MemoryUsage;
                         Console.WriteLine("맞았습니다.");
@@ -102,15 +99,14 @@
                 }
             }
             // Invalid Response
-            else
-            {
+
+            else {
                 // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
                 Console.WriteLine("Invalid response");
             }
         }
         // Post 요청 실패
-        else
-        {
+        else {
             // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
             Console.WriteLine("Failed to post data " + response.StatusCode);
         }
