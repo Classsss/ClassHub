@@ -56,7 +56,7 @@
             if (judgeResult != null) {
                 switch (judgeResult.Result) {
                     case JudgeResult.JResult.Accepted:
-                        Output = "맞았습니다.\n실행 시간(ms) : " + judgeResult.ExecutionTime + "\n메모리 사용량(KB) : " + judgeResult.MemoryUsage;
+                        Output = "맞았습니다.\n실행 시간(ms) : " + string.Format("{0:F3}", judgeResult.ExecutionTime) + "\n메모리 사용량(KB) : " + judgeResult.MemoryUsage;
                         Console.WriteLine("맞았습니다.");
                         Console.WriteLine("실행 시간(ms) : " + judgeResult.ExecutionTime);
                         Console.WriteLine("메모리 사용량(KB) : " + judgeResult.MemoryUsage);
