@@ -13,6 +13,7 @@
 
 <div id="output-number">
     <h3>결과: @Output</h3>
+    <h3>@Message</h3>
 </div>
 
 @code {
@@ -25,6 +26,9 @@
 
     // 채점 결과를 표시할 변수
     private string Output = "";
+
+    // 채점 결과와 동반되는 메시지를 표시할 변수
+    private string Message = "";
 
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
@@ -93,6 +97,15 @@
                         Output = "채점 미완료";
                         Console.WriteLine("채점 미완료");
                         break;
+                }
+
+                // 메시지가 유효하면 화면에 표시
+                if (judgeResult.Message != null) {
+                    Message = judgeResult.Message;
+                } 
+                // 메시지가 유효하지 않으면 화면에 표시되지 않도록 초기화
+                else {
+                    Message = "";
                 }
             }
             // Invalid Response
