@@ -1,4 +1,4 @@
-﻿@page "/counter"
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/counter"
 @layout MainLayout
 
 <PageTitle>Counter</PageTitle>
@@ -10,6 +10,13 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
+    [Parameter]
+    public int Year { get; set; }
+    [Parameter]
+    public int Semester { get; set; }
+    [Parameter]
+    public int Number { get; set; }
+
     private int currentCount = 0;
 
     private void IncrementCount()

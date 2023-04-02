@@ -1,0 +1,15 @@
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom"
+@layout MainLayout
+
+<h3>@Number 강의실입니다.</h3>
+
+@code {
+    [Parameter]
+    public int Year { get; set; }
+    [Parameter]
+    public int Semester { get; set; }
+    [Parameter]
+    public int Number { get; set; }
+
+    // TODO: 강의 또는 강의실 정보를 가져오는 로직 추가
+}
