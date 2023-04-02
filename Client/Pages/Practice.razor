@@ -11,6 +11,10 @@
 <!--채점 서버로 요청을 보내는 버튼-->
 <button class="btn btn-primary" @onclick="SubmitCode">코드 제출</button>
 
+<div id="output-number">
+    <h3>결과: @Output</h3>
+</div>
+
 @code {
     [Parameter]
     public int Year { get; set; }
@@ -18,6 +22,9 @@
     public int Semester { get; set; }
     [Parameter]
     public int Number { get; set; }
+
+    // 채점 결과를 표시할 변수
+    private string Output = "";
 
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
