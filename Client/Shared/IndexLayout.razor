@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthenticationService AuthService
+@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
 <style>
@@ -89,7 +90,7 @@
 <div class="page">
     <main>
         <div class="top-row px-4">
-            <a href="@(NavigationManager.BaseUri + "/login")" @onclick="Logout" target="_self">Logout</a>
+            <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
         </div>
 
         <article class="content px-4">
@@ -99,8 +100,9 @@
 </div>
 
 @code {
-    private void Logout() {
-        // TODO: 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
+    private async void Logout() {
+        // 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
         AuthService.IsLoggedIn = false;
     }
 }
