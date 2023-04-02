@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ClassHub</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -10,17 +12,32 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="@classRoomUri" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
+            <NavLink class="nav-link" href="@(classRoomUri + "/announcement")">
+                <span class="oi oi-bullhorn" aria-hidden="true"></span> Announcement
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@(classRoomUri + "/assignment")">
+                <span class="oi oi-document" aria-hidden="true"></span> Assignment
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@(classRoomUri + "/practice")">
+                <span class="oi oi-code" aria-hidden="true"></span> Practice
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="@(classRoomUri + "/counter")">
                 <span class="oi oi-plus" aria-hidden="true"></span> Counter
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
+            <NavLink class="nav-link" href="@(classRoomUri + "/fetchdata")">
                 <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
             </NavLink>
         </div>
@@ -28,9 +45,17 @@
 </div>
 
 @code {
+    private string classRoomUri = string.Empty;
+
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync() {
+        Console.WriteLine(NavigationManager.Uri);
+        string uri = NavigationManager.Uri;
+        classRoomUri = uri.Substring(0, uri.IndexOf("classroom") + "classroom".Length);
+    }
 
     private void ToggleNavMenu()
     {

@@ -1,4 +1,5 @@
-﻿@page "/fetchdata"
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/fetchdata"
+@layout MainLayout
 @using ClassHub.Shared
 @inject HttpClient Http
 
@@ -38,6 +39,13 @@ else
 }
 
 @code {
+    [Parameter]
+    public int Year { get; set; }
+    [Parameter]
+    public int Semester { get; set; }
+    [Parameter]
+    public int Number { get; set; }
+
     private WeatherForecast[]? forecasts;
 
     protected override async Task OnInitializedAsync()

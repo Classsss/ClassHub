@@ -10,6 +10,25 @@
     <link href="css/app.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="ClassHub.Client.styles.css" rel="stylesheet" />
+    <script>
+        function setUniformRowHeight() {
+            let maxHeight = 0;
+            const rows = document.querySelectorAll('.timetable tr');
+
+            // Find the highest row
+            for (let i = 0; i < rows.length; i++) {
+                const rowHeight = rows[i].clientHeight;
+                if (rowHeight > maxHeight) {
+                    maxHeight = rowHeight;
+                }
+            }
+
+            // Set all rows to the highest row's height
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.height = maxHeight + 'px';
+            }
+        }
+    </script>
 </head>
 
 <body>
