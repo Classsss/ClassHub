@@ -12,8 +12,9 @@
     }
     <main>
         <div class="top-row px-4">
+            <a class="oi oi-person" aria-hidden="true"></a>
+            <a class="oi oi-bell" aria-hidden="true"></a>
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
-
         </div>
         <article class="content px-4">
             @Body
