@@ -1,0 +1,15 @@
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement/{id:int}"
+
+<h3>AnnouncementPage</h3>
+<DragDropUpload />
+
+@code {
+	[Parameter]
+	public int Year { get; set; }
+	[Parameter]
+	public int Semester { get; set; }
+	[Parameter]
+	public int Number { get; set; }
+	[Parameter]
+	public int Id { get; set; }
+}
