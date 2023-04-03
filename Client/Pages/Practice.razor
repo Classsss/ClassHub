@@ -35,6 +35,9 @@
 
     // 채점 서버로 요청을 보냄
     private async Task SubmitCode() {
+        // Message 초기화
+        Message = "";
+
         // 채점 요청을 전송하기 위한 객체 생성
         JudgeRequest request = new JudgeRequest();
         request.Code = await MonacoEditorReference.editor.GetValue();
@@ -103,10 +106,6 @@
                 if (judgeResult.Message != null) {
                     Message = judgeResult.Message;
                 } 
-                // 메시지가 유효하지 않으면 화면에 표시되지 않도록 초기화
-                else {
-                    Message = "";
-                }
             }
             // Invalid Response
             else {
