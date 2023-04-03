@@ -3,10 +3,13 @@
 @inject AuthenticationService AuthService
 @inject NavigationManager NavigationManager
 
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri) {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
     <main>
         <div class="top-row px-4">
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
@@ -18,7 +21,12 @@
     </main>
 </div>
 
+
+
 @code {
+    [Parameter]
+    public bool IncludeSideBar { get; set; } = true;
+
     private async void Logout()
     {
         // 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
