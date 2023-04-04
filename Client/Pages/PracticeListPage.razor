@@ -1,0 +1,21 @@
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice"
+@layout MainLayout
+@using ClassHub.Client.Models
+
+<h3>PracticeListPage</h3>
+<PracticeList Practices="@practices" />
+
+@code {
+    [Parameter]
+    public int Year { get; set; }
+    [Parameter]
+    public int Semester { get; set; }
+    [Parameter]
+    public int Number { get; set; }
+
+    List<Practice> practices = new List<Practice> {
+        new Practice { Id = 1, Title = "Introduction to C#", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30) },
+        new Practice { Id = 2, Title = "Object-oriented Programming with C#", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
+        new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
+    };
+}
