@@ -16,12 +16,12 @@ namespace ClassHub.Server.Controllers
             // POST <JudgeController>
             [HttpPost]
             public async Task<IActionResult> Post([FromBody] JudgeRequest request)
-            {
+            {   
 
                 // 채점 서버에 채점 요청
                 HttpClient Http = new HttpClient();
                 var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-                var response = await Http.PostAsync("https://classhubjudge.azurewebsites.net/Judge", content);
+                var response = await Http.PostAsync("https://localhost:7135/Judge", content);
 
                 // Post 요청 및 응답 받기 성공
 
