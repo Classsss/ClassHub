@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice"
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice/{id:int}"
 @layout MainLayout
 @using ClassHub.Shared
 @using System.Text.Json
@@ -23,6 +23,8 @@
     public int Semester { get; set; }
     [Parameter]
     public int Number { get; set; }
+    [Parameter]
+    public int Id { get; set; }
 
     // 채점 결과를 표시할 변수
     private string Output = "";
