@@ -1,0 +1,38 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+
+<h3>과제 등록현황 게시판</h3>
+<br />
+
+<table class="table table-striped">
+    <thead>
+        <tr class="bg-gray">
+            <th>번호</th>
+            <th>제목</th>
+            <th>진행</th>
+            <th>제출</th>
+            <th>마감일</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var assignment in Assignments)
+        {
+            <tr>
+                <td>@assignment.Id</td>
+                <td>@assignment.Title</td>
+                <td>@(assignment.Deadline >= DateTime.Now ? "진행중" : "종료")</td>
+                <td>@(assignment.IsSubmitted ? "제출" : "미제출")</td>
+                <td>@assignment.Deadline.ToString("yyyy.MM.dd tt hh:mm")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public List<Assignment> Assignments { get; set; }
+    protected override void OnInitialized()
+    {
+        Assignments = Assignments.OrderByDescending(a => a.Id).ToList();
+    }
+}
