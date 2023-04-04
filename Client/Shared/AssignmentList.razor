@@ -5,6 +5,14 @@
     .bg-gray {
         background-color: gray;
     }
+
+    .bg-inProgress {
+        color: green;
+    }
+
+    .bg-end {
+        color: red;
+    }
 </style>
 
 <h3>과제 등록현황 게시판</h3>
@@ -26,7 +34,9 @@
             <tr>
                 <td>@assignment.Id</td>
                 <td>@assignment.Title</td>
-                <td>@(assignment.Deadline >= DateTime.Now ? "진행중" : "종료")</td>
+                <td class="@(assignment.Deadline >= DateTime.Now ? "bg-inProgress" : "bg-end" )"> 
+                    @(assignment.Deadline >= DateTime.Now ? "진행중" : "종료")
+                </td>
                 <td>@(assignment.IsSubmitted ? "제출" : "미제출")</td>
                 <td>@assignment.Deadline.ToString("yyyy.MM.dd tt hh:mm")</td>
             </tr>
