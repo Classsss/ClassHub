@@ -1,0 +1,17 @@
+﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement/{id:int}"
+@layout MainLayout
+
+<h3>AnnouncementPage</h3>
+
+@code {
+	[Parameter]
+	public int Year { get; set; }
+	[Parameter]
+	public int Semester { get; set; }
+	[Parameter]
+	public int Number { get; set; }
+	[Parameter]
+	public int Id { get; set; }
+
+	// TODO: 공지사항을 불러옵니다
+}
