@@ -1,20 +1,44 @@
 ﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice/{id:int}"
 @layout MainLayout
 @using ClassHub.Shared
+@using ClassHub.Client.Models
 @using System.Text.Json
 @using System.Text
 @inject HttpClient Http
+@inherits LayoutComponentBase
 
 <h3>Practice</h3>
-<MonacoEditor @ref="MonacoEditorReference" />
 
-<!--채점 서버로 요청을 보내는 버튼-->
-<button class="btn btn-primary" @onclick="SubmitCode">코드 제출</button>
 
-<div id="output-number">
-    <h3>결과: @Output</h3>
-    <h3>@Message</h3>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6" style="height: 100%;">
+            <div class="d-flex flex-column justify-content-between h-100">
+                <div>
+                    <h1>@practice.Title</h1>
+                    <hr />
+                    <p>작성자: @practice.Author</p>
+                    <hr />
+                    <div class="d-flex">
+                        <p>게시일: @practice.StartDate.ToString("yyyy.MM.dd tt hh:mm") <span class="ms-3">마감일: @practice.EndDate.ToString("yyyy.MM.dd tt hh:mm")</span></p>
+                    </div>
+                    <hr />
+                    <div>@((MarkupString)practice.Content)</div>
+                    <hr />
+                </div>
+                <button class="btn btn-primary" @onclick="SubmitCode">코드 제출</button>
+                <div id="output-number">
+                    <h3>결과: @Output</h3>
+                    <h3>@Message</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" style="height: 100%;">
+            <MonacoEditor @ref="MonacoEditorReference" />
+        </div>
+    </div>
 </div>
+
 
 @code {
     [Parameter]
@@ -25,6 +49,34 @@
     public int Number { get; set; }
     [Parameter]
     public int Id { get; set; }
+
+    private Practice practice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
+        var practices = new List<Practice>
+        {
+ 
+        new Practice { Id = 1, Title = "Introduction to C#", Content = @"<p> Hello World 프로그램은 프로그래밍 언어를 배울 때 가장 먼저 작성하는 프로그램이다. 하지만 이 프로그램에는 입력을 받는 부분이 없다.</p>
+    <p>그래서 여기에서는 여러분의 이름을 입력 받아 이름을 이용하여 인사말을 출력하는 프로그램을 작성해보자.</p>
+    <p>#출력 예</p>
+    <p>&nbsp; &nbsp;What is your name? YoonSang</p>
+    <p>&nbsp; &nbsp;Hello, YoonSang, nice to meet you!</p>
+    <p>#제약 조건</p>
+    <p>&nbsp; &nbsp;1. 입력 부분, 문자열 연결(String concatenation) 부분, 출력 부분을 별도로 작성할 것</p>
+    <p>#도전 과제</p>
+    <p>&nbsp; &nbsp;1. 변수를 사용하지 않는 새로운 버전을 작성하라.</p>
+    <p>&nbsp; &nbsp;2. 사람들마다 서로 다른 인사말이 나타나도록 프로그램을 작성하라.</p> ", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30) },
+        new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
+        new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
+    };
+
+        // Id가 현재 페이지의 Id와 일치하는 practice 객체를 찾아 초기화합니다.
+        practice = practices.FirstOrDefault(p => p.Id == Id);
+
+    }
+
 
     // 채점 결과를 표시할 변수
     private string Output = "";

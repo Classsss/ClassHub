@@ -2,6 +2,10 @@
     resizeEditor();
 });
 
+window.onresize = function () {
+    resizeEditor();
+};
+
 function resizeEditor() {
     var editorElement = document.getElementById("editor");
     var style = window.getComputedStyle(editorElement);
@@ -9,4 +13,5 @@ function resizeEditor() {
     var width = window.innerWidth - 300 - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth) - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     editorElement.style.height = height + "px";
     editorElement.style.width = width + "px";
+
 }
