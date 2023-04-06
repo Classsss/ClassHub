@@ -11,7 +11,7 @@ namespace ClassHub.Client.Models
         public int Year { get; set; } // 개설 년도
 
         [JsonPropertyName("semester")]
-        public int Semester { get; set; } // 개설 학기
+        public string Semester { get; set; } // 개설 학기
 
         [JsonPropertyName("name")]
         public string Name { get; set; } // 교과목명

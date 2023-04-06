@@ -21,7 +21,8 @@ namespace ClassHub.Server.Controllers
         {
             //앱 서버로 수강과목 출력을 요청
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://academicinfo.azurewebsites.net/Course");
+            client.BaseAddress = new Uri("https://academicinfo.azurewebsites.net/");
+            var request = new HttpRequestMessage(HttpMethod.Post, "Course");
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
 
