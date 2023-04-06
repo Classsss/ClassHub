@@ -1,5 +1,5 @@
 ﻿namespace ClassHub.Client.Models {
-    public class Classroom {
+    public class ClassRoom {
         public int Id { get; set; }
         public string CourseId { get; set; } // ABC12345
         public int SectionId { get; set; } // 0810
