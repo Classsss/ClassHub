@@ -1,9 +1,11 @@
 ﻿window.addEventListener("resize", function () {
     resizeEditor();
+    setUniformRowHeight();
 });
 
 window.onresize = function () {
     resizeEditor();
+    setUniformRowHeight();
 };
 
 function resizeEditor() {
