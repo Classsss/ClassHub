@@ -1,6 +1,6 @@
-﻿namespace ClassHub.Client.Models {
+﻿namespace ClassHub.Shared {
     public class ClassRoom {
-        public int Id { get; set; }
+        public int RoomId { get; set; }
         public string CourseId { get; set; } // ABC12345
         public int SectionId { get; set; } // 0810
         public string Semester { get; set; } // SPRING, SUMMER, FALL, WINTER         
