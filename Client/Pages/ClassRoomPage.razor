@@ -1,0 +1,20 @@
+﻿@page "/classroom/{id:int}"
+@layout MainLayout
+@using ClassHub.Shared
+@inject HttpClient Http
+
+<h3>강의실 번호는 @Id 입니다.</h3>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ClassRoom? classRoom;
+
+    protected async override void OnInitialized() {
+        // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
+        classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{Id}");
+
+        Console.WriteLine(classRoom.CourseId);
+    }
+}
