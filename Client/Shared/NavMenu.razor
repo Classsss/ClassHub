@@ -62,9 +62,10 @@
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     protected override async Task OnInitializedAsync() {
-        Console.WriteLine(NavigationManager.Uri);
         string uri = NavigationManager.Uri;
-        classRoomUri = uri.Substring(0, uri.IndexOf("classroom") + "classroom".Length);
+        int start = uri.IndexOf("classroom");
+        classRoomUri = uri.Substring(start, 10) + uri.Substring(start).Split('/')[1];
+        Console.WriteLine($"classRoomUri : {classRoomUri}");
     }
 
     private void ToggleNavMenu()
