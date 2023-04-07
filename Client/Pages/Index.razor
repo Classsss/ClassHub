@@ -10,16 +10,20 @@
 @using System.Text;
 @using System.Text.Json
 
-<Timetable Sections="Sections" />
+@if (Sections == null)
+{
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+    </div>  
+}
+else
+{
+    <Timetable Sections="Sections" />
+}
+
 
 @code {
-    private List<Section> Sections = new List<Section> {
-        /*
-        new Course { Number = 12, Year = 2023, Semester = 1, Name = "Math", Instructor = "Prof. A", Day = DayOfWeek.Monday, StartTime = 9, EndTime = 10, ClassRoom = "Y1234" },
-        new Course { Number = 21, Year = 2023, Semester = 1, Name = "Physics", Instructor = "Prof. B", Day = DayOfWeek.Wednesday, StartTime = 11, EndTime = 13, ClassRoom = "Y1234" },
-        // 다른 강의 데이터를 추가하세요.
-    */
-    };
+    private List<Section>? Sections;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -68,13 +72,7 @@
         var content = await response.Content.ReadAsStringAsync();
 
         Console.WriteLine(content);
-        var sections = JsonSerializer.Deserialize<List<Section>>(content);
-
-        foreach (var section in sections)
-        {
-            Sections.Add(section);
-        }
-
+        Sections = JsonSerializer.Deserialize<List<Section>>(content);
         StateHasChanged(); // 화면을 다시 그립니다.
 	}
 }
