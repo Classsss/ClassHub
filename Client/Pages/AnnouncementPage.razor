@@ -6,16 +6,72 @@
 <div style="min-height: 100vh;">
 	<div class="d-flex flex-column justify-content-between">
 		<div>
-			<h1>@announcement.Title</h1>
-			<hr />
-			<p>작성자: @announcement.Author</p>
-			<hr />
-			<p>게시일: @announcement.StartDate.ToString("yyyy.MM.dd tt hh:mm")</p>
-			<hr />
+			<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
+				<h1>
+					<span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
+					@announcement.Title
+				</h1>
+			</div>
+			<div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;" >
+				<p style="float: left; margin-right: 50px;">작성자: @announcement.Author</p>
+				<div style="float: right;">
+					<span class="oi oi-eye" aria-hidden="true"></span>
+					<span style="margin-left: 5px;">@announcement.ViewCount</span>
+					<span style="margin-left: 10px; margin-right: 10px;">|</span>
+					<span class="oi oi-clock" aria-hidden="true"></span>
+					@if (announcement.StartDate.Date == DateTime.Today)
+					{ // 글이 올라온 시간이 오늘일 경우 시간만 표시
+						<span style="margin-left: 5px;">@announcement.StartDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+					}
+					else
+					{ // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
+						<span style="margin-left: 5px;">@announcement.StartDate.ToString("yyyy.MM.dd")</span>
+					}
+				</div>
+			</div>
+			<img src="@ImageUrl" />
 			<div>@((MarkupString)announcement.Content)</div> <!--보안에 취약?-->
 			<hr />
+
+			<style>
+				a {
+					color: inherit;
+					text-decoration: none;
+				}
+
+					a:hover {
+						background-color: lightblue;
+					}
+			</style>
+
+			<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
+				<p style="display: inline-block; margin-right: 10px;">이전글</p>
+				@if (GetPreviousAnnouncement() != null)
+				{
+					
+					<a href="@($"/classroom/{RoomId}/announcement/{GetPreviousAnnouncement().Id}")" @onclick="() => GoToPreviousAnnouncement()" style="display: inline-block;">@GetPreviousAnnouncement().Title</a>
+				}
+				else
+				{
+
+					<p style="display: inline-block;">이전글이 없습니다.</p>
+				}
+			</div>
+
+			<div style="border-bottom: 1px solid grey;">
+				<p style="display: inline-block; margin-right: 10px;">다음글</p>
+				@if (GetNextAnnouncement() != null)
+				{
+					<a href="@($"/classroom/{RoomId}/announcement/{GetNextAnnouncement().Id}")" @onclick="() => GoToNextAnnouncement()" style="display: inline-block;">@GetNextAnnouncement().Title</a>
+				}
+				else
+				{	
+					<p style="display: inline-block;">다음글이 없습니다.</p>
+				}
+			</div>
+
 		</div>
-		<div class="d-flex justify-content-end pb-3 pr-3">
+		<div class="d-flex justify-content-end pb-3 pr-3" style="margin-top:10px;">
 			<button class="btn btn-primary" @onclick="GoBack">목록</button>
 		</div>
 	</div>
@@ -28,35 +84,78 @@
 	[Parameter]
 	public int AnnouncementId { get; set; }
 
+	private string ImageUrl = "/images/banner.png";
+
 	// TODO: 공지사항을 불러옵니다
 	private Announcement announcement;
+
+	// 이전, 공지사항 구현용 서버에서 데이터를 가져올 경우 삭제
+	private List<Announcement> announcements;
 
 	private void GoBack() // 목록으로 돌아가는 클래스
 	{
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
 
+	private Announcement GetPreviousAnnouncement() // 이전 공지사항을 받아옴
+	{
+		var index = announcements.FindIndex(a => a.Id == AnnouncementId);
+		return index > 0 ? announcements[index - 1] : null;
+	}
+
+	private Announcement GetNextAnnouncement() // 다음 공지사항을 받아옴
+	{
+		var index = announcements.FindIndex(a => a.Id == AnnouncementId);
+		return index < announcements.Count - 1 ? announcements[index + 1] : null;
+	}
+
+	private void GoToPreviousAnnouncement() // 이전 공지사항으로 가는 클래스
+	{
+		AnnouncementId--;
+		LoadAnnouncementData();
+		NavigationManager.NavigateTo($"/classroom/{RoomId}/announcement/{AnnouncementId}", forceLoad: true);
+	}
+
+	private void GoToNextAnnouncement() // 다음 공지사항으로 가는 클래스
+	{
+		AnnouncementId++;
+		LoadAnnouncementData();
+		NavigationManager.NavigateTo($"/classroom/{RoomId}/announcement/{AnnouncementId}", forceLoad: true);
+	}
+
+
+	private bool HasPrevious => GetPreviousAnnouncement() != null;
+	private bool HasNext => GetNextAnnouncement() != null;
+
 	protected override async Task OnInitializedAsync()
 	{
 		// 실제 프로젝트에서는 서버로부터 데이터를 가져옴
-		var announcements = new List<Announcement>
-		{
-			new Announcement { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = @"<div>
-    <p>1. 필요한 구매 내용을 요청 (첨부 excel 파일 참조)</p>
-    <ul>
-        <li>구매 가능 물품: SW(클라우드나 API 사용료 포함) 또는 재료비(소모성 물품)</li>
-    </ul>
-    <p>처리 절차:</p>
-    <p>excel 파일에 구매 요청 물품을 저에게 mkcho@mju.ac.kr</a> 이메일로 주세요</p>
-    <p>제가 검토 후 문제가 없는 경우 학과사무실 김은주 선생님이 구매를 진행 (필요시 SW의 경우 웹에서 바로 구매가 가능한 경우는 과사로 찾아가셔서 결제 진행)</p>
-    <p>저희 수업에 할당된 총금액은 50만원입니다.</p>
-</div>" , Author = "조민경", StartDate = new DateTime(2023,03,03,09,02,0)},
-			new Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,03,03,10,42,0)},
-			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0)},
-			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0)}
-		};
-		announcement = announcements.FirstOrDefault(a => a.Id == AnnouncementId);
+
+		LoadAnnouncementData();
 
 	}
+
+	private void LoadAnnouncementData() // 공지사항을 데이터를 불러오는 메서드
+	{
+		announcements = new List<Announcement>
+		{
+			new Announcement { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = @"<div>
+			<p></p>
+		    <p>1. 필요한 구매 내용을 요청 (첨부 excel 파일 참조)</p>
+		    <ul>
+		    <li>구매 가능 물품: SW(클라우드나 API 사용료 포함) 또는 재료비(소모성 물품)</li>
+			</ul>
+			<p>처리 절차:</p>
+			<p>excel 파일에 구매 요청 물품을 저에게 mkcho@mju.ac.kr</a> 이메일로 주세요</p>
+			<p>제가 검토 후 문제가 없는 경우 학과사무실 김은주 선생님이 구매를 진행 (필요시 SW의 경우 웹에서 바로 구매가 가능한 경우는 과사로 찾아가셔서 결제 진행)</p>
+			<p>저희 수업에 할당된 총금액은 50만원입니다.</p>
+			</div>" , Author = "조민경", StartDate = new DateTime(2023,04,07,09,02,0),ViewCount = 521342},
+			new Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,03,03,10,42,0),ViewCount = 45201},
+			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0),ViewCount = 3201},
+			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0),ViewCount = 514}
+		};
+		announcement = announcements.FirstOrDefault(a => a.Id == AnnouncementId);
+	}
+
 
 }
