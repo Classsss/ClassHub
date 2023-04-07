@@ -10,22 +10,20 @@
 @using System.Text;
 @using System.Text.Json
 
-@if (Sections.Count > 0)
+@if (Sections == null)
 {
-    <Timetable Sections="Sections" />
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+    </div>  
 }
 else
 {
-    <div class="d-flex justify-content-center mt-5">
-        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"/>
-    </div>
+    <Timetable Sections="Sections" />
 }
 
 
 @code {
-    private List<Section> Sections = new List<Section> {
-
-    };
+    private List<Section>? Sections;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -74,13 +72,7 @@ else
         var content = await response.Content.ReadAsStringAsync();
 
         Console.WriteLine(content);
-        var sections = JsonSerializer.Deserialize<List<Section>>(content);
-
-        foreach (var section in sections)
-        {
-            Sections.Add(section);
-        }
-
+        Sections = JsonSerializer.Deserialize<List<Section>>(content);
         StateHasChanged(); // 화면을 다시 그립니다.
 	}
 }
