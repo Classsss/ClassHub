@@ -45,27 +45,49 @@
 			</style>
 
 			<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
+				<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
 				<p style="display: inline-block; margin-right: 10px;">이전글</p>
 				@if (GetPreviousAnnouncement() != null)
 				{
-					
 					<a href="@($"/classroom/{RoomId}/announcement/{GetPreviousAnnouncement().Id}")" @onclick="() => GoToPreviousAnnouncement()" style="display: inline-block;">@GetPreviousAnnouncement().Title</a>
+					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+						<span class="oi oi-clock" aria-hidden="true"></span>
+						@if (GetPreviousAnnouncement().StartDate.Date == DateTime.Today)
+						{
+							<span style="margin-left :5px; margin-right:11px;">@GetPreviousAnnouncement().StartDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						}
+						else
+						{
+							<span style="margin-left :5px;">@GetPreviousAnnouncement().StartDate.ToString("yyyy.MM.dd")</span>
+						}
+					</span>
 				}
 				else
 				{
-
 					<p style="display: inline-block;">이전글이 없습니다.</p>
 				}
 			</div>
 
 			<div style="border-bottom: 1px solid grey;">
+				<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
 				<p style="display: inline-block; margin-right: 10px;">다음글</p>
 				@if (GetNextAnnouncement() != null)
 				{
 					<a href="@($"/classroom/{RoomId}/announcement/{GetNextAnnouncement().Id}")" @onclick="() => GoToNextAnnouncement()" style="display: inline-block;">@GetNextAnnouncement().Title</a>
+					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+						<span class="oi oi-clock" aria-hidden="true"></span>
+						@if (GetNextAnnouncement().StartDate.Date == DateTime.Today)
+						{
+							<span style="margin-left :5px; margin-right:11px;">@GetNextAnnouncement().StartDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						}
+						else
+						{
+							<span style="margin-left :5px;">@GetNextAnnouncement().StartDate.ToString("yyyy.MM.dd")</span>
+						}
+					</span>
 				}
 				else
-				{	
+				{
 					<p style="display: inline-block;">다음글이 없습니다.</p>
 				}
 			</div>
@@ -75,6 +97,18 @@
 			<button class="btn btn-primary" @onclick="GoBack">목록</button>
 		</div>
 	</div>
+	<footer class="text-black py-3">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<p>&copy; 2023 ClasX, Inc. all rights reserved.</p>
+				</div>
+				<div class="col-md-6 text-right">
+					<p>Privacy Policy | Terms of Use</p>
+				</div>
+			</div>
+		</div>
+	</footer>
 </div>
 
 
@@ -149,7 +183,7 @@
 			<p>excel 파일에 구매 요청 물품을 저에게 mkcho@mju.ac.kr</a> 이메일로 주세요</p>
 			<p>제가 검토 후 문제가 없는 경우 학과사무실 김은주 선생님이 구매를 진행 (필요시 SW의 경우 웹에서 바로 구매가 가능한 경우는 과사로 찾아가셔서 결제 진행)</p>
 			<p>저희 수업에 할당된 총금액은 50만원입니다.</p>
-			</div>" , Author = "조민경", StartDate = new DateTime(2023,04,07,09,02,0),ViewCount = 521342},
+			</div>" , Author = "조민경", StartDate = new DateTime(2023,04,08,09,02,0),ViewCount = 521342},
 			new Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,03,03,10,42,0),ViewCount = 45201},
 			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0),ViewCount = 3201},
 			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0),ViewCount = 514}
