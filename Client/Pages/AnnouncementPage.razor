@@ -42,19 +42,25 @@
 		var announcements = new List<Announcement>
 		{
 			new Announcement { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = @"<div>
-    <p>1. 필요한 구매 내용을 요청 (첨부 excel 파일 참조)</p>
-    <ul>
-        <li>구매 가능 물품: SW(클라우드나 API 사용료 포함) 또는 재료비(소모성 물품)</li>
-    </ul>
-    <p>처리 절차:</p>
-    <p>excel 파일에 구매 요청 물품을 저에게 mkcho@mju.ac.kr</a> 이메일로 주세요</p>
-    <p>제가 검토 후 문제가 없는 경우 학과사무실 김은주 선생님이 구매를 진행 (필요시 SW의 경우 웹에서 바로 구매가 가능한 경우는 과사로 찾아가셔서 결제 진행)</p>
-    <p>저희 수업에 할당된 총금액은 50만원입니다.</p>
-</div>" , Author = "조민경", StartDate = new DateTime(2023,03,03,09,02,0)},
-			new Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,03,03,10,42,0)},
-			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0)},
-			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0)}
+			<p>1. 필요한 구매 내용을 요청 (첨부 excel 파일 참조)</p>
+			<ul>
+			<li>구매 가능 물품: SW(클라우드나 API 사용료 포함) 또는 재료비(소모성 물품)</li>
+			</ul>
+			<p>처리 절차:</p>
+			<p>excel 파일에 구매 요청 물품을 저에게 mkcho@mju.ac.kr</a> 이메일로 주세요</p>
+			<p>제가 검토 후 문제가 없는 경우 학과사무실 김은주 선생님이 구매를 진행 (필요시 SW의 경우 웹에서 바로 구매가 가능한 경우는 과사로 찾아가셔서 결제 진행)</p>
+			<p>저희 수업에 할당된 총금액은 50만원입니다.</p>
+			</div>" , Author = "조민경", StartDate = new DateTime(2023,04,08,09,02,0)},
+			new Announcement { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", StartDate = new DateTime(2023,02,17,10,42,0)},
+			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,02,27,10,30,0)},
+			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,02,11,44,0)}
 		};
+
+		for (int i = 5; i < 30; i++)
+		{
+			announcements.Add(new Announcement { Id = i, Title = "Test용 " + i, Content = "내용 " + i, Author = "정윤상", StartDate = new DateTime(2023, 03, i, 11, i, 0) });
+		}
+
 		announcement = announcements.FirstOrDefault(a => a.Id == AnnouncementId);
 
 	}
