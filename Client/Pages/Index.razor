@@ -14,9 +14,11 @@
 
 @code {
     private List<Course> Courses = new List<Course> {
-        new Course { Number = 1, Year = 2023, Semester = 1, Name = "Math", Instructor = "Prof. A", Day = DayOfWeek.Monday, StartTime = 9, EndTime = 10, ClassRoom = "Y1234" },
-        new Course { Number = 2, Year = 2023, Semester = 1, Name = "Physics", Instructor = "Prof. B", Day = DayOfWeek.Wednesday, StartTime = 11, EndTime = 13, ClassRoom = "Y1234" },
+        /*
+        new Course { Number = 12, Year = 2023, Semester = 1, Name = "Math", Instructor = "Prof. A", Day = DayOfWeek.Monday, StartTime = 9, EndTime = 10, ClassRoom = "Y1234" },
+        new Course { Number = 21, Year = 2023, Semester = 1, Name = "Physics", Instructor = "Prof. B", Day = DayOfWeek.Wednesday, StartTime = 11, EndTime = 13, ClassRoom = "Y1234" },
         // 다른 강의 데이터를 추가하세요.
+    */
     };
 
     protected async override void OnInitialized() {
@@ -32,6 +34,8 @@
         if (!string.IsNullOrEmpty(accessToken)) AuthService.IsLoggedIn = true;
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+
+        await getCourses(); //시간표 받아오기
     }
 
     protected async Task exchangeToken(String code)
@@ -46,10 +50,31 @@
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
         }
         catch (Exception ex)
         {
             Console.WriteLine("Error during request: " + ex.Message);
         }
     }
+
+    protected async Task getCourses()
+    {
+        //앱 서버로 수강과목 출력을 요청
+        var client = new HttpClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/Course");
+        var response = await client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(content);
+        var courses = JsonSerializer.Deserialize<List<Course>>(content);
+
+        foreach (var course in courses)
+        {
+            Courses.Add(course);
+        }
+
+        StateHasChanged(); // 화면을 다시 그립니다.
+	}
 }

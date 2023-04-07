@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice"
+﻿@page "/classroom/{roomid:int}/practice"
 @layout MainLayout
 @using ClassHub.Client.Models
 
@@ -7,12 +7,7 @@
 
 @code {
     [Parameter]
-    public int Year { get; set; }
-    [Parameter]
-    public int Semester { get; set; }
-    [Parameter]
-    public int Number { get; set; }
-   
+    public int RoomId { get; set; }
 
     List<Practice> practices = new List<Practice> {
         new Practice { Id = 1, Title = "Introduction to C#", Content = "C#은 어려웡", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30) },

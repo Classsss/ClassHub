@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement/{id:int}"
+﻿@page "/classroom/{roomid:int}/announcement/{announcementid:int}"
 @layout MainLayout
 @inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
@@ -23,14 +23,10 @@
 
 
 @code {
-		[Parameter]
-		public int Year { get; set; }
-		[Parameter]
-		public int Semester { get; set; }
-		[Parameter]
-		public int Number { get; set; }
-		[Parameter]
-		public int Id { get; set; }
+	[Parameter]
+	public int RoomId { get; set; }
+	[Parameter]
+	public int AnnouncementId { get; set; }
 
 	// TODO: 공지사항을 불러옵니다
 	private Announcement announcement;
@@ -59,7 +55,7 @@
 			new Announcement { Id = 3, Title = "개념설계보고 발표 관련", Content = "내용 3", Author = "조민경", StartDate = new DateTime(2023,03,24,10,30,0)},
 			new Announcement { Id = 4, Title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", Content = "내용 4", Author = "조민경", StartDate = new DateTime(2023,03,29,11,44,0)}
 		};
-		announcement = announcements.FirstOrDefault(a => a.Id == Id);
+		announcement = announcements.FirstOrDefault(a => a.Id == AnnouncementId);
 
 	}
 

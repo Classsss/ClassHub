@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/practice/{id:int}"
+﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}"
 @layout MainLayout
 @using ClassHub.Shared
 @using ClassHub.Client.Models
@@ -42,13 +42,9 @@
 
 @code {
     [Parameter]
-    public int Year { get; set; }
+    public int RoomId { get; set; }
     [Parameter]
-    public int Semester { get; set; }
-    [Parameter]
-    public int Number { get; set; }
-    [Parameter]
-    public int Id { get; set; }
+    public int PracticeId { get; set; }
 
     private Practice practice;
 
@@ -73,7 +69,7 @@
     };
 
         // Id가 현재 페이지의 Id와 일치하는 practice 객체를 찾아 초기화합니다.
-        practice = practices.FirstOrDefault(p => p.Id == Id);
+        practice = practices.FirstOrDefault(p => p.Id == PracticeId);
 
     }
 

@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/announcement"
+﻿@page "/classroom/{classroomid:int}/announcement"
 @layout MainLayout
 @using ClassHub.Client.Models
 
@@ -6,11 +6,7 @@
 
 @code {
 	[Parameter]
-	public int Year { get; set; }
-	[Parameter]
-	public int Semester { get; set; }
-	[Parameter]
-	public int Number { get; set; }
+	public int ClassRoomId { get; set; }
 
 	private List<Announcement> Announcements = new List<Announcement> {
 		new Announcement { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = "내용 1" , Author = "조민경", StartDate = new DateTime(2023,03,03,09,02,0)},

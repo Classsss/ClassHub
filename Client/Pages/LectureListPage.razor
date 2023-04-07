@@ -1,13 +1,9 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/lecture"
+﻿@page "/classroom/{roomid:int}/lecture"
 @layout MainLayout
 
 <h3>LectureListPage</h3>
 
 @code {
     [Parameter]
-    public int Year { get; set; }
-    [Parameter]
-    public int Semester { get; set; }
-    [Parameter]
-    public int Number { get; set; }
+    public int RoomId { get; set; }
 }

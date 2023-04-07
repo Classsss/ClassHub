@@ -1,4 +1,4 @@
-﻿@page "/{year:int}/{semester:int}/{number:int}/classroom/assignment"
+﻿@page "/classroom/{roomid:int}/assignment"
 @layout MainLayout
 @using ClassHub.Client.Models
 
@@ -7,11 +7,7 @@
 <!--과제 현황 리스트 게시판-->
 @code {
 	[Parameter]
-	public int Year { get; set; }
-	[Parameter]
-	public int Semester { get; set; }
-	[Parameter]
-	public int Number { get; set; }
+	public int RoomId { get; set; }
 
 	public List<Assignment> Assignments { get; set; } = new List<Assignment>()
 	{
