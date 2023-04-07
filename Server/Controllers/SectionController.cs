@@ -7,11 +7,11 @@ namespace ClassHub.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CourseController : ControllerBase
+    public class SectionController : ControllerBase
     {
-        private readonly ILogger<CourseController> _logger;
+        private readonly ILogger<SectionController> _logger;
 
-        public CourseController(ILogger<CourseController> logger)
+        public SectionController(ILogger<SectionController> logger)
         {
             _logger = logger;
         }
@@ -22,7 +22,8 @@ namespace ClassHub.Server.Controllers
             //앱 서버로 수강과목 출력을 요청
             var client = new HttpClient();
             client.BaseAddress = new Uri("https://academicinfo.azurewebsites.net/");
-            var request = new HttpRequestMessage(HttpMethod.Post, "Course");
+            //client.BaseAddress = new Uri("https://localhost:7239/");
+            var request = new HttpRequestMessage(HttpMethod.Post, "Section");
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
 
