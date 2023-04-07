@@ -2,10 +2,10 @@
 
 namespace ClassHub.Client.Models
 {
-    public class Course
+    public class Section
     {
-        [JsonPropertyName("number")]
-        public int Number { get; set; } // 강좌 번호
+        [JsonPropertyName("sectionId")]
+        public int SectionId { get; set; } // 강좌 번호 (SectionId)
 
         [JsonPropertyName("year")]
         public int Year { get; set; } // 개설 년도
@@ -28,7 +28,7 @@ namespace ClassHub.Client.Models
         [JsonPropertyName("endTime")]
         public int EndTime { get; set; } // 강의 종료시간
 
-        [JsonPropertyName("classRoom")]
-        public string ClassRoom { get; set; } // 강의실
+        [JsonPropertyName("buildingId")]
+        public string BuildingId { get; set; } // 강의실 (BuildingId)
     }
 }
