@@ -5,6 +5,11 @@
     .announcement-row:hover {
         background-color: rgba(0, 0, 0, 0.1);
     }
+
+    .announcement-title:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
 </style>
 
 <h3>공지사항</h3>
@@ -23,7 +28,7 @@
         {
             <tr class="announcement-row" @onclick="@(() => ShowAnnouncement(announcement))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@announcement.Id</td>
-                <td>@announcement.Title</td>
+                <td class="announcement-title">@announcement.Title</td>
                 <td>@announcement.Author</td>
                 <td>@announcement.StartDate.ToString("yyyy.MM.dd")</td>
             </tr>
