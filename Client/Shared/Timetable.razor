@@ -1,4 +1,4 @@
-﻿@using ClassHub.Client.Models
+﻿@using ClassHub.Shared
 @using System.Linq
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -16,7 +16,7 @@
     }
 </style>
 
-@if(Courses == null) {
+@if(Sections == null) {
     <p><em>Loading...</em></p>
 } else {
     <table class="table table-bordered timetable">
@@ -34,7 +34,7 @@
                     <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
                     @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
                         bool flag = true;
-                        @foreach(var course in Courses.Where(c => c.Day == dayOfWeek && c.StartTime <= hour && hour < c.EndTime)) {
+                        @foreach(var course in Sections.Where(c => c.Day == dayOfWeek && c.StartTime <= hour && hour < c.EndTime)) {
                             if(course.StartTime != hour) {
                                 flag = false;
                                 break;
@@ -46,7 +46,7 @@
                                     <br />
                                     @course.Instructor
                                     <br />
-                                    @course.ClassRoom
+                                    @course.BuildingId
                                 </button>
                             </td>
                             flag = false;
@@ -64,15 +64,15 @@
 
 @code {
     [Parameter]
-    public List<Course> Courses { get; set; }
+    public List<Section> Sections { get; set; }
 
     // 시간표 시작 시간과 종료 시간을 설정하세요.
     private int StartHour => 9;
     private int EndHour => 19;
 
-    private void CourseSelected(Course course) {
+    private void CourseSelected(Section section) {
         // 해당 강의를 선택했을 때 수행할 작업을 정의하세요.
-        Console.WriteLine($"Selected course: {course.Name}");
+        Console.WriteLine($"Selected course: {section.Name}");
         //NavigationManager.NavigateTo($"/classroom/{course.Id}");
         NavigationManager.NavigateTo($"/classroom/1");
     }
