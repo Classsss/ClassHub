@@ -9,11 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.3" />
-<<<<<<< HEAD
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-=======
     <PackageReference Include="Npgsql" Version="7.0.2" />
->>>>>>> 70ef931ba4c4a6584a84d5bc838d8b224bc26656
   </ItemGroup>
 
   <ItemGroup>
