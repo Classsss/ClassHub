@@ -33,11 +33,22 @@
 				</div>
 				<div class="col-md-4">
 					<div class="card-body">
-						<p class="card-text">
-							<small class="text-muted">게시일: @announcement.StartDate.ToString("yyyy.MM.dd tt hh:mm")</small>
-						</p>
+						<div style="display: flex; justify-content: space-between; align-items: center;">
+							<div small>
+								<span class="oi oi-clock" aria-hidden="true"></span>
+								@if (announcement.StartDate.Date == DateTime.Today)
+								{
+									<span style="margin-left: 5px;">@announcement.StartDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+								}
+								else
+								{
+									<span style="margin-left: 5px;">@announcement.StartDate.ToString("yyyy.MM.dd")</span>
+								}
+							</div>
+						</div>
 					</div>
 				</div>
+
 			</div>
 		</div>
 	}
