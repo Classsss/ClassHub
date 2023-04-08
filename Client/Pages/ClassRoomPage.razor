@@ -1,0 +1,26 @@
+﻿@page "/classroom/{id:int}"
+@layout MainLayout
+@using ClassHub.Shared
+@inject HttpClient Http
+
+@if(classRoom == null) {
+    <p><em>강의실 정보를 로딩 중입니다...</em></p>
+} else {
+    <h1>@Id 번 강의실에 오신 것을 환영합니다.</h1>
+    <p>강의정보 : @(classRoom.Year + "년") @(classRoom.Semester + "학기") @classRoom.Title</p>
+    <p>과목번호 : @classRoom.CourseId</p>
+    <p>강좌번호 : @(classRoom.SectionId.ToString("D4"))</p>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ClassRoom? classRoom;
+
+    protected async override void OnInitialized() {
+        // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
+        classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{Id}");
+        StateHasChanged();
+    }
+}

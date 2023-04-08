@@ -5,8 +5,8 @@ using System.Text.Json;
 
 namespace ClassHub.Server.Controllers
 {
-    [ApiController]
     [Route("[controller]")]
+    [ApiController]
     public class TokenExchangeController : ControllerBase
     {
         private readonly ILogger<TokenExchangeController> _logger;

@@ -24,7 +24,7 @@
 				</div>
 				<div class="col-md-7">
 					<div class="card-body">
-						<h5 class="card-title" @onclick="@(() => ShowAnnouncement(announcement))">@announcement.Title</h5>
+						<h5 class="card-title" @onclick="@(() => ShowAnnouncement(announcement))" style="cursor:pointer;">@announcement.Title</h5>
 						<!--		<p class="card-text">@announcement.Content</p>  콘텐츠 내용-->
 						<p class="card-text">
 							<small class="text-muted">@announcement.Author</small>
@@ -34,7 +34,7 @@
 				<div class="col-md-4">
 					<div class="card-body">
 						<p class="card-text">
-							<small class="text-muted">등록일: @announcement.StartDate.ToString("yyyy-MM-dd tt HH:mm")</small>
+							<small class="text-muted">게시일: @announcement.StartDate.ToString("yyyy.MM.dd tt hh:mm")</small>
 						</p>
 					</div>
 				</div>

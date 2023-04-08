@@ -24,14 +24,20 @@
 </div>
 
 <!--Monaco Editor 컴포넌트 생성-->
-<StandaloneCodeEditor @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+<StandaloneCodeEditor  id="editor" @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
 
 <!--Monaco Editor css 설정-->
 <style>
     .my-editor-class {
-        height: 500px;
-        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        height: calc(100vh - 300px);
+        width: calc(100vw - 300px);
+        min-width: 600px;
+        overflow: auto;
         border: 1px solid black;
+        
+
     }
 </style>
 
