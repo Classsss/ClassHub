@@ -3,6 +3,26 @@
 
 <h3>@roomId 강의실 출석현황</h3>
 <hr>
+<table class="attendance-status-table">
+    <thead>
+        <tr>
+            <th>총계</th>
+            <th>출석</th>
+            <th>지각</th>
+            <th>결석</th>
+            <th>기타</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>6</td>
+            <td>3</td>
+            <td>1</td>
+            <td>1</td>
+            <td>1</td>
+        </tr>
+    </tbody>
+</table>
 <table class="attendance-table">
     @for (int i = 0; i < attendanceStatus.Count; i++)
     {
@@ -16,11 +36,16 @@
     }
 </table>
 <style>
+    .attendance-status-table {
+        border:1px;
+    }
+
     .attendance-table tr{
         height: 70px;
     }
 
     .attendance-status-button {
+        font-size: 12px;
         width: 100px;
         height: 50px;
         border: 0;
@@ -28,6 +53,7 @@
         justify-content: center;
         display: flex;
         align-items: center;
+        border-radius: 10px;
     }
 
     .attendance-status-not-attended {
