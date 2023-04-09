@@ -1,4 +1,4 @@
-﻿@page "/classroom/{roomid:int}/announcement/{announcementid:int}"
+﻿@page "/classroom/{roomid:int}/notice/{noticeid:int}"
 @layout MainLayout
 @inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
@@ -9,25 +9,25 @@
 			<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
 				<h1>
 					<span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
-					@announcement.Title
+					@notice.Title
 				</h1>
 			</div>
 			<div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;">
-				<p style="float: left; margin-right: 50px;">작성자: @announcement.Author</p>
+				<p style="float: left; margin-right: 50px;">작성자: @notice.Author</p>
 				<div style="float: right;">
 					<span class="oi oi-eye" aria-hidden="true"></span>
-					<span style="margin-left: 5px;">@announcement.ViewCount</span>
+					<span style="margin-left: 5px;">@notice.ViewCount</span>
 					<span style="margin-left: 10px; margin-right: 10px;">|</span>
 					<span class="oi oi-clock" aria-hidden="true"></span>
-					@if(announcement.PublishDate.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
-						<span style="margin-left: 5px;">@announcement.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+					@if(notice.PublishDate.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
+						<span style="margin-left: 5px;">@notice.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
 					} else { // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
-						<span style="margin-left: 5px;">@announcement.PublishDate.ToString("yyyy.MM.dd")</span>
+						<span style="margin-left: 5px;">@notice.PublishDate.ToString("yyyy.MM.dd")</span>
 					}
 				</div>
 			</div>
 			<img src="@ImageUrl" />
-			<div>@((MarkupString)announcement.Content)</div> <!--보안에 취약?-->
+			<div>@((MarkupString)notice.Content)</div> <!--보안에 취약?-->
 			<hr />
 
 			<style>
@@ -44,14 +44,14 @@
 			<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
 				<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
 				<p style="display: inline-block; margin-right: 10px;">이전글</p>
-				@if(prevAnnouncement != null) {
-					<a href="@($"/classroom/{RoomId}/announcement/{prevAnnouncement.Id}")" style="display: inline-block;">@prevAnnouncement.Title</a>
+				@if(prevnotice != null) {
+					<a href="@($"/classroom/{RoomId}/notice/{prevnotice.Id}")" style="display: inline-block;">@prevnotice.Title</a>
 					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 						<span class="oi oi-clock" aria-hidden="true"></span>
-						@if(prevAnnouncement.PublishDate.Date == DateTime.Today) {
-							<span style="margin-left :5px; margin-right:11px;">@prevAnnouncement.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						@if(prevnotice.PublishDate.Date == DateTime.Today) {
+							<span style="margin-left :5px; margin-right:11px;">@prevnotice.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
 						} else {
-							<span style="margin-left :5px;">@prevAnnouncement.PublishDate.ToString("yyyy.MM.dd")</span>
+							<span style="margin-left :5px;">@prevnotice.PublishDate.ToString("yyyy.MM.dd")</span>
 						}
 					</span>
 				} else {
@@ -62,14 +62,14 @@
 			<div style="border-bottom: 1px solid grey;">
 				<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
 				<p style="display: inline-block; margin-right: 10px;">다음글</p>
-				@if(nextAnnouncement != null) {
-					<a href="@($"/classroom/{RoomId}/announcement/{nextAnnouncement.Id}")" style="display: inline-block;">@nextAnnouncement.Title</a>
+				@if(nextnotice != null) {
+					<a href="@($"/classroom/{RoomId}/notice/{nextnotice.Id}")" style="display: inline-block;">@nextnotice.Title</a>
 					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 						<span class="oi oi-clock" aria-hidden="true"></span>
-						@if(nextAnnouncement.PublishDate.Date == DateTime.Today) {
-							<span style="margin-left :5px; margin-right:11px;">@nextAnnouncement.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						@if(nextnotice.PublishDate.Date == DateTime.Today) {
+							<span style="margin-left :5px; margin-right:11px;">@nextnotice.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
 						} else {
-							<span style="margin-left :5px;">@nextAnnouncement.PublishDate.ToString("yyyy.MM.dd")</span>
+							<span style="margin-left :5px;">@nextnotice.PublishDate.ToString("yyyy.MM.dd")</span>
 						}
 					</span>
 				} else {
@@ -88,33 +88,33 @@
 	[Parameter]
 	public int RoomId { get; set; }
 	[Parameter]
-	public int AnnouncementId { get; set; }
+	public int noticeId { get; set; }
 
 	private string ImageUrl = "/images/banner.png";
 
 	// TODO: 공지사항을 불러옵니다
-	private Notice announcement;
+	private Notice notice;
 
 	// 이전, 공지사항 구현용 서버에서 데이터를 가져올 경우 삭제
-	private List<Notice> announcements;
+	private List<Notice> notices;
 
 	private int index;
-	private Notice? prevAnnouncement;
-	private Notice? nextAnnouncement;
+	private Notice? prevnotice;
+	private Notice? nextnotice;
 
 	private void GoBack() // 목록으로 돌아가는 클래스
 	{
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
 
-	private Notice? GetPreviousAnnouncement() // 이전 공지사항을 받아옴
+	private Notice? GetPreviousnotice() // 이전 공지사항을 받아옴
 	{
-		return index-1 >= 0 ? announcements[index - 1] : null;
+		return index-1 >= 0 ? notices[index - 1] : null;
 	}
 
-	private Notice? GetNextAnnouncement() // 다음 공지사항을 받아옴
+	private Notice? GetNextnotice() // 다음 공지사항을 받아옴
 	{
-		return index+1 < announcements.Count ? announcements[index + 1] : null;
+		return index+1 < notices.Count ? notices[index + 1] : null;
 	}
 
 	protected override async Task OnInitializedAsync()
@@ -122,7 +122,7 @@
 		Console.WriteLine("OnInitializedAsync");
 
 		// TODO: 실제 프로젝트에서는 서버로부터 데이터를 가져옴
-		LoadAnnouncementData();
+		LoadnoticeData();
 	}
 
 	protected override async Task OnParametersSetAsync() {
@@ -130,9 +130,9 @@
 
 		// TODO: 공지사항이 도중에 삭제되는 경우를 고려하여 공지사항 리스트를 다시 로딩하고 index값을 조정하는 작업이 필요함.
 
-		index = announcements.FindIndex(a => a.Id == AnnouncementId);
+		index = notices.FindIndex(a => a.Id == noticeId);
 
-		if(index >= announcements.Count) {
+		if(index >= notices.Count) {
 			// 마지막 바로 전 공지사항을 보고 있다가 다음글 기능을 통해 마지막 공지사항으로 이동했는데
 			// 하필이면 그 사이에 마지막 공지사항이 삭제되어 리스트 범위를 초과하는 경우
 
@@ -140,14 +140,14 @@
 			return;
 		}
 
-		announcement = announcements[index];
-		prevAnnouncement = GetPreviousAnnouncement();
-		nextAnnouncement = GetNextAnnouncement();
+		notice = notices[index];
+		prevnotice = GetPreviousnotice();
+		nextnotice = GetNextnotice();
 	}
 
-	private void LoadAnnouncementData() // 공지사항을 데이터를 불러오는 메서드
+	private void LoadnoticeData() // 공지사항을 데이터를 불러오는 메서드
 	{
-		announcements = new List<Notice>
+		notices = new List<Notice>
 			{
 			new Notice { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = @"<div>
 			<p>1. 필요한 구매 내용을 요청 (첨부 excel 파일 참조)</p>
@@ -165,7 +165,7 @@
 		};
 
 		for(int i = 5; i < 30; i++) {
-			announcements.Add(new Notice { Id = i, Title = "Test용 " + i, Content = "내용 " + i, Author = "정윤상", PublishDate = new DateTime(2023, 03, i, 11, i, 0) });
+			notices.Add(new Notice { Id = i, Title = "Test용 " + i, Content = "내용 " + i, Author = "정윤상", PublishDate = new DateTime(2023, 03, i, 11, i, 0) });
 		}
 	}
 }

@@ -1,21 +1,21 @@
-﻿@page "/classroom/{classroomid:int}/announcement"
+﻿@page "/classroom/{classroomid:int}/notice"
 @layout MainLayout
 @using ClassHub.Client.Models
 
-<NoticeList  Announcements="@Announcements" />
+<NoticeList  notices="@notices" />
 
 @code {
     [Parameter]
     public int ClassRoomId { get; set; }
 
-    private List<Notice> Announcements;
+    private List<Notice> notices;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        // Announcements 변수 초기화
-        Announcements = new List<Notice>
+        // notices 변수 초기화
+        notices = new List<Notice>
         {
             new Notice { Id = 1, Title = "캡스톤 실험실습비 사용 절차", Content = "내용 1" , Author = "조민경", PublishDate = new DateTime(2023,03,03,09,02,0)},
             new Notice { Id = 2, Title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", Content = "내용 2", Author = "조민경", PublishDate = new DateTime(2023,03,03,10,42,0)},
@@ -25,7 +25,7 @@
 
         for (int i = 5; i < 30; i++)
         {
-            Announcements.Add(new Notice { Id = i, Title = "Test용 " + i, Content = "내용 " + i, Author = "정윤상", PublishDate = new DateTime(2023, 03, i, 11, i, 0) });
+            notices.Add(new Notice { Id = i, Title = "Test용 " + i, Content = "내용 " + i, Author = "정윤상", PublishDate = new DateTime(2023, 03, i, 11, i, 0) });
         }
     }
 }

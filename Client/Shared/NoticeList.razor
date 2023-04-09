@@ -2,11 +2,11 @@
 @using ClassHub.Client.Models
 
 <style>
-    .announcement-row:hover {
+    .notice-row:hover {
         background-color: rgba(0, 0, 0, 0.1);
     }
 
-    .announcement-title:hover {
+    .notice-title:hover {
         color: #007bff;
         text-decoration: underline;
     }
@@ -24,13 +24,13 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var announcement in pagedAnnouncements)
+        @foreach (var notice in pagednotices)
         {
-            <tr class="announcement-row" @onclick="@(() => ShowAnnouncement(announcement))" style="cursor:pointer;">
-                <td style="text-indent : 7px;">@announcement.Id</td>
-                <td class="announcement-title">@announcement.Title</td>
-                <td>@announcement.Author</td>
-                <td>@announcement.PublishDate.ToString("yyyy.MM.dd")</td>
+            <tr class="notice-row" @onclick="@(() => Shownotice(notice))" style="cursor:pointer;">
+                <td style="text-indent : 7px;">@notice.Id</td>
+                <td class="notice-title">@notice.Title</td>
+                <td>@notice.Author</td>
+                <td>@notice.PublishDate.ToString("yyyy.MM.dd")</td>
             </tr>
         }
     </tbody>
@@ -57,38 +57,38 @@
 
 @code {
     [Parameter]
-    public List<Notice> Announcements { get; set; }
+    public List<Notice> notices { get; set; }
 
     public int RoomId { get; set; }
 
-    private void ShowAnnouncement(Notice announcement)
+    private void Shownotice(Notice notice)
     {
-        Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{announcement.Id}");
+        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
     }
 
     private int currentPage = 1;
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
     private int totalPages = 0;
 
-    private List<Notice> pagedAnnouncements = new List<Notice>();
+    private List<Notice> pagednotices = new List<Notice>();
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
-        Announcements = Announcements.OrderByDescending(a => a.Id).ToList();
+        notices = notices.OrderByDescending(a => a.Id).ToList();
         CalculateTotalPages();
         LoadPagedData();
     }
 
     private void CalculateTotalPages()
     {
-        totalPages = (int)Math.Ceiling((double)Announcements.Count / pageSize);
+        totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
     }
 
 
     private void LoadPagedData()
     {
-        pagedAnnouncements = Announcements.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+        pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
     private void GoToPage(int pageNumber)
