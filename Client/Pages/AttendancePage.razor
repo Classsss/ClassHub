@@ -8,13 +8,8 @@
     [Parameter]
     public int RoomId { get; set; }
 
-    private List<int> Attendances;
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        // Announcements 변수 초기화
-        Attendances = new List<int> {1, 2 };
     }
 }
