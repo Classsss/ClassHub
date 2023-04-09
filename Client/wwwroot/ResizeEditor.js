@@ -20,3 +20,11 @@ function resizeEditor() {
 
     }
 }
+
+function setPaginationInfo(key, value) {
+    localStorage.setItem(key, value);
+}
+
+function getPaginationInfo(key) {
+    return localStorage.getItem(key);
+}
