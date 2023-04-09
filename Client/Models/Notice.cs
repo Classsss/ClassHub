@@ -1,10 +1,10 @@
 ﻿namespace ClassHub.Client.Models {
-    public class Announcement { // 공지사항 클래스
+    public class Notice { // 공지사항 클래스
         public int Id { get; set; } // 공지사항 번호
         public string Title { get; set; } // 공지사항 제목
         public string Content { get; set; } // 공지사항 내용
         public string Author { get; set; } // 작성자
-        public DateTime StartDate { get; set; } // 시작일
+        public DateTime PublishDate { get; set; } // 게시일
         public int ViewCount { get; set; } // 조회수
         // public DateTime EndDate { get; set; } // 종료일
         // public int Priority { get; set; } // 우선순위

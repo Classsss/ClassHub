@@ -30,7 +30,7 @@
                 <td style="text-indent : 7px;">@announcement.Id</td>
                 <td class="announcement-title">@announcement.Title</td>
                 <td>@announcement.Author</td>
-                <td>@announcement.StartDate.ToString("yyyy.MM.dd")</td>
+                <td>@announcement.PublishDate.ToString("yyyy.MM.dd")</td>
             </tr>
         }
     </tbody>
@@ -57,11 +57,11 @@
 
 @code {
     [Parameter]
-    public List<Announcement> Announcements { get; set; }
+    public List<Notice> Announcements { get; set; }
 
     public int RoomId { get; set; }
 
-    private void ShowAnnouncement(Announcement announcement)
+    private void ShowAnnouncement(Notice announcement)
     {
         Console.WriteLine($"{announcement.Id}번 공지를 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{announcement.Id}");
@@ -71,7 +71,7 @@
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
     private int totalPages = 0;
 
-    private List<Announcement> pagedAnnouncements = new List<Announcement>();
+    private List<Notice> pagedAnnouncements = new List<Notice>();
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
