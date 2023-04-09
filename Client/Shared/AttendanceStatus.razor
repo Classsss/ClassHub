@@ -1,0 +1,79 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+
+<h3>@roomId 강의실 출석현황</h3>
+<hr>
+<table class="attendance-table">
+    @for (int i = 0; i < attendanceStatus.Count; i++)
+    {
+        <tr>
+            <td style="text-align: center;">@(i + 1)주</td>
+            @for (int j = 0; j < attendanceStatus[i].Count; j++)
+            {
+                <td><div class="attendance-status-button @getClassForAttendanceStatus(attendanceStatus[i][j])">@(j + 1)차시</div></td>
+            }
+        </tr>
+    }
+</table>
+<style>
+    .attendance-table tr{
+        height: 70px;
+    }
+
+    .attendance-status-button {
+        width: 100px;
+        height: 50px;
+        border: 0;
+        margin-left: 10px;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+    }
+
+    .attendance-status-not-attended {
+        background-color: #ADADAD;
+    }
+
+    .attendance-status-attended {
+        background-color: #99ff99;
+    }
+
+    .attendance-status-tardy {
+        background-color: #FFFE91;
+    }
+
+    .attendance-status-absent {
+        background-color: #FF6666;
+    }
+</style>
+@code {
+    [Parameter]
+    public int roomId { get; set; } //강의실 번호
+
+    //출결 상태 배열(DB Learning과 LearningTime테이블의 complete, chapter와 관련)    * 0 미수강 1 출석 2 지각 3 결석
+    /*[추후 논의]만일 이렇게 한다면 DB에서 complete의 값을 불러와 week와 chapter 따져서 2차원 리스트(배열)에 넣는 별도의 로직이 필요할 것*/
+    public List<List<int>> attendanceStatus = new List<List<int>>
+    {
+        new List<int> { 1, 1, 1 },
+        new List<int> { 1, 2 },
+        new List<int> { 3, 0, 0 },
+    };
+
+    //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
+    string getClassForAttendanceStatus(int status)
+    {
+        switch (status)
+        {
+            case 0:
+                return "attendance-status-not-attended";
+            case 1:
+                return "attendance-status-attended";
+            case 2:
+                return "attendance-status-tardy";
+            case 3:
+                return "attendance-status-absent";
+            default:
+                return "";
+        }
+    }
+}
