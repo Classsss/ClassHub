@@ -14,11 +14,11 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="width: 10%;">번호</th>
+            <th style="width: 10%;" @onclick="@(() => SortById())">번호 <i class=@((sortByIDAscending) ? "oi oi-sort-ascending" : "oi oi-sort-descending") /></th>
             <th style="width: 10%;">주차</th>
             <th style="width: 50%;">제목</th>
             <th style="width: 10%;">작성자</th>
-            <th style="width: 10%;">게시일</th>
+            <th style="width: 10%;" >게시일</th>
             <th style="width: 10%;">조회</th>
         </tr>
     </thead>
@@ -59,14 +59,32 @@
 
     public int RoomId { get; set; }
 
+    //정렬을 위한 변수
+    private bool sortByIDAscending = true;
+
     private void ShowLecMat(LectureMaterial lec_mat)
     {
         Console.WriteLine($"{lec_mat.Id}번 강의자료를 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lec_mat.Id}");
     }
 
+    private void SortById() //강의자료 번호 순 정렬
+    {
+        if (sortByIDAscending)
+        {
+            lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
+        }
+        else
+        {
+            lecture_materials = lecture_materials.OrderBy(a => a.Id).ToList();
+        }
+
+        sortByIDAscending = !sortByIDAscending;
+    }
+
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
         lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
+        sortByIDAscending = true;
     }
 }
