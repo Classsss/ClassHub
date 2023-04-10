@@ -1,0 +1,45 @@
+﻿@page "/temp"
+@using ClassHub.Client.Models
+
+@code {
+    [Parameter]
+    public Exam examInfo { get; set; }
+    private int currentProblemIndex;
+    private List<ExamProblem> problems;
+    private ExamProblem problem;
+
+    protected override void OnInitialized() {
+        examInfo = new Exam {
+            ExamId = 1,
+            StartDate = DateTime.Today.AddDays(-1),
+            EndDate = DateTime.Today.AddDays(1),
+            IsRandomProblem = true,
+            IsShowTimeLimit = true,
+            IsBackToPreviousProblem = true
+        };
+
+        problems = new List<ExamProblem> {
+            new MultipleChoiceProblem {
+                ProblemId = 1,
+                Description = "What is the capital city of France?",
+                Questions = new string[] { "London", "Paris", "Berlin", "Madrid" },
+            },
+            new ShortAnswerProblem {
+                ProblemId = 2,
+                Description = "무엇이 의미 있는 삶인가? (10자 이내)"
+            },
+            new CodeProblem {
+                ProblemId = 3,
+                Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
+                Example = @"int a, b;
+                           int ans;
+                           Console.WriteLine(ans);",
+            }
+        };
+
+        problems.OrderBy(a => Guid.NewGuid()).ToList(); // 무작위 셔플
+
+        currentProblemIndex = 0;
+        problem = problems[currentProblemIndex];
+    }
+}
