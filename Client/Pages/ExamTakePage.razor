@@ -49,12 +49,13 @@
                 ProblemId = 3,
                 Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
                 Example = @"int a, b;
-                           int ans;
-                           Console.WriteLine(ans);",
+int ans;
+Console.WriteLine(ans);",
             }
         };
 
-        problems.OrderBy(a => Guid.NewGuid()).ToList(); // 무작위 셔플
+        var rnd = new Random();
+        problems = problems.OrderBy(item => rnd.Next()).ToList(); // 무작위 셔플
 
         currentProblemIndex = 0;
         problem = problems[currentProblemIndex];
