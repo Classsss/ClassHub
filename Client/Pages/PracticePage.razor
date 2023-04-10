@@ -93,17 +93,17 @@
         // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
         var practices = new List<Practice>
         {
- 
+
         new Practice { Id = 1, Title = "Introduction to C#", Content = @"<p> Hello World 프로그램은 프로그래밍 언어를 배울 때 가장 먼저 작성하는 프로그램이다. 하지만 이 프로그램에는 입력을 받는 부분이 없다.</p>
-    <p>그래서 여기에서는 여러분의 이름을 입력 받아 이름을 이용하여 인사말을 출력하는 프로그램을 작성해보자.</p>
-    <p>#출력 예</p>
-    <p>&nbsp; &nbsp;What is your name? YoonSang</p>
-    <p>&nbsp; &nbsp;Hello, YoonSang, nice to meet you!</p>
-    <p>#제약 조건</p>
-    <p>&nbsp; &nbsp;1. 입력 부분, 문자열 연결(String concatenation) 부분, 출력 부분을 별도로 작성할 것</p>
-    <p>#도전 과제</p>
-    <p>&nbsp; &nbsp;1. 변수를 사용하지 않는 새로운 버전을 작성하라.</p>
-    <p>&nbsp; &nbsp;2. 사람들마다 서로 다른 인사말이 나타나도록 프로그램을 작성하라.</p> ", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30) },
+    <p>그래서 여기에서는 여러분의 이름을 입력 받아 이름을 이용하여 인사말을 출력하는 프로그램을 작성해보자.</p>",
+        Author = "John Doe",
+        InputCases = new List<string>(),
+        OutputCases = new List<string>() { "Hello Guy! I'm zinoooooooooooooooooooooooooooooooooooooooooooooooo","I'm Byungmeo\n\n\n\n\n\n\n\n\nhello","난창훈","난윤상","난하윤" },
+        Language = "C",
+        isApplyScore = true,
+        isGptAvailable = true,
+        StartDate = new DateTime(2022, 4, 1),
+        EndDate = new DateTime(2022, 4, 30) },
         new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
         new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
     };
