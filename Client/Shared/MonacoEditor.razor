@@ -42,6 +42,9 @@
 </style>
 
 @code {
+    [Parameter]
+    public string InitCode { get; set; }
+
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;
     private string[] decorationIds = new string[0];
@@ -69,10 +72,11 @@
                     GlyphMarginClassName = "decorationGlyphMarginClass"
                 }
             }
-    };
-
+        };
         // 정의한 Decoration을 에디터에 적용한다.
         decorationIds = await editor.DeltaDecorations(null, newDecorations);
+
+        await editor.SetValue(InitCode);
     }
 
     // 에디터에 우클릭 시 수행할 로직을 정의한다.
