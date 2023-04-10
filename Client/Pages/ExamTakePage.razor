@@ -20,7 +20,7 @@
             <button class="btn btn-primary @((currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
         </div>
         <div class="col text-center">
-            <p>1 / 10</p>
+            <p>@(currentProblemIndex+1) / @(problems.Count)</p>
             <p>남은 시간: 10:00</p>
         </div>
         <div class="col text-center">
