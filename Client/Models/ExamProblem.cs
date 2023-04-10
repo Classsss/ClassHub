@@ -7,7 +7,7 @@ public class ExamProblem {
 // 객관식
 public class MultipleChoiceProblem : ExamProblem {
     public string[] Questions { get; set; }
-    public int? Answer { get; set; } = null;
+        public int Answer { get; set; } = -1;
 }
 
 // 단답형
