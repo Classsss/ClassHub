@@ -1,20 +1,27 @@
-﻿@page "/classroom/{roomid:int}/lecture-material"
+﻿@page "/classroom/{roomid:int}/lecturematerial"
 @layout MainLayout
+@using ClassHub.Client.Shared
 
 <h3>
-	LectureMaterialListPage 
-	@foreach (int sel in selectedWeek)
-	{
-		@(sel + " ")
-	}
+	강의자료
 </h3>
 <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" />
-
+<br />
+<LectureMaterialList lecture_materials="@lec_mat" selectWeek="@selectedWeek" />
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
 
-	public List<int> selectedWeek = new List<int>();
+	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+	{
+		new LectureMaterial { Id = 1, Week = 1, Title = "강의자료1", Content = "내용 1" , Author = "조민경", PublishDate = new DateTime(2023, 03, 03, 09, 02, 0), ViewCount = 54 },
+		new LectureMaterial { Id = 2, Week = 2, Title = "강의자료2", Content = "내용 2" , Author = "조민경", PublishDate = new DateTime(2023, 03, 05, 09, 02, 0), ViewCount = 31 },
+		new LectureMaterial { Id = 3, Week = 3, Title = "강의자료3", Content = "내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 10, 09, 02, 0), ViewCount = 43 },
+		new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "내용 2" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
+		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
+	};
+
+	public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
 	private async Task OnWeekChanged(List<int> week)
 	{
