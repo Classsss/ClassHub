@@ -1,9 +1,24 @@
 ﻿@page "/classroom/{roomid:int}/lecture-material"
 @layout MainLayout
 
-<h3>LectureMaterialListPage</h3>
+<h3>
+	LectureMaterialListPage 
+	@foreach (int sel in selectedWeek)
+	{
+		@(sel + " ")
+	}
+</h3>
+<WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" />
 
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
+
+	public List<int> selectedWeek = new List<int>();
+
+	private async Task OnWeekChanged(List<int> week)
+	{
+		selectedWeek = week;
+		await Task.CompletedTask;
+	}
 }
