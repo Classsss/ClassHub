@@ -1,5 +1,12 @@
 ﻿@page "/temp"
 @using ClassHub.Client.Models
+@using ClassHub.Client.Shared.ExamProblem
+
+@switch(problem) {
+    case MultipleChoiceProblem multipleChoiceProblem:
+        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" />
+        break;
+}
 
 <div class="container">
     <div class="row justify-content-center align-items-center">
