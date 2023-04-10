@@ -1,6 +1,23 @@
 ﻿@page "/temp"
 @using ClassHub.Client.Models
 
+<div class="container">
+    <div class="row justify-content-center align-items-center">
+        <div class="col text-center">
+            <button class="btn btn-primary @((currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+        </div>
+        <div class="col text-center">
+            <p>1 / 10</p>
+            <p>남은 시간: 10:00</p>
+        </div>
+        <div class="col text-center">
+            <button class="btn btn-primary" @onclick="NextProblem">
+                @((currentProblemIndex == problems.Count - 1) ? "응시 완료" : "다음 문제")
+            </button>
+        </div>
+    </div>
+</div>
+
 @code {
     [Parameter]
     public Exam examInfo { get; set; }
@@ -41,5 +58,17 @@
 
         currentProblemIndex = 0;
         problem = problems[currentProblemIndex];
+    }
+
+    private void NextProblem() {
+        if(currentProblemIndex < problems.Count - 1) {
+            problem = problems[++currentProblemIndex];
+        }
+    }
+
+    private void PrevProblem() {
+        if(currentProblemIndex > 0) {
+            problem = problems[--currentProblemIndex];
+        }
     }
 }
