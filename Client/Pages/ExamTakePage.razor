@@ -1,4 +1,4 @@
-﻿@page "/temp"
+﻿@page "/classroom/{roomid:int}/exam/{examid:int}"
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
 
@@ -32,6 +32,11 @@
 </div>
 
 @code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int ExamId { get; set; }
+
     [Parameter]
     public Exam examInfo { get; set; }
     private int currentProblemIndex;
