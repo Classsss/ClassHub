@@ -36,47 +36,24 @@
     </tbody>
 </table>
 
-<div class="d-flex justify-content-center">
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            <li class="page-item"><button class="page-link" @onclick="GoToFirstPage">처음</button></li>
-            <li class="page-item"><button class="page-link" @onclick="GoToPreviousPage">이전</button></li>
-            @for (int i = 1; i <= totalPages; i++)
-            {
-                int currentPageNumber = i;
-                <li class="page-item @(currentPage == i ? "active" : "")">
-                    <button class="page-link" @onclick="() => GoToPage(currentPageNumber)">@i</button>
-                </li>
-            }
-
-            <li class="page-item"><button class="page-link" @onclick="GoToNextPage">다음</button></li>
-            <li class="page-item"><button class="page-link" @onclick="GoToLastPage">끝</button></li>
-        </ul>
-    </nav>
+<div class="d-flex justify-content-center"> <!--Pagination 컴포넌트 호출-->
+    <Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged"></Pagination>
 </div>
 
 @code {
     [Parameter]
     public List<Notice> notices { get; set; }
+    private List<Notice> pagednotices = new List<Notice>();
 
     public int RoomId { get; set; }
-
-    private void Shownotice(Notice notice)
-    {
-        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
-    }
-
+    // 여기부터 페이지네이션 관련 코드
     private int currentPage = 1;
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
     private int totalPages = 0;
 
-    private List<Notice> pagednotices = new List<Notice>();
-
-    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    private async Task OnPageChanged(int newPage)
     {
-        notices = notices.OrderByDescending(a => a.Id).ToList();
-        CalculateTotalPages();
+        currentPage = newPage;
         LoadPagedData();
     }
 
@@ -85,46 +62,27 @@
         totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
     }
 
-
+    // <== 여기 까지
     private void LoadPagedData()
     {
         pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    private void GoToPage(int pageNumber)
+    private void Shownotice(Notice notice)
     {
-        currentPage = pageNumber;
+        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
+    }
+
+    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    {
+        notices = notices.OrderByDescending(a => a.Id).ToList();
+        CalculateTotalPages();
         LoadPagedData();
     }
 
 
-    private void GoToPreviousPage()
-    {
-        if (currentPage > 1)
-        {
-            currentPage--;
-            LoadPagedData();
-        }
-    }
 
-    private void GoToNextPage()
-    {
-        if (currentPage < totalPages)
-        {
-            currentPage++;
-            LoadPagedData();
-        }
-    }
 
-    private void GoToFirstPage()
-    {
-        currentPage = 1;
-        LoadPagedData();
-    }
 
-    private void GoToLastPage()
-    {
-        currentPage = totalPages;
-        LoadPagedData();
-    }
 }
