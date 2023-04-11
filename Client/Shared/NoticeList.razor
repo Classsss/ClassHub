@@ -1,0 +1,173 @@
+﻿@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using ClassHub.Client.Models
+
+
+<style>
+    .notice-row:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .notice-title:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+
+    .notice-table-container {
+        height: 535px;
+        position: relative;
+        overflow : hidden;
+    }
+
+    .pagination-container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 20px; /* 여백을 설정할 수 있습니다. */
+    }
+</style>
+
+<h3>공지사항</h3>
+<br />
+
+<div class="notice-table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 10%;">번호</th>
+                <th style="width: 50%;">제목</th>
+                <th style="width: 15%;">작성자</th>
+                <th style="width: 25%;">게시일</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var notice in pagednotices)
+            {
+                <tr class="notice-row" @onclick="@(() => Shownotice(notice))" style="cursor:pointer;">
+                    <td style="text-indent : 7px;">@notice.Id</td>
+                    <td class="notice-title">@notice.Title</td>
+                    <td>@notice.Author</td>
+                    <td>@notice.PublishDate.ToString("yyyy.MM.dd")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center pagination-container">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item"><button class="page-link" @onclick="GoToFirstPage">처음</button></li>
+                <li class="page-item"><button class="page-link" @onclick="GoToPreviousPage">이전</button></li>
+                @{
+                    int startPage = ((currentPage - 1) / maxVisiblePages) * maxVisiblePages + 1;
+                    int endPage = Math.Min(startPage + maxVisiblePages - 1, totalPages);
+                    for (int i = startPage; i <= endPage; i++)
+                    {
+                        int currentPageNumber = i;
+                        <li class="page-item @(currentPage == i ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(currentPageNumber)">@i</button>
+                        </li>
+                    }
+                }
+                <li class="page-item"><button class="page-link" @onclick="GoToNextPage">다음</button></li>
+                <li class="page-item"><button class="page-link" @onclick="GoToLastPage">끝</button></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<Notice> notices { get; set; }
+
+    public int RoomId { get; set; }
+
+    private async void Shownotice(Notice notice)
+    {
+        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
+        await SavePaginationInfo("currentPage", currentPage.ToString());
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
+    }
+
+    private int currentPage = 1;
+    private int pageSize = 1; // 원하는 페이지당 표시할 항목 수를 설정
+    private int maxVisiblePages = 9; // 한 번에 표시할 최대 페이지 수를 설정
+    private int totalPages = 0;
+
+    private List<Notice> pagednotices = new List<Notice>();
+
+    protected override void OnParametersSet()
+    {
+
+        notices = notices.OrderByDescending(a => a.Id).ToList();
+        CalculateTotalPages();
+        LoadPagedData();
+    }
+
+    private void CalculateTotalPages()
+    {
+        totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
+    }
+
+
+    private void LoadPagedData()
+    {
+        pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    private void GoToPage(int pageNumber)
+    {
+        currentPage = pageNumber;
+        LoadPagedData();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var savedPage = await LoadPaginationInfo("currentPage");
+        if (!string.IsNullOrEmpty(savedPage) && int.TryParse(savedPage, out var storedPage))
+        {
+            currentPage = storedPage;
+        }
+    }
+
+    private void GoToPreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            LoadPagedData();
+        }
+    }
+
+    private void GoToNextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            LoadPagedData();
+        }
+    }
+
+    private void GoToFirstPage()
+    {
+        currentPage = 1;
+        LoadPagedData();
+    }
+
+    private void GoToLastPage()
+    {
+        currentPage = totalPages;
+        LoadPagedData();
+    }
+
+    private async Task SavePaginationInfo(string key, string value)
+    {
+        await JSRuntime.InvokeVoidAsync("setPaginationInfo", key, value);
+    }
+
+    private async Task<string> LoadPaginationInfo(string key)
+    {
+        return await JSRuntime.InvokeAsync<string>("getPaginationInfo", key);
+    }
+}
