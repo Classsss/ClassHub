@@ -1,0 +1,14 @@
+﻿@inherits MultipleChoiceDisplayBase
+<div class="text-center border p-3 rounded">
+    <h3>@Problem.Description</h3>
+    <div class="d-inline-block text-left">
+        @foreach(var question in Problem.Questions.Select((value, index) => new { index, value })) {
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="multipleChoice" id="@question.index" value="@question.index" @onchange="OnAnswerSelected" checked="@(Problem.Answer == question.index)" />
+                <label class="form-check-label" for="@question.index">
+                    @question.value
+                </label>
+            </div>
+        }
+    </div>
+</div>

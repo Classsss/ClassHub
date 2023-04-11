@@ -1,0 +1,9 @@
+﻿@inherits ShortAnswerDisplayBase
+<div class="text-center border p-3 rounded">
+    <h3>@Problem.Description</h3>
+    <div class="d-inline-block text-left">
+        <div class="form-group">
+            <input class="form-control" @bind="Problem.Answer" />
+        </div>
+    </div>
+</div>
