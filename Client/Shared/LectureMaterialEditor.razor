@@ -14,7 +14,7 @@
     <label for="post-content" style="font-weight: bold;">내용</label>
     <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요" @bind="@content"></textarea>
 </div>
-<DragDropUpload/>
+<DragDropUpload />
 
 <br />
 <div class="d-flex justify-content-between mb-2">
@@ -30,6 +30,9 @@
     public int id { get; set; }
 
     [Parameter]
+    public LectureMaterial target { get; set; }
+
+    [Parameter]
     public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
 
     public string title;
@@ -41,6 +44,11 @@
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
+        if (target != null)
+        {
+            title = target.Title;
+            content = target.Content;
+        }
     }
 
     private async Task toListMode()
