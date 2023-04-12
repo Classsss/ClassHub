@@ -1,0 +1,10 @@
+﻿@page "/classroom/{roomid:int}/assignment/{assignmentid:int}"
+@layout MainLayout
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+
+    [Parameter]
+    public int AssignmentId { get; set; }
+}
