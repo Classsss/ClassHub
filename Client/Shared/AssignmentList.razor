@@ -38,7 +38,7 @@
             <tr>
                 <td>@assignment.Id</td>
                 <td>
-                    <button class="btn" type="button">@assignment.Title</button>
+                    <button class="btn" type="button" @onclick="@(() => ShowAssignment(assignment))">@assignment.Title</button>
                 </td>
                 <td class="@(assignment.Deadline >= DateTime.Now ? "bg-inProgress" : "bg-end" )"> 
                     @(assignment.Deadline >= DateTime.Now ? "진행중" : "종료")
@@ -53,8 +53,14 @@
 @code {
     [Parameter]
     public List<Assignment> Assignments { get; set; }
+
     protected override void OnInitialized()
     {
         Assignments = Assignments.OrderByDescending(a => a.Id).ToList();
+    }
+
+    private void ShowAssignment(Assignment assignment) {
+        Console.WriteLine($"{assignment.Id}번 과제를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{assignment.Id}");
     }
 }
