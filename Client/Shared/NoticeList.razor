@@ -24,8 +24,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var notice in pagednotices)
-        {
+        @foreach(var notice in pagednotices) {
             <tr class="notice-row" @onclick="@(() => Shownotice(notice))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@notice.Id</td>
                 <td class="notice-title">@notice.Title</td>
@@ -36,7 +35,8 @@
     </tbody>
 </table>
 
-<div class="d-flex justify-content-center"> <!--Pagination 컴포넌트 호출-->
+<div class="d-flex justify-content-center">
+    <!--Pagination 컴포넌트 호출-->
     <Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged"></Pagination>
 </div>
 
@@ -51,25 +51,21 @@
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
     private int totalPages = 0;
 
-    private async Task OnPageChanged(int newPage)
-    {
+    private async Task OnPageChanged(int newPage) {
         currentPage = newPage;
         LoadPagedData();
     }
 
-    private void CalculateTotalPages()
-    {
+    private void CalculateTotalPages() {
         totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
     }
 
     // <== 여기 까지
-    private void LoadPagedData()
-    {
+    private void LoadPagedData() {
         pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    private void Shownotice(Notice notice)
-    {
+    private void Shownotice(Notice notice) {
         Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
     }
@@ -80,9 +76,4 @@
         CalculateTotalPages();
         LoadPagedData();
     }
-
-
-
-
-
 }
