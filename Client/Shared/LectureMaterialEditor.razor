@@ -1,22 +1,28 @@
 ﻿@inject NavigationManager NavigationManager
 @using ClassHub.Client.Shared
 
+<div class="form-group">
+    <label for="post-title" style="font-weight: bold;">제목</label>
+    <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요">
+</div>
+<br />
+
 <WeekPicker weekValue="@selectedWeek" allowMultipleSelection=false />
 <br />
 
+<div class="form-group">
+    <label for="post-content" style="font-weight: bold;">내용</label>
+    <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요"></textarea>
+</div>
+<DragDropUpload/>
+
+<br />
 <div class="d-flex justify-content-between mb-2">
+    <button type="submit" class="btn btn-primary">등록</button>
     <button class="btn btn-success" @onclick="()=>toListMode()">목록</button>
 </div>
 
 <style>
-    .matlec-row:hover {
-        background-color: rgba(0, 0, 0, 0.1);
-    }
-
-    .matlec-title:hover {
-        color: #007bff;
-        text-decoration: underline;
-    }
 </style>
 
 @code {
