@@ -3,7 +3,7 @@
 
 <div class="form-group">
     <label for="post-title" style="font-weight: bold;">제목</label>
-    <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요">
+    <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요" @bind="@title">
 </div>
 <br />
 
@@ -12,14 +12,14 @@
 
 <div class="form-group">
     <label for="post-content" style="font-weight: bold;">내용</label>
-    <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요"></textarea>
+    <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요" @bind="@content"></textarea>
 </div>
 <DragDropUpload/>
 
 <br />
 <div class="d-flex justify-content-between mb-2">
-    <button type="submit" class="btn btn-primary">등록</button>
     <button class="btn btn-success" @onclick="()=>toListMode()">목록</button>
+    <button type="submit" class="btn btn-primary" @onclick="()=>toListMode()">등록</button>
 </div>
 
 <style>
@@ -27,7 +27,13 @@
 
 @code {
     [Parameter]
+    public int id { get; set; }
+
+    [Parameter]
     public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
+
+    public string title;
+    public string content;
 
     public List<int> selectedWeek = new List<int>() { 1, };
 
@@ -38,6 +44,11 @@
     }
 
     private async Task toListMode()
+    {
+        await ViewChanged.InvokeAsync();
+    }
+
+    private async Task ClickedSubmit()
     {
         await ViewChanged.InvokeAsync();
     }
