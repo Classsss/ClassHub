@@ -1,9 +1,15 @@
 ﻿@page "/classroom/{roomid:int}/attendance"
 @layout MainLayout
+@using ClassHub.Client.Models
 
-<h3>AttendancePage</h3>
+<AttendanceStatus roomId="@RoomId"/>
 
 @code {
     [Parameter]
     public int RoomId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
 }

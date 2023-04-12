@@ -1,0 +1,99 @@
+﻿<div class="week-picker">
+	@foreach (int i in Enumerable.Range(0, 15))
+	{
+		if (i == 0 && allowMultipleSelection)
+		{
+			<button class="week-button @((weekValue.Contains(i)) ? "selected" : "unselected")" @onclick="() => WeekSelected(i)">
+				<i class="icon oi oi-circle-check" /><br>
+				전체
+			</button>
+		}
+		else if (i > 0)
+		{
+			<button class="week-button @((weekValue.Contains(i)) ? "selected" : "unselected")" @onclick="() => WeekSelected(i)">
+				@if(weekValue.Contains(i)){
+					<i class="icon oi oi-check" />
+				}else{
+					<i class="icon oi oi-x" />
+				}
+				<br>
+				@(i)주
+			</button>
+		}
+	}
+</div>
+
+<style>
+	.week-picker{
+		width: 100%;
+		border-radius: 5px;
+		border: 1px solid black;
+	}
+	.week-button {
+		width: 50px;
+		padding: 5px;
+		margin: 5px;
+		border: 1px dotted gray;
+		transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+	}
+	.week-button.selected {
+			background-color: #BCE6AB;
+			color: white;
+	}
+	.week-button.unselected {
+		background-color: white;
+		color: black;
+	}
+</style>
+
+@code {
+	[Parameter]
+	public List<int> weekValue { get; set; } //선택된 주차의 값
+
+	[Parameter]
+	public bool allowMultipleSelection { get; set; } = true; //복수 선택 허용 여부
+
+	[Parameter]
+	public EventCallback<List<int>> ValueChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
+
+	public async void WeekSelected(int target)
+	{
+		bool isAllSelected = true;
+		if (target == 0)
+		{
+			if (!weekValue.Contains(0) && allowMultipleSelection)
+	{
+				for (int i = 1; i <= 14; i++)
+				{
+					if (!weekValue.Contains(i))
+					{
+						weekValue.Add(i);
+						isAllSelected = false;
+					}
+				}
+
+				if (isAllSelected)
+				{
+					weekValue.Clear();
+				}
+			}
+		}
+		else
+		{
+			if (weekValue.Contains(target))
+			{
+				weekValue.Remove(target);
+			}
+			else if (!allowMultipleSelection)
+			{
+				weekValue.Clear();
+				weekValue.Add(target);
+			}
+			else
+			{
+				weekValue.Add(target);
+			}
+		}
+		await ValueChanged.InvokeAsync(weekValue);
+	}
+}

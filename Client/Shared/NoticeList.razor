@@ -1,0 +1,79 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+
+<style>
+    .notice-row:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .notice-title:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+</style>
+
+<h3>공지사항</h3>
+<br />
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 10%;">번호</th>
+            <th style="width: 50%;">제목</th>
+            <th style="width: 15%;">작성자</th>
+            <th style="width: 25%;">게시일</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var notice in pagednotices) {
+            <tr class="notice-row" @onclick="@(() => Shownotice(notice))" style="cursor:pointer;">
+                <td style="text-indent : 7px;">@notice.Id</td>
+                <td class="notice-title">@notice.Title</td>
+                <td>@notice.Author</td>
+                <td>@notice.PublishDate.ToString("yyyy.MM.dd")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-center">
+    <!--Pagination 컴포넌트 호출-->
+    <Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged"></Pagination>
+</div>
+
+@code {
+    [Parameter]
+    public List<Notice> notices { get; set; }
+    private List<Notice> pagednotices = new List<Notice>();
+
+    public int RoomId { get; set; }
+    // 여기부터 페이지네이션 관련 코드
+    private int currentPage = 1;
+    private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
+    private int totalPages = 0;
+
+    private async Task OnPageChanged(int newPage) {
+        currentPage = newPage;
+        LoadPagedData();
+    }
+
+    private void CalculateTotalPages() {
+        totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
+    }
+
+    // <== 여기 까지
+    private void LoadPagedData() {
+        pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    private void Shownotice(Notice notice) {
+        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
+    }
+
+    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    {
+        notices = notices.OrderByDescending(a => a.Id).ToList();
+        CalculateTotalPages();
+        LoadPagedData();
+    }
+}
