@@ -1,0 +1,38 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Client.Shared
+
+<WeekPicker weekValue="@selectedWeek" allowMultipleSelection=false />
+<br />
+
+<div class="d-flex justify-content-between mb-2">
+    <button class="btn btn-success" @onclick="()=>toListMode()">목록</button>
+</div>
+
+<style>
+    .matlec-row:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .matlec-title:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
+
+    public List<int> selectedWeek = new List<int>() { 1, };
+
+    public int RoomId { get; set; }
+
+    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    {
+    }
+
+    private async Task toListMode()
+    {
+        await ViewChanged.InvokeAsync();
+    }
+}
