@@ -2,15 +2,25 @@
 @layout MainLayout
 @using ClassHub.Client.Shared
 
-<h3>
-	강의자료
-</h3>
-<WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" />
-<br />
-<LectureMaterialList lecture_materials="@lec_mat" selectWeek="@selectedWeek" />
+@if (Viewmode == "List")
+{
+	<h3>
+		강의자료
+	</h3>
+	<LectureMaterialList lecture_materials="@lec_mat" ValueChanged="OnWriteMode" />
+}
+else if (Viewmode == "Write")
+{
+	<h3>
+		강의자료 작성
+	</h3>
+}
+
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
+
+	private string Viewmode = "List";
 
 	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
 	{
@@ -21,11 +31,9 @@
 		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
 	};
 
-	public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-
-	private async Task OnWeekChanged(List<int> week)
+	private async Task OnWriteMode()
 	{
-		selectedWeek = week;
+		Viewmode = "Write";
 		await Task.CompletedTask;
 	}
 }
