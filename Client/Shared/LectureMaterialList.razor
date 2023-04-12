@@ -1,6 +1,7 @@
 ﻿@inject NavigationManager NavigationManager
 @using ClassHub.Client.Shared
 
+<WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true/>
 <br />
 
 <div class="d-flex justify-content-between mb-2">
@@ -8,7 +9,7 @@
         <input type="text" class="form-control me-2" placeholder="제목">
         <button style="width: 40px; height: 40px; border: 0;" class="oi oi-magnifying-glass"></button>
     </div>
-    <button class="btn btn-success">작성</button>
+    <button class="btn btn-success" @onclick="()=>toWriteMode()">작성</button>
 </div>
 
 <table class="table">
@@ -25,7 +26,7 @@
     <tbody>
         @foreach (var lec_mat in lecture_materials)
         {
-            @if (selectWeek.Contains(lec_mat.Week))
+            @if (selectedWeek.Contains(lec_mat.Week))
             {
                 <tr class="matlec-row" @onclick="@(() => ShowLecMat(lec_mat))" style="cursor:pointer;">
                     <td style="text-indent : 7px;">@lec_mat.Id</td>
@@ -54,18 +55,23 @@
 @code {
     [Parameter]
     public List<LectureMaterial> lecture_materials { get; set; }
+
     [Parameter]
-    public List<int> selectWeek { get; set; }
+    public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
+
+    [Parameter]
+    public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+
+    public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
     public int RoomId { get; set; }
 
     //정렬을 위한 변수
     private bool sortByIDAscending = true;
 
-    private void ShowLecMat(LectureMaterial lec_mat)
+    private async Task ShowLecMat(LectureMaterial lm)
     {
-        Console.WriteLine($"{lec_mat.Id}번 강의자료를 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lec_mat.Id}");
+        await ItemClicked.InvokeAsync(lm);
     }
 
     private void SortById() //강의자료 번호 순 정렬
@@ -86,5 +92,16 @@
     {
         lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
         sortByIDAscending = true;
+    }
+
+    private async Task OnWeekChanged(List<int> week)
+    {
+        selectedWeek = week;
+        await Task.CompletedTask;
+    }
+
+    private async Task toWriteMode()
+    {
+        await ViewChanged.InvokeAsync();
     }
 }
