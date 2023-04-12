@@ -10,6 +10,11 @@
     <link href="css/app.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="ClassHub.Client.styles.css" rel="stylesheet" />
+
+    <!--Text Editor-->
+    <link href="lib/quill/dist/quill.snow.css" rel="stylesheet" />
+    <link href="lib/quill/dist/quill.bubble.css" rel="stylesheet" />
+
     <script>
         function setUniformRowHeight() {
             let maxHeight = 0;
@@ -45,6 +50,11 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
+    <!--Text Editor-->
+    <script src="lib/quill/dist/quill.js"></script>
+    <script src="_content/Blazored.TextEditor/quill-blot-formatter.min.js"></script>
+    <script src="_content/Blazored.TextEditor/Blazored-BlazorQuill.js"></script>
 
     <script src="_content/BlazorMonaco/jsInterop.js"></script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
