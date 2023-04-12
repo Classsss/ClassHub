@@ -13,6 +13,10 @@
     .bg-end {
         color: red;
     }
+
+    .btn:hover {
+        color: #007bff;
+    }
 </style>
 
 <h3>과제 등록현황 게시판</h3>
@@ -33,7 +37,9 @@
         {
             <tr>
                 <td>@assignment.Id</td>
-                <td>@assignment.Title</td>
+                <td>
+                    <button class="btn" type="button">@assignment.Title</button>
+                </td>
                 <td class="@(assignment.Deadline >= DateTime.Now ? "bg-inProgress" : "bg-end" )"> 
                     @(assignment.Deadline >= DateTime.Now ? "진행중" : "종료")
                 </td>
