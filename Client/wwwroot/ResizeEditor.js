@@ -20,3 +20,12 @@ function resizeEditor() {
 
     }
 }
+
+function toggleSidebar() {
+    let sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("collapse")) {
+        sidebar.classList.remove("collapse");
+    } else {
+        sidebar.classList.add("collapse");
+    }
+}

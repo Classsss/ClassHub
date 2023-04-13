@@ -1,6 +1,14 @@
 ﻿@page "/classroom/{roomid:int}/lecture"
 @layout MainLayout
+@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
+@using System.Text.Json
+
+<CascadingValue Value="@lectures">
+    <!--하위 컴포넌트로 lectures 객체를 전달하는 코드-->
+   
+    <LecturePage RoomId="RoomId" LectureId="selectedid" />
+</CascadingValue>
 
 <div class="container mt-4">
     <h2 class="mb-4">동영상 강의 목록</h2>
@@ -32,36 +40,36 @@
                     <div style="width: 15%;">
                         <p class="mb-1" style="text-indent: 27px">@((lecture.IsEnrolled ? "O" : " X"))</p>
                     </div>
-
-                    <div style="width: 10%;"><button type="button" class="btn btn-primary btn-sm" onclick="window.open('@lecture.VideoUrl', '_blank')">강의 보기</button></div>
+                    <div style="width: 10%;"><button type="button" class="btn btn-primary btn-sm" @onclick="@(() => Showlecture(lecture))">강의 보기</button></div>
                 </div>
             </div>
         }
     </div>
 </div>
 
-
-
-
-
-
-
-
-
-
 @code {
     [Parameter]
     public int RoomId { get; set; }
+
+    public int selectedid;
 
     private List<Lecture> lectures = new List<Lecture>
 	{
         // 샘플 데이터
         // 실제 프로젝트에서는 데이터베이스 또는 API를 통해 동영상 강의 정보를 가져옴
-        new Lecture { Id = 1, Title = "Zior Park - CHRISTIAN (OFFICIAL VIDEO)", Description = "Zior Park's new album \"WHERE DOES SASQUATCH LIVE? PART 1\" just got out on every streaming platform.", VideoUrl = "https://www.youtube.com/watch?v=Dqlr8EDunCM", RunningTime =  new DateTime(1,1,1,0,59,36), IsEnrolled = true },
-        new Lecture { Id = 2, Title = "윤하(YOUNHA) - 사건의 지평선 M/V", Description = "윤하(YOUNHA) - 사건의 지평선 M/V", VideoUrl = "https://www.youtube.com/watch?v=BBdC1rl5sKY", RunningTime =  new DateTime(1,1,1,0,51,13), IsEnrolled = false },
+        new Lecture { Id = 1, Title = "영상 1", Description = "내용 1", VideoUrl = "/videos/Test.mp4", RunningTime =  new DateTime(1,1,1,0,59,36), IsEnrolled = true },
+        new Lecture { Id = 2, Title = "영상 2", Description = "윤하(YOUNHA) - 사건의 지평선 M/V", VideoUrl = "#", RunningTime =  new DateTime(1,1,1,0,51,13), IsEnrolled = false },
         new Lecture { Id = 3, Title = "[MV] BOL4(볼빨간사춘기) _ Travel(여행)", Description = @"소중한 일기장처럼 그녀들의 깨끗하고 말간 감정들이 모든 사람들의 마음속에 오래 간직되기를 바라는 Red Diary, 두 번째 페이지.
         조그마한 방 한 켠, 서랍 안에 숨겨두었던 볼빨간사춘기의 진심이 담긴 이야기들, 지금 전합니다.", VideoUrl = "https://www.youtube.com/watch?v=xRbPAVnqtcs", RunningTime =  new DateTime(1,1,1,0,48,19), IsEnrolled = false },
 
         // 추가 강의...
     };
+
+    private void Showlecture(Lecture lecture)
+    {
+        selectedid = lecture.Id;
+        Console.WriteLine($"{lecture.Id}번 강의를 클릭하였습니다.");
+        var lecturesJson = JsonSerializer.Serialize(lectures);
+        NavigationManager.NavigateTo($"/classroom/{RoomId}/lecture/{lecture.Id}?lectures={Uri.EscapeDataString(lecturesJson)}");
+    }
 }

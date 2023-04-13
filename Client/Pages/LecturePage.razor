@@ -1,0 +1,149 @@
+﻿@page "/classroom/{roomid:int}/lecture/{lectureid:int}"
+@using ClassHub.Client.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Collections.Generic
+
+@if (SelectedLecture != null)
+{
+    <h3>@SelectedLecture.Title</h3>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <div class="d-flex">
+        <div id="sidebar" class="collapse">
+            <div class="d-flex justify-content-between align-items-center" style="background-color: #333; padding: 10px;">
+                <span style="color: white; font-size: 18px;">Table of Contents</span>
+                <button style="color: white; background-color: transparent; border: none; font-size: 18px; cursor: pointer;" @onclick="ToggleSidebar">X</button>
+            </div>
+            <div class="list-group">
+                @foreach (var lecture in Lectures)
+                {
+                    <a class="list-group-item list-group-item-action" @onclick="@(() => ShowLecture(lecture.Id))" style="cursor:pointer;">@lecture.Title</a>
+                }
+            </div>
+        </div>
+
+        <div class="video-container">
+            <video controls>
+                <source src="@SelectedLecture.VideoUrl" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+            <div class="video-controls">
+                <button @onclick="ToggleSidebar">메뉴</button>
+                <button>이전</button>
+                <button>다음</button>
+                <button @onclick="GoBack">종료</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .video-container {
+        background-color: black;
+        position: relative;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100vh;
+        width: 100%;
+        }
+
+        video {
+        width: 80%;
+        float: right;
+        }
+
+        .video-controls {
+        position: absolute;
+        bottom: 50px;
+        right: 0;
+        background-color: grey;
+        padding: 10px;
+        }
+
+        .video-controls button {
+        color: white;
+        background-color: transparent;
+        border: none;
+        font-size: 18px;
+        margin-left: 10px;
+        cursor: pointer;
+        }
+
+        .video-controls button:hover {
+        color: orange;
+        }
+
+        #sidebar {
+        width: 30%; /* 너비 조절 */
+        background-color: grey;
+        }
+
+    </style>
+}
+
+
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int LectureId { get; set; } = 0;
+
+    [CascadingParameter] // 상위 컴포넌트에서 리스트를 받아옴
+    public List<Lecture> Lectures { get; set; }
+
+    private int index;
+    private Lecture? prevlecture;
+    private Lecture? nextlecture;
+
+
+    public Lecture SelectedLecture { get; set; }
+
+    private async Task ToggleSidebar()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleSidebar");
+    }
+
+    private void GoBack() // 목록으로 돌아가는 클래스
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        if (Lectures == null)
+        {
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("lectures", out var lecturesJson))
+            {
+                Lectures = JsonSerializer.Deserialize<List<Lecture>>(Uri.UnescapeDataString(lecturesJson.ToString()));
+            }
+        }
+
+        if (Lectures != null && Lectures.Any())
+        {
+            SelectedLecture = Lectures.FirstOrDefault(l => l.Id == LectureId);
+        }
+
+        if (SelectedLecture != null)
+        {
+            StateHasChanged();
+        }
+
+
+    }
+
+    private void ShowLecture(int id)
+    {
+        LectureId = id;
+        SelectedLecture = Lectures.FirstOrDefault(l => l.Id == LectureId);
+        StateHasChanged();
+    }
+
+}
