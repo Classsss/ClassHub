@@ -16,15 +16,15 @@
 
 @foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson }))
 {
-    <p style="font-weight:bold;" colspan="5">@(item.Key.Week)주차 @(item.Key.Lesson)차시</p>
-    <table class="table table-bordered">
-        <thead>
+    <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(item.Key.Week)주차 @(item.Key.Lesson)차시</i>
+    <table class="table table-bordered rounded" style="text-align: center;">
+        <thead style="font-size: 120%; font-weight: bold;">
             <tr>
-                <th>과목명</th>
-                <th>학습 유형</th>
-                <th>학습 진행 상태</th>
-                <th>출석 진행 상태</th>
-                <th>상세 링크</th>
+                <th style="width: 30%;">학습 내용</th>
+                <th style="width: 20%;">학습 유형</th>
+                <th style="width: 20%;">학습 진행 상태</th>
+                <th style="width: 15%;">출석 진행 상태</th>
+                <th style="width: 15%;">상세 링크</th>
             </tr>
         </thead>
         <tbody>
@@ -40,12 +40,9 @@
             }
         </tbody>
     </table>
+    <br />
 }
 
-
-<style>
-
-</style>
 @code {
     [Parameter]
     public int roomId { get; set; } //강의실 번호
