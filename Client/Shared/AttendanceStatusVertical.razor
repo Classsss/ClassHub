@@ -33,8 +33,17 @@
                 <tr>
                     <td>@subItem.Title</td>
                     <td>@subItem.LearningType</td>
-                    <td>@subItem.LearningProgress</td>
-                    <td>@subItem.AttendProgress</td>
+                    <td>
+                        <i class="@((subItem.LearningProgress == "완료") ? "oi oi-circle-check" : "oi oi-x")"></i>
+                        @subItem.LearningProgress
+                    </td>
+                    <td>
+                        @if (subItem.AttendProgress == "출석")
+                        {
+                            <i class="oi oi-circle-check"/>
+                        }
+                        @(" " + subItem.AttendProgress)
+                    </td>
                     <td><a href="@subItem.DetailLink">링크</a></td>
                 </tr>
             }
