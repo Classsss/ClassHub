@@ -2,6 +2,7 @@
 @layout MainLayout
 @using Blazored.TextEditor
 @using ClassHub.Client.Models
+@inject NavigationManager NavigationManager
 
 <style>
     .ql-editor{
@@ -119,7 +120,13 @@
             <button class="btn btn-primary">Add</button>
         </div>
     </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-success" @onclick="Submit">Submit New Exam</button>
+    </div>
 </div>
+
+
 
 @code {
     [Parameter]
@@ -144,5 +151,9 @@
             Score = 10,
             Answer = "Seoul"
         });
+    }
+
+    private void Submit() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf('/')));
     }
 }
