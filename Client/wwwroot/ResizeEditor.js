@@ -21,6 +21,7 @@ function resizeEditor() {
     }
 }
 
+<<<<<<< HEAD
 function toggleSidebar() {
     let sidebar = document.getElementById("sidebar");
     if (sidebar.classList.contains("collapse")) {
@@ -28,4 +29,12 @@ function toggleSidebar() {
     } else {
         sidebar.classList.add("collapse");
     }
+=======
+function setPaginationInfo(key, value) {
+    localStorage.setItem(key, value);
+}
+
+function getPaginationInfo(key) {
+    return localStorage.getItem(key);
+>>>>>>> origin/release
 }
