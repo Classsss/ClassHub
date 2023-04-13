@@ -73,6 +73,23 @@ else
 
         Console.WriteLine(content);
         Sections = JsonSerializer.Deserialize<List<Section>>(content);
-        StateHasChanged(); // 화면을 다시 그립니다.
+
+        // 색상 부여
+        if(Sections != null) {
+            int colorIndex = 0;
+            for(int i = 0; i < Sections.Count; i++) {
+                var section1 = Sections[i];
+                if(section1.Color == -1) {
+                    section1.Color = colorIndex++;
+                    for(int j = i + 1; j < Sections.Count; j++) {
+                        var section2 = Sections[j];
+                        if(section1.SectionId == section2.SectionId) section2.Color = section1.Color;
+                    }
+                } else continue;
+            }
+        }
+
+        // 화면을 다시 그립니다.
+        StateHasChanged(); 
 	}
 }
