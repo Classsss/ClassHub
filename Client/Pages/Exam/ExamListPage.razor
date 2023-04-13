@@ -6,6 +6,9 @@
 <button class="btn btn-primary" @onclick="Test">
     응시화면 테스트
 </button>
+<button class="btn btn-primary" @onclick="Test2">
+    시험 등록 화면 테스트
+</button>
 
 @code {
     [Parameter]
@@ -13,5 +16,9 @@
 
     private void Test() {
         NavigationManager.NavigateTo(NavigationManager.Uri + "/1");
+    }
+
+    private void Test2() {
+        NavigationManager.NavigateTo(NavigationManager.Uri + "/editor");
     }
 }
