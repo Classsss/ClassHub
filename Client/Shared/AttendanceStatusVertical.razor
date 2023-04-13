@@ -1,0 +1,87 @@
+﻿@inject NavigationManager NavigationManager
+@using ClassHub.Shared
+
+<h3>@roomId 강의실 출석현황</h3>
+<hr>
+<div class="row">
+    <div class="col-md-auto" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
+        <span style="font-weight:bold;">출결 상태 : </span>
+         <span>출석 <span style="color: green;">30</span> | 지각 <span style="color: orange;">0</span> | 결석 <span style="color: red;">0</span> | 미결 <span style="color: gray;">0</span> | 예정 <span style="color: blue;">0</span></span>
+        <br />
+        <span style="font-weight:bold;">학습 상태 : </span>
+        <span>완료 <span style="color: green;">101</span> | 미완료 <span style="color: gray;">16</span> | 예정 <span style="color: blue;">0</span></span>
+    </div>
+</div>
+<br />
+
+@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson }))
+{
+    <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(item.Key.Week)주차 @(item.Key.Lesson)차시</i>
+    <table class="table table-bordered rounded" style="text-align: center;">
+        <thead style="font-size: 120%; font-weight: bold;">
+            <tr>
+                <th style="width: 30%;">학습 내용</th>
+                <th style="width: 20%;">학습 유형</th>
+                <th style="width: 20%;">학습 진행 상태</th>
+                <th style="width: 15%;">출석 진행 상태</th>
+                <th style="width: 15%;">상세 링크</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var subItem in item)
+            {
+                <tr>
+                    <td>@subItem.Title</td>
+                    <td>@subItem.LearningType</td>
+                    <td>@subItem.LearningProgress</td>
+                    <td>@subItem.AttendProgress</td>
+                    <td><a href="@subItem.DetailLink">링크</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <br />
+}
+
+@code {
+    [Parameter]
+    public int roomId { get; set; } //강의실 번호
+
+    //출결 항목 리스트
+    public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>
+    {
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "1주차 1차시 수업", LearningType = "오프라인 출결", LearningProgress = "완료", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의자료1", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의OT", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "1주차 2차시 수업", LearningType = "오프라인 출결", LearningProgress = "완료", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "강의자료2", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "몸풀기 퀴즈", LearningType = "퀴즈", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "2주차 1차시 수업", LearningType = "오프라인 출결", LearningProgress = "미완료", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "강의자료3", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 실습", LearningType = "실습", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 과제", LearningType = "과제", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" },
+
+        new AttendanceItem { Week = 2, Lesson = 2, Title = "2주차 2차시 수업", LearningType = "오프라인 출결", LearningProgress = "미완료", AttendProgress = "미출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 2, Title = "강의자료4", LearningType = "PDF", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" }
+    };
+
+    //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
+    string getClassForAttendanceStatus(int status)
+    {
+        switch (status)
+        {
+            case 0:
+                return "attendance-status-not-attended";
+            case 1:
+                return "attendance-status-attended";
+            case 2:
+                return "attendance-status-tardy";
+            case 3:
+                return "attendance-status-absent";
+            default:
+                return "";
+        }
+    }
+}
