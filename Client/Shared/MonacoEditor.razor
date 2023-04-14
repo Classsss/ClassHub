@@ -50,6 +50,7 @@
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;
     private string[] decorationIds = new string[0];
+    private string previousValue = "python";
 
     // monaco editor의 Construction 옵션을 정의하여 반환한다.
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor) {
