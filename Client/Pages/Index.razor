@@ -18,7 +18,42 @@
 }
 else
 {
-    <Timetable Sections="Sections" />
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    <strong>Notice:</strong> 시간표 내의 강의 영역을 클릭하면 강의실로 이동합니다.
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-9 col-12">
+                <Timetable Sections="Sections" />
+            </div>
+            <div class="col-lg-3 col-12">
+                <div class="row">
+                    <h3 class="text-center col-12">ToDo List</h3>
+                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
+                        <ul class="list-group">
+                            @for(int i = 1; i <= 20; i++) {
+                                <li class="list-group-item">Task @i</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3 class="text-center col-12">New Notifications</h3>
+                    <div class="col-12 border" style="overflow: auto; max-height: 260px;">
+                        <ul class="list-group">
+                            @for(int i = 1; i <= 12; i++) {
+                                <li class="list-group-item">Notification @i</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 
@@ -73,6 +108,23 @@ else
 
         Console.WriteLine(content);
         Sections = JsonSerializer.Deserialize<List<Section>>(content);
-        StateHasChanged(); // 화면을 다시 그립니다.
+
+        // 색상 부여
+        if(Sections != null) {
+            int colorIndex = 0;
+            for(int i = 0; i < Sections.Count; i++) {
+                var section1 = Sections[i];
+                if(section1.Color == -1) {
+                    section1.Color = colorIndex++;
+                    for(int j = i + 1; j < Sections.Count; j++) {
+                        var section2 = Sections[j % 8];
+                        if(section1.SectionId == section2.SectionId) section2.Color = section1.Color;
+                    }
+                } else continue;
+            }
+        }
+
+        // 화면을 다시 그립니다.
+        StateHasChanged(); 
 	}
 }

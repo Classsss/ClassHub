@@ -95,5 +95,10 @@
     private async Task ChangeLanguage(ChangeEventArgs e) {
         var model = await editor.GetModel();
         await Global.SetModelLanguage(model, e.Value?.ToString());
+        if(e.Value != null) {
+            if (e.Value.ToString() == "csharp") await editor.SetValue(SampleCode.csharp);
+            else if (e.Value.ToString() == "c") await editor.SetValue(SampleCode.c);
+            else await editor.SetValue(SampleCode.etc);
+        }
     }
 }   

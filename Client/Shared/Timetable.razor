@@ -41,7 +41,7 @@
                             }
                             int span = course.EndTime - course.StartTime;
                             <td rowspan=@span>
-                                <button class="btn btn-primary btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
+                                <button class="btn btn-@colors[course.Color] btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
                                     @course.Name
                                     <br />
                                     @course.Instructor
@@ -65,6 +65,8 @@
 @code {
     [Parameter]
     public List<Section> Sections { get; set; }
+
+    private string[] colors = { "primary", "secondary", "success", "danger", "warning", "info", "light", "dark" };
 
     // 시간표 시작 시간과 종료 시간을 설정하세요.
     private int StartHour => 9;
