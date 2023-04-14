@@ -62,10 +62,10 @@ else
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code))
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code) && QueryHelpers.ParseQuery(uri.Query).TryGetValue("role", out var role))
         {
             AuthService.IsLoggedIn = true;
-            exchangeToken(code);
+            exchangeToken(code, role);
         }
 
         // 로컬 스토리지에서 AccessToken이 있는지 확인
@@ -77,19 +77,20 @@ else
         await getCourses(); //시간표 받아오기
     }
 
-    protected async Task exchangeToken(String code)
+    protected async Task exchangeToken(String code, String role)
     {
         var client = new HttpClient();
         client.BaseAddress = new Uri(NavigationManager.BaseUri);
         var request = new HttpRequestMessage(HttpMethod.Post, "TokenExchange/submit-code");
 
-        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = code }), Encoding.UTF8, "application/json");
+        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = code, Role = role}), Encoding.UTF8, "application/json");
         try
         {
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "role", JsonSerializer.Deserialize<AccessTokenResponse>(content).Role);
         }
         catch (Exception ex)
         {
