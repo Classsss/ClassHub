@@ -38,14 +38,12 @@
         min-width: 600px;
         overflow: auto;
         border: 1px solid black;
-        
-
     }
 </style>
 
 @code {
     [Parameter]
-    public string InitCode { get; set; }
+    public string? InitCode { get; set; }
 
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;
@@ -56,7 +54,7 @@
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor) {
         // TODO : 추후 사양에 따라 에디터 옵션 수정 필요
         return new StandaloneEditorConstructionOptions {
-                Language = "python",
+                Language = previousValue, // previousValue의 초기값을 첫 언어로 설정
                 GlyphMargin = true,
                 Value = ""
             };
@@ -75,11 +73,12 @@
                     GlyphMarginClassName = "decorationGlyphMarginClass"
                 }
             }
-        };
+    };
         // 정의한 Decoration을 에디터에 적용한다.
         decorationIds = await editor.DeltaDecorations(null, newDecorations);
 
-        await editor.SetValue(InitCode);
+        if(InitCode != null) await editor.SetValue(InitCode);
+        else await editor.SetValue(GetTemplateCode(previousValue));
     }
 
     // 에디터에 우클릭 시 수행할 로직을 정의한다.
@@ -105,12 +104,7 @@
             if (e.Value != null)
             {
                 // 선택한 값으로 에디터에 코드 셋팅
-                if (e.Value.ToString() == "csharp") await editor.SetValue(SampleCode.csharp);
-                else if (e.Value.ToString() == "cpp") await editor.SetValue(SampleCode.cpp);
-                else if (e.Value.ToString() == "c") await editor.SetValue(SampleCode.c);
-                else if (e.Value.ToString() == "java") await editor.SetValue(SampleCode.java);
-                else if (e.Value.ToString() == "python") await editor.SetValue(SampleCode.python);
-                else await editor.SetValue(SampleCode.etc);
+                await editor.SetValue(GetTemplateCode(e.Value.ToString()));
                 previousValue = e.Value.ToString();
             }
         }
@@ -121,4 +115,13 @@
         }
     }
 
+    private string GetTemplateCode(string language)
+    {
+        if (language == "csharp") return SampleCode.csharp;
+        else if (language == "cpp") return SampleCode.cpp;
+        else if (language == "c") return SampleCode.c;
+        else if (language == "java") return SampleCode.java;
+        else if (language == "python") return SampleCode.python;
+        else return SampleCode.etc;
+    }
 }   
