@@ -117,7 +117,7 @@ else
                 if(section1.Color == -1) {
                     section1.Color = colorIndex++;
                     for(int j = i + 1; j < Sections.Count; j++) {
-                        var section2 = Sections[j];
+                        var section2 = Sections[j % 8];
                         if(section1.SectionId == section2.SectionId) section2.Color = section1.Color;
                     }
                 } else continue;
