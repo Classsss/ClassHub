@@ -1,4 +1,4 @@
-﻿namespace ClassHub.Client.Shared {
+﻿namespace ClassHub.Shared {
     public class LectureMaterial
     {
         public int Id { get; set; } // 강의자료 번호

@@ -1,5 +1,5 @@
 ﻿@inject NavigationManager NavigationManager
-@using ClassHub.Client.Shared
+@using ClassHub.Shared
 
 <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true/>
 <br />
@@ -40,6 +40,8 @@
         }
     </tbody>
 </table>
+
+<Pagination />
 
 <style>
     .matlec-row:hover {
