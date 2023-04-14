@@ -95,24 +95,30 @@
 
     // Language Select를 변경했을 때 호출된다.
     // 선택한 옵션에 따라 에디터의 Language를 변경한다.
-    private async Task ChangeLanguage(ChangeEventArgs e) {
+    private async Task ChangeLanguage(ChangeEventArgs e)
+    {
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "언어를 바꿀시에 코드가 초기화됩니다. 계속하시겠습니까?");
-        if (confirmed){
+        if (confirmed)
+        {
             var model = await editor.GetModel();
             await Global.SetModelLanguage(model, e.Value?.ToString());
-            if(e.Value != null){
-            if (e.Value.ToString() == "csharp") await editor.SetValue(SampleCode.csharp);
-            else if (e.Value.ToString() == "cpp") await editor.SetValue(SampleCode.cpp);
-            else if (e.Value.ToString() == "c") await editor.SetValue(SampleCode.c);
-            else if (e.Value.ToString() == "java") await editor.SetValue(SampleCode.java);
-            else if (e.Value.ToString() == "python") await editor.SetValue(SampleCode.python);
-            else await editor.SetValue(SampleCode.etc);
+            if (e.Value != null)
+            {
+                // 선택한 값으로 에디터에 코드 셋팅
+                if (e.Value.ToString() == "csharp") await editor.SetValue(SampleCode.csharp);
+                else if (e.Value.ToString() == "cpp") await editor.SetValue(SampleCode.cpp);
+                else if (e.Value.ToString() == "c") await editor.SetValue(SampleCode.c);
+                else if (e.Value.ToString() == "java") await editor.SetValue(SampleCode.java);
+                else if (e.Value.ToString() == "python") await editor.SetValue(SampleCode.python);
+                else await editor.SetValue(SampleCode.etc);
+                previousValue = e.Value.ToString();
             }
         }
-        else {
-        // 이전 선택값으로 선택상태를 되돌린다.
-            var previousValue = (string) e.Value ?? string.Empty;
+        else
+        {
+            // 이전 선택값으로 선택상태를 되돌린다.
             await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('#languageSelect').value = '{previousValue}'");
         }
     }
+
 }   
