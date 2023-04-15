@@ -26,7 +26,7 @@
 					}
 				</div>
 			</div>
-			<img src="@ImageUrl" />
+			<img src="@ImageUrl" style="margin-bottom: 15px;" />
 			<div>@((MarkupString)notice.Content)</div> <!--보안에 취약?-->
 			<hr />
 
@@ -41,26 +41,9 @@
 					}
 			</style>
 
+			
 			<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
 				<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
-				<p style="display: inline-block; margin-right: 10px;">이전글</p>
-				@if(prevnotice != null) {
-					<a href="@($"/classroom/{RoomId}/notice/{prevnotice.Id}")" style="display: inline-block;">@prevnotice.Title</a>
-					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
-						<span class="oi oi-clock" aria-hidden="true"></span>
-						@if(prevnotice.PublishDate.Date == DateTime.Today) {
-							<span style="margin-left :5px; margin-right:11px;">@prevnotice.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-						} else {
-							<span style="margin-left :5px;">@prevnotice.PublishDate.ToString("yyyy.MM.dd")</span>
-						}
-					</span>
-				} else {
-					<p style="display: inline-block;">이전글이 없습니다.</p>
-				}
-			</div>
-
-			<div style="border-bottom: 1px solid grey;">
-				<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
 				<p style="display: inline-block; margin-right: 10px;">다음글</p>
 				@if(nextnotice != null) {
 					<a href="@($"/classroom/{RoomId}/notice/{nextnotice.Id}")" style="display: inline-block;">@nextnotice.Title</a>
@@ -74,6 +57,30 @@
 					</span>
 				} else {
 					<p style="display: inline-block;">다음글이 없습니다.</p>
+				}
+			</div>
+
+			<div style="border-bottom: 1px solid grey;">
+				<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
+				<p style="display: inline-block; margin-right: 10px;">이전글</p>
+				@if (prevnotice != null)
+				{
+					<a href="@($"/classroom/{RoomId}/notice/{prevnotice.Id}")" style="display: inline-block;">@prevnotice.Title</a>
+					<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+						<span class="oi oi-clock" aria-hidden="true"></span>
+						@if (prevnotice.PublishDate.Date == DateTime.Today)
+						{
+							<span style="margin-left :5px; margin-right:11px;">@prevnotice.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						}
+						else
+						{
+							<span style="margin-left :5px;">@prevnotice.PublishDate.ToString("yyyy.MM.dd")</span>
+						}
+					</span>
+				}
+				else
+				{
+					<p style="display: inline-block;">이전글이 없습니다.</p>
 				}
 			</div>
 
