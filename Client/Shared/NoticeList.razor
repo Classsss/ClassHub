@@ -1,4 +1,6 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
 
 <style>
@@ -53,6 +55,7 @@
 
     private async Task OnPageChanged(int newPage) {
         currentPage = newPage;
+        await SavePaginationState();
         LoadPagedData();
     }
 
@@ -75,5 +78,27 @@
         notices = notices.OrderByDescending(a => a.Id).ToList();
         CalculateTotalPages();
         LoadPagedData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        notices = notices.OrderByDescending(a => a.Id).ToList();
+        await RestorePaginationState();
+        CalculateTotalPages();
+        LoadPagedData();
+    }
+
+    private async Task SavePaginationState()
+    {
+        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentPage", currentPage);
+    }
+
+    private async Task RestorePaginationState()
+    {
+        var storedPage = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentPage");
+        if (!string.IsNullOrEmpty(storedPage))
+        {
+            currentPage = int.Parse(storedPage);
+        }
     }
 }

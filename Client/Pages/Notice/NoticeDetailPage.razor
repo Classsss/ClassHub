@@ -119,15 +119,11 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		Console.WriteLine("OnInitializedAsync");
-
 		// TODO: 실제 프로젝트에서는 서버로부터 데이터를 가져옴
 		LoadnoticeData();
 	}
 
 	protected override async Task OnParametersSetAsync() {
-		Console.WriteLine("OnParametersSetAsync");
-
 		// TODO: 공지사항이 도중에 삭제되는 경우를 고려하여 공지사항 리스트를 다시 로딩하고 index값을 조정하는 작업이 필요함.
 
 		index = notices.FindIndex(a => a.Id == noticeId);
