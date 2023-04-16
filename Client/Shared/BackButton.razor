@@ -1,0 +1,11 @@
+﻿@inject NavigationManager NavigationManager
+
+<i class="oi oi-arrow-left mb-4 btn btn-link" @onclick="GoBack"> @Msg</i>
+
+@code {
+    [Parameter]
+    public string Msg { get; set; } = "뒤로 가기";
+    private void GoBack() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+}

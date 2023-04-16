@@ -12,7 +12,7 @@
 </style>
 
 <div class="col-md-12">
-    <i class="oi oi-arrow-left mb-4 btn btn-link" @onclick="GoBack"> 등록하지 않고 나가기</i>
+    <BackButton Msg="저장하지 않고 나가기" />
     <div class="card mb-4">
         <div class="card-header">
             <input type="text" class="form-control mb-3" placeholder="Title">
@@ -160,10 +160,6 @@
     }
 
     private void Submit() {
-        GoBack();
-    }
-
-    private void GoBack() {
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }
