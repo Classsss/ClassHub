@@ -4,12 +4,6 @@
 @using ClassHub.Client.Models
 
 <ExamList Exams="Exams" />
-<div class="row">
-    <div class="col-12">
-        <button class="btn btn-success float-end" @onclick="Test2">등록</button>
-    </div>
-</div>
-
 
 @code {
     [Parameter]
@@ -37,13 +31,5 @@
             EndDate = DateTime.Now.AddDays(2),
             IsAttend = true
         });
-    }
-
-    private void Test() {
-        NavigationManager.NavigateTo(NavigationManager.Uri + "/1");
-    }
-
-    private void Test2() {
-        NavigationManager.NavigateTo(NavigationManager.Uri + "/editor");
     }
 }

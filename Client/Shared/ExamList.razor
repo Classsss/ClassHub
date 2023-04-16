@@ -1,5 +1,7 @@
-﻿@inject NavigationManager NavigationManager
-@using ClassHub.Client.Models
+﻿@using ClassHub.Client.Models
+@using ClassHub.Client.Shared
+@inject NavigationManager NavigationManager
+
 
 <style>
     .bg-inProgress {
@@ -57,12 +59,24 @@
     </tbody>
 </table>
 
+<div class="row">
+    <div class="col-12">
+        <button class="btn btn-success float-end" @onclick="SubmitExam">등록</button>
+    </div>
+</div>
+
+<Pagination currentPage="1" totalPages="1"></Pagination>
+
 @code {
     [Parameter]
     public List<Exam> Exams { get; set; }
 
     protected override void OnInitialized() {
         Exams = Exams.OrderByDescending(a => a.ExamId).ToList();
+    }
+
+    private void SubmitExam() {
+        NavigationManager.NavigateTo(NavigationManager.Uri + "/editor");
     }
 
     private void AttendExam(Exam exam) {
