@@ -1,11 +1,10 @@
 ﻿@page "/classroom/{roomid:int}/exam"
 @layout MainLayout
 @inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
 
 <h3>ExamListPage</h3>
-<button class="btn btn-primary" @onclick="Test">
-    응시화면 테스트
-</button>
+<ExamList Exams="Exams" />
 <button class="btn btn-primary" @onclick="Test2">
     시험 등록 화면 테스트
 </button>
@@ -13,6 +12,30 @@
 @code {
     [Parameter]
     public int RoomId { get; set; }
+
+    private List<Exam> Exams;
+
+    protected override void OnInitialized() {
+        Exams = new List<Exam>();
+        Exams.Add(new Exam() {
+            ExamId = 1,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddDays(1),
+            IsAttend = true
+        });
+        Exams.Add(new Exam() {
+            ExamId = 2,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddDays(1),
+            IsAttend = false
+        });
+        Exams.Add(new Exam() {
+            ExamId = 3,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddDays(1),
+            IsAttend = true
+        });
+    }
 
     private void Test() {
         NavigationManager.NavigateTo(NavigationManager.Uri + "/1");
