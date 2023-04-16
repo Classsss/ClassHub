@@ -3,11 +3,13 @@
 @inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
 
-<h3>ExamListPage</h3>
 <ExamList Exams="Exams" />
-<button class="btn btn-primary" @onclick="Test2">
-    시험 등록 화면 테스트
-</button>
+<div class="row">
+    <div class="col-12">
+        <button class="btn btn-success float-end" @onclick="Test2">등록</button>
+    </div>
+</div>
+
 
 @code {
     [Parameter]
