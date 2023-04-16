@@ -60,7 +60,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4" style="height: 100%; width = 55%;">
+        <div class="col-md-4" style="height: 100%; width: 55%;">
             <MonacoEditor @ref="MonacoEditorReference" />
             <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
             <div id="output-number">
@@ -70,10 +70,6 @@
         </div>
     </div>
 </div>
-
-
-
-
 
 
 
@@ -107,6 +103,15 @@
         EndDate = new DateTime(2022, 4, 30) },
         new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
         new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
+         new Practice { Id = 4, Title = "간단한 덧셈", Content = "숫자 두개를 더하는 코드를 구현해보자",
+        Author = "조세형",
+        InputCases = new List<string>(){ "1 1","5 10"},
+        OutputCases = new List<string>() { "2","15" },
+        Language = "C",
+        isApplyScore = true,
+        isGptAvailable = true,
+        StartDate = new DateTime(2022, 4, 1),
+        EndDate = new DateTime(2022, 4, 30) },
     };
 
         // Id가 현재 페이지의 Id와 일치하는 practice 객체를 찾아 초기화합니다.
@@ -117,7 +122,7 @@
 
     // 채점 결과를 표시할 변수
     private string Output = "";
-
+    
     // 채점 결과와 동반되는 메시지를 표시할 변수
     private string Message = "";
 
