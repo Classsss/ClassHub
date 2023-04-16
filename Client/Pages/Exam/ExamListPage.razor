@@ -21,8 +21,8 @@
         Exams = new List<Exam>();
         Exams.Add(new Exam() {
             ExamId = 1,
-            StartDate = DateTime.Now,
-            EndDate = DateTime.Now.AddDays(1),
+            StartDate = DateTime.Now.AddDays(-2),
+            EndDate = DateTime.Now.AddDays(-1),
             IsAttend = true
         });
         Exams.Add(new Exam() {
@@ -33,8 +33,8 @@
         });
         Exams.Add(new Exam() {
             ExamId = 3,
-            StartDate = DateTime.Now,
-            EndDate = DateTime.Now.AddDays(1),
+            StartDate = DateTime.Now.AddDays(1),
+            EndDate = DateTime.Now.AddDays(2),
             IsAttend = true
         });
     }
