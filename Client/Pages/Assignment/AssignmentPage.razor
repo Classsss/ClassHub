@@ -15,12 +15,12 @@
         <p style="float: left; margin-right: 50px;">작성자: @assignment.Author</p>
         <div style="float: right;">
             <span class="oi oi-eye" aria-hidden="true">공개일</span>
-            <span style="margin-left: 5px;">@assignment.Deadline.ToString("yyyy.MM.dd")</span>
+            <span style="margin-left: 5px;">@assignment.EndDate.ToString("yyyy.MM.dd")</span>
         </div>
         <br />
         <div style="float: right;">
             <span class="oi oi-eye" aria-hidden="true">마감일</span>
-            <span style="margin-left: 5px;">@assignment.Deadline.ToString("yyyy.MM.dd")</span>
+            <span style="margin-left: 5px;">@assignment.EndDate.ToString("yyyy.MM.dd")</span>
         </div>
         <br />
     </div>
@@ -61,6 +61,6 @@
 
     protected override async Task OnInitializedAsync() {
         // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
-        assignment = new Assignment { Id = AssignmentId, Title = "ASP.NET Core 프로젝트", Description = "첨부된 파일을 참고하여 텍스트 파일을 업로드하세요.", Author="조민경", Deadline = new DateTime(2023, 5, 2, 23, 50, 0), IsSubmitted = false, SubmissionDate = null, SubmissionFilePath = string.Empty };
+        assignment = new Assignment { Id = AssignmentId, Title = "ASP.NET Core 프로젝트", Description = "첨부된 파일을 참고하여 텍스트 파일을 업로드하세요.", Author = "조민경", EndDate = new DateTime(2023, 5, 2, 23, 50, 0), IsSubmitted = false, SubmissionDate = null, SubmissionFilePath = string.Empty };
     }
 }
