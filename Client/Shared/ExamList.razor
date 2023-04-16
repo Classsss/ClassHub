@@ -2,20 +2,22 @@
 @using ClassHub.Client.Models
 
 <style>
-    .bg-gray {
-        background-color: gray;
-    }
-
     .bg-inProgress {
-        color: green;
+        color: #27ae60;
+        font-weight: bold;
     }
 
-    .bg-end {
-        color: red;
+    .bg-plan {
+        color: #3498db;
     }
 
     .btn:hover {
         color: #007bff;
+    }
+
+    .exam-row:hover {
+        background-color: #bdc3c7;
+        cursor: pointer;
     }
 </style>
 
@@ -24,26 +26,32 @@
 
 <table class="table table-striped">
     <thead>
-        <tr class="bg-gray">
-            <th>번호</th>
-            <th>제목</th>
-            <th>진행</th>
-            <th>제출</th>
-            <th>마감일</th>
+        <tr>
+            <th class="text-center">번호</th>
+            <th class="text-center">제목</th>
+            <th class="text-center">진행</th>
+            <th class="text-center">제출</th>
+            <th class="text-start">일정</th>
         </tr>
     </thead>
     <tbody>
         @foreach(var exam in Exams) {
-            <tr>
-                <td>@exam.ExamId</td>
-                <td>
-                    <button class="btn" type="button" @onclick="@(() => AttendExam(exam))">@(exam.ExamId)번 시험</button>
+            int state = (exam.EndDate < DateTime.Now) ? 0 : (DateTime.Now < exam.StartDate) ? 1 : 2; // 0 종료, 1 예정, 2 진행 중
+            <tr class="exam-row" @onclick="@(() => AttendExam(exam))">
+                <td class="align-middle text-center">@exam.ExamId</td>
+
+                <td class="align-middle text-center">@(exam.ExamId)번 시험</td>
+
+                <td class="align-middle text-center @((state == 0) ? "" : (state == 1) ? "bg-plan" : "bg-inProgress" )">
+                    @((state == 0) ? "종료" : (state == 1) ? "예정" : "진행 중")
                 </td>
-                <td class="@(exam.EndDate >= DateTime.Now ? "bg-inProgress" : "bg-end" )">
-                    @(exam.EndDate < DateTime.Now ? "종료" : (DateTime.Now < exam.StartDate) ? "시작전" : "진행중")
+                <td class="align-middle text-center">
+                    <span class="oi oi-@(exam.IsAttend ? "check" : "x")" style="color: @(exam.IsAttend ? "#27ae60" : "#e74c3c");"></span>
                 </td>
-                <td>@(exam.IsAttend ? "응시" : "미응시")</td>
-                <td>@exam.EndDate.ToString("yyyy.MM.dd tt hh:mm")</td>
+                <td class="align-middle text-start">
+                    시작 : @exam.StartDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US"))<br />
+                    종료 : @exam.EndDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US")) (@(Math.Round((exam.EndDate - exam.StartDate).TotalMinutes))분)
+                </td>
             </tr>
         }
     </tbody>
