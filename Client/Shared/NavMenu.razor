@@ -1,8 +1,9 @@
 ﻿@inject NavigationManager NavigationManager
+@inject NavMenuTitleService NavMenuTitleService
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">ClassHub</a>
+        <a class="navbar-brand" href="">@NavMenuTitleService.Title</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -56,9 +57,7 @@
 
 @code {
     private string classRoomUri = string.Empty;
-
     private bool collapseNavMenu = true;
-
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     protected override async Task OnInitializedAsync() {
