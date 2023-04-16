@@ -3,54 +3,34 @@
 <div class="d-flex justify-content-center">
     <nav aria-label="Page navigation">
         <ul class="pagination">
-            <li class="page-item"><button class="page-link" @onclick="GoToFirstPage">처음</button></li>
-            <li class="page-item"><button class="page-link" @onclick="GoToPreviousPage">이전</button></li>
+            <li class="page-item"><button class="page-link" @onclick="@(() => GoToPage(currentPage=1))">처음</button></li>
+            <li class="page-item"><button class="page-link" @onclick="@(() => GoToPage(--currentPage))">이전</button></li>
             @for (int i = 1; i <= totalPages; i++)
             {
-                int currentPageNumber = i;
+                int pageNumber = i;
                 <li class="page-item @(currentPage == i ? "active" : "")">
-                    <button class="page-link" @onclick="() => GoToPage(currentPageNumber)">@i</button>
+                    <button class="page-link" @onclick="() => GoToPage(pageNumber)">@i</button>
                 </li>
             }
-
-            <li class="page-item"><button class="page-link" @onclick="GoToNextPage">다음</button></li>
-            <li class="page-item"><button class="page-link" @onclick="GoToLastPage">끝</button></li>
+            <li class="page-item"><button class="page-link" @onclick="@(() => GoToPage(++currentPage))">다음</button></li>
+            <li class="page-item"><button class="page-link" @onclick="@(() => GoToPage(currentPage=totalPages))">끝</button></li>
         </ul>
     </nav>
 </div>
 
 @code {
 
-    [Parameter] public int currentPage { get; set; } // 현재 페이지
-    [Parameter] public int totalPages { get; set; } // 총 페이지
-    [Parameter] public EventCallback<int> onPageChanged { get; set; } // 페이지의 상태가 변화하면 currentPage를 업데이트함
+    /// <summary> 현재 페이지 </summary>
+    [Parameter] public int currentPage { get; set; }
+    /// <summary> 총 페이지 수 </summary>
+    [Parameter] public int totalPages { get; set; }
+    /// <summary> Pagination의 currentPage가 변경되면 발생하는 이벤트 </summary>
+    [Parameter] public EventCallback<int> onPageChanged { get; set; }
 
-    private void GoToFirstPage() => GoToPage(1); // 1페이지로 이동
-
-    private void GoToLastPage() => GoToPage(totalPages); // 마지막 페이지로 이동
-
-    private void GoToPreviousPage() // 이전 페이지로 이동
-    {
-        if (currentPage > 1)
-        {
-            GoToPage(currentPage - 1);
-        }
-    }
-
-    private void GoToNextPage() // 다음 페이지로 이동
-    {
-        if (currentPage < totalPages)
-        {
-            GoToPage(currentPage + 1);
-        }
-    }
-
-    private async Task GoToPage(int pageNumber) // pagenumber로 페이지 이동
-    {
-        if (currentPage != pageNumber)
-        {
-            currentPage = pageNumber;
-            await onPageChanged.InvokeAsync(currentPage);
-        }
+    /// <summary>
+    /// 현재 페이지 번호를 target으로 변경하고 상태 변경 이벤트를 발생시킵니다.
+    /// </summary>
+    private async Task GoToPage(int target) {
+        if(0 < target || target <= totalPages) await onPageChanged.InvokeAsync((currentPage = target));
     }
 }
