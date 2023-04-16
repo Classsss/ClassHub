@@ -34,6 +34,26 @@
             }
         }
     </script>
+
+    <!--Monaco Editor-->
+    <script>
+        function updateEditorContainerWidth() {
+
+            var container = document.querySelector('.my-editor-class');
+            if (container) {
+                var parentElement = container.parentElement;
+                if (parentElement) {
+                    container.style.width = parentElement.clientWidth + 'px';
+                }
+            }
+        }
+
+        window.addResizeEventListener = function () {
+            window.addEventListener('resize', function () {
+                window.updateEditorContainerWidth();
+            });
+        }
+    </script>
 </head>
 
 <body>
