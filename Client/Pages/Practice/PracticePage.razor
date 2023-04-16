@@ -18,16 +18,29 @@
                     #@practice.Id @practice.Title
                 </h1>
             </div>
-            <div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;  ">
-                <p style=" margin-right: 50px; ">작성자: @practice.Author</p>
-                <div style="margin-bottom: 10px; margin-right: 10px;">
-                    <div>시작일 : @practice.StartDate.ToString("yyyy.MM.dd HH:mm")</div>
-                    <div>마감일 : @practice.EndDate.ToString("yyyy.MM.dd HH:mm")</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; ">
+                <div style="display: flex; align-items: center;">
+                    <p style="margin-right: 50px; margin-bottom: 0;">작성자: @practice.Author</p>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="margin-right: 20px;">
+                        <div>시작일: @practice.StartDate.ToString("yyyy.MM.dd HH:mm")</div>
+                        <div>마감일: @practice.EndDate.ToString("yyyy.MM.dd HH:mm")</div>
+                    </div>
+                    <div style="margin-right: 20px;">제출 언어: @practice.Language</div>
+                    <div>
+                        <div>점수 반영: @((practice.isApplyScore) ? "반영" : "미반영")</div>
+                        <div>GPT 조언: @((practice.isGptAvailable) ? "가능" : "불가능")</div>
+                    </div>
                 </div>
             </div>
+
+
+
         </div>
     </div>
-    <div class="row" style="width: 100%;">
+    <hr style="margin-top: 0rem; margin-bottom: 0.5rem; border: 0; border-top: 1px solid grey;">
+    <div class="row" style="width: 100%; margin-top :3rem;">
         <div class="col-md-6" style="max-height: calc(100vh - 50px); width: 45%;overflow-y: auto;">
             <div class="d-flex flex-column justify-content-between h-100">
                 <div>
@@ -48,21 +61,13 @@
                         </div>
                     }
                     <hr />
-                    <div style="margin-bottom: 10px; margin-top: 20px;">
-                        <h5 style="font-weight: bold;">실습 정보</h5>
-                        <div>시작일 : @practice.StartDate.ToString("yyyy.MM.dd HH:mm")</div>
-                        <div>마감일 : @practice.EndDate.ToString("yyyy.MM.dd HH:mm")</div>
-                        <div>제출 언어 : @practice.Language</div>
-                        <div>점수 반영: @((practice.isApplyScore) ? "반영" : "미반영")</div>
-                        <div>GPT 조언: @((practice.isGptAvailable) ? "가능" : "불가능")</div>
-                        <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
-                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4" style="height: 100%; width: 55%;">
             <MonacoEditor @ref="MonacoEditorReference" />
             <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+            <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
             <div id="output-number">
                 <h3>결과: @Output</h3>
                 <h3>@Message</h3>
