@@ -1,11 +1,9 @@
 ﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}/submitresult"
-@*todo : 
-    수강생 id도 받아야함 주소 자체에 id 추가해야하나?
-    그렇게 되면 해당 실습id와 제출자id를 이용해 DB에서 꺼내서 보여줌 
-    코드나 조언 확인 누르면 새창떠서 코드나 조언결과 보여줌
-*@
-<h3>제출 내역</h3>
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@inject Blazored.Modal.Services.IModalService ModalService
 
+<h3>제출 내역</h3>
 
 <table class="table">
     <thead>
@@ -28,8 +26,8 @@
             <td>0ms</td>
             <td>C</td>
             <td>2023.4.16 14:20</td>
-            <td><a href="#">코드확인</a></td>
-            <td><a href="#">조언확인</a></td>
+            <td><button @onclick="ShowCode">제출 코드 확인</button></td>
+            <td><button @onclick="ShowAdvice">GPT의 조언</button></td>
         </tr>
     </tbody>
 </table>
@@ -40,4 +38,29 @@
     [Parameter]
     public int PracticeId { get; set; }
 
+    private async Task ShowCode()
+    {
+        var parameters = new ModalParameters();
+        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
+
+
+        parameters.Add("Code", samplecode);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<SubmitCode>("제출 코드", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+    }
+
+    private async Task ShowAdvice()
+    {
+        var parameters = new ModalParameters();
+        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
+
+
+        parameters.Add("Code", samplecode);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<AdviceGpt>("GPT 조언", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+    }
 }
