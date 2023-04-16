@@ -34,7 +34,7 @@
         box-sizing: border-box;
         position: relative;
         height: calc(100vh - 300px);
-        width: calc(100vw - 300px);
+        width: 100%;
         min-width: 600px;
         overflow: auto;
         border: 1px solid black;
@@ -56,7 +56,8 @@
         return new StandaloneEditorConstructionOptions {
                 Language = previousValue, // previousValue의 초기값을 첫 언어로 설정
                 GlyphMargin = true,
-                Value = ""
+                Value = "",
+                AutomaticLayout = true
             };
     }
 
@@ -79,6 +80,9 @@
 
         if(InitCode != null) await editor.SetValue(InitCode);
         else await editor.SetValue(GetTemplateCode(previousValue));
+
+        // practiceEditor의 크기 조절
+        await JSRuntime.InvokeVoidAsync("updateEditorContainerWidth");
     }
 
     // 에디터에 우클릭 시 수행할 로직을 정의한다.
