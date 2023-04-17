@@ -1,8 +1,6 @@
 ﻿@inject NavigationManager NavigationManager
 @using ClassHub.Shared
 
-<h3>@roomId 강의실 출석현황</h3>
-<hr>
 <div class="row">
     <div class="col-md-auto" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
         <span style="font-weight:bold;">출결 상태 : </span>
@@ -14,8 +12,8 @@
 </div>
 <br />
 
-@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson }))
-{
+@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson })) {
+    if(--MaxCount < 0) break;
     <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Lesson)차시</i>
     
     <table class="table table-bordered table-hover" style="text-align: center;">
@@ -86,7 +84,9 @@
 
 @code {
     [Parameter]
-    public int roomId { get; set; } //강의실 번호
+    public int roomId { get; set; } = 1; //강의실 번호
+    [Parameter]
+    public int MaxCount { get; set; } = 10;
 
     //출결 항목 리스트
     public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>
