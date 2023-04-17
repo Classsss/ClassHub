@@ -6,10 +6,35 @@
 @if(classRoom == null) {
     <p><em>강의실 정보를 로딩 중입니다...</em></p>
 } else {
-    <h1>@Id 번 강의실에 오신 것을 환영합니다.</h1>
-    <p>강의정보 : @(classRoom.Year + "년") @(classRoom.Semester + "학기") @classRoom.Title</p>
-    <p>과목번호 : @classRoom.CourseId</p>
-    <p>강좌번호 : @(classRoom.SectionId.ToString("D4"))</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-9 col-12">
+                <AttendanceStatusVertical MaxCount="2" />
+            </div>
+            <div class="col-lg-3 col-12">
+                <div class="row">
+                    <h3 class="text-center col-12">공지사항</h3>
+                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
+                        <ul class="list-group">
+                            @for(int i = 1; i <= 20; i++) {
+                                <li class="list-group-item">공지사항 @i</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <h3 class="text-center col-12">질의응답</h3>
+                    <div class="col-12 border" style="overflow: auto; max-height: 260px;">
+                        <ul class="list-group">
+                            @for(int i = 1; i <= 12; i++) {
+                                <li class="list-group-item">질의응답 @i</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
