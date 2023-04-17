@@ -3,6 +3,7 @@
 @using Blazored.TextEditor
 @using ClassHub.Client.Models
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <style>
     .ql-editor{
@@ -10,7 +11,8 @@
     }
 </style>
 
-<div class="col-md-8">
+<div class="col-md-12">
+    <BackButton Msg="저장하지 않고 나가기" />
     <div class="card mb-4">
         <div class="card-header">
             <input type="text" class="form-control mb-3" placeholder="Title">
@@ -102,6 +104,7 @@
                         <th>Description</th>
                         <th>Type</th>
                         <th>Score</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,18 +114,21 @@
                             <td>@problem.Description</td>
                             <td>@(problem is MultipleChoiceProblem ? "Multiple Choice" : "Short Answer")</td>
                             <td>@problem.Score</td>
+                            <td><i class="oi oi-pencil" /></td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
         <div class="card-footer d-flex justify-content-end">
-            <button class="btn btn-primary">Add</button>
+            <button class="btn btn-primary">
+                <i class="oi oi-plus" />
+            </button>
         </div>
     </div>
 
     <div class="d-flex justify-content-end">
-        <button class="btn btn-success" @onclick="Submit">Submit New Exam</button>
+        <button class="btn btn-success" @onclick="Submit">시험 등록</button>
     </div>
 </div>
 
@@ -154,6 +160,6 @@
     }
 
     private void Submit() {
-        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf('/')));
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }
