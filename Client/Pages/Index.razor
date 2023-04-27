@@ -6,11 +6,20 @@
 @inject NavMenuTitleService NavMenuTitleService
 @using ClassHub.Client.Models;
 @using ClassHub.Shared;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 @using Microsoft.AspNetCore.WebUtilities;
 @using Microsoft.JSInterop;
 @using System.Text;
 @using System.Text.Json
-
+<AuthorizeView Roles="student">
+    <Authorized>
+        <h1>Welcome, student!</h1>
+    </Authorized>
+    <NotAuthorized>
+        <h1>You are not authorized to view this page.</h1>
+    </NotAuthorized>
+</AuthorizeView>
 @if (Sections == null)
 {
     <div class="d-flex justify-content-center mt-5">
@@ -71,7 +80,10 @@ else
 
         // 로컬 스토리지에서 AccessToken이 있는지 확인
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
-        if (!string.IsNullOrEmpty(accessToken)) AuthService.IsLoggedIn = true;
+        if (!string.IsNullOrEmpty(accessToken)) {
+            AuthService.IsLoggedIn = true;
+
+        }
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
 

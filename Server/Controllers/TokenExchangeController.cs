@@ -20,7 +20,7 @@ namespace ClassHub.Server.Controllers
         public async Task<IActionResult> ExchangeToken([FromBody] AccessTokenRequest request)
         {
             var client = new HttpClient();
-            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://classhubsso.azurewebsites.net/token");
+            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7119/token");
 
             var authCode = request.AuthorizationCode;
             tokenRequest.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = authCode }), Encoding.UTF8, "application/json");
