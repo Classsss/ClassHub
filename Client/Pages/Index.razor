@@ -14,6 +14,7 @@
 @using System.Text;
 @using System.Text.Json
 
+<!--Role 테스트용 AuthView-->
 <AuthorizeView Roles="student">
     <Authorized>
         <h1>어서와 학생</h1>
@@ -24,6 +25,7 @@
         <h1>교수님 어서오세요</h1>
     </Authorized>
 </AuthorizeView>
+
 @if (Sections == null)
 {
     <div class="d-flex justify-content-center mt-5">
@@ -90,7 +92,7 @@ else
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
 
-        NavMenuTitleService.Title = "ClassHub";
+        NavMenuTitleService.Title = "ClassHub"; 
         await getCourses(); //시간표 받아오기
     }
 
