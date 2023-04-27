@@ -22,8 +22,9 @@ namespace ClassHub.Server.Controllers
             var client = new HttpClient();
             var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7119/token");
 
+            var id = request.UserId;
             var authCode = request.AuthorizationCode;
-            tokenRequest.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = authCode }), Encoding.UTF8, "application/json");
+            tokenRequest.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { UserId = id ,AuthorizationCode = authCode }), Encoding.UTF8, "application/json");
 
             var response = await client.SendAsync(tokenRequest);
             var content = await response.Content.ReadAsStringAsync();

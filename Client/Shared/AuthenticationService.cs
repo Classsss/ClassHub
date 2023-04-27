@@ -46,10 +46,11 @@ namespace ClassHub.Client.Shared {
                 var name = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
                 var role = claimsPrincipal.FindFirst(ClaimTypes.Role).Value;
 
+                /*
                 Console.WriteLine($"Code: {code}");
                 Console.WriteLine($"Name: {name}");
                 Console.WriteLine($"Role: {role}");
-
+                */
                 return new AuthenticationState(claimsPrincipal);
             }
             catch (Exception ex)
@@ -57,6 +58,10 @@ namespace ClassHub.Client.Shared {
                 Console.WriteLine(ex.Message);
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
+        }
+        public void StateChanged()
+        {
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
     }
 }
