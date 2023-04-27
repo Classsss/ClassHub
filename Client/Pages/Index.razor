@@ -3,6 +3,7 @@
 @inject AuthenticationService AuthService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@inject NavMenuTitleService NavMenuTitleService
 @using ClassHub.Client.Models;
 @using ClassHub.Shared;
 @using Microsoft.AspNetCore.WebUtilities;
@@ -74,6 +75,7 @@ else
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
 
+        NavMenuTitleService.Title = "ClassHub";
         await getCourses(); //시간표 받아오기
     }
 

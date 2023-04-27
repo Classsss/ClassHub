@@ -1,0 +1,92 @@
+﻿@using ClassHub.Client.Models
+@using ClassHub.Client.Shared
+@inject NavigationManager NavigationManager
+
+
+<style>
+    .bg-inProgress {
+        color: #27ae60;
+        font-weight: bold;
+    }
+
+    .bg-plan {
+        color: #3498db;
+    }
+
+    .btn:hover {
+        color: #007bff;
+    }
+
+    .exam-row:hover {
+        background-color: #bdc3c7;
+        cursor: pointer;
+    }
+</style>
+
+<h3>@Title</h3>
+<br />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th class="text-center">번호</th>
+            <th class="text-start">제목</th>
+            <th class="text-center">진행</th>
+            <th class="text-center">제출</th>
+            <th class="text-start">일정</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var submission in Submissions) {
+            int state = (submission.EndDate < DateTime.Now) ? 0 : (DateTime.Now < submission.StartDate) ? 1 : 2; // 0 종료, 1 예정, 2 진행 중
+            <tr class="exam-row" @onclick="@(() => Attend(submission))">
+                <td class="align-middle text-center">@submission.Id</td>
+
+                <td class="align-middle text-start">
+                    @submission.Title<br />
+                    <small style="color:dimgray">@submission.Author</small>
+                </td>
+
+                <td class="align-middle text-center @((state == 0) ? "" : (state == 1) ? "bg-plan" : "bg-inProgress" )">
+                    @((state == 0) ? "종료" : (state == 1) ? "예정" : "진행 중")
+                </td>
+                <td class="align-middle text-center">
+                    <span class="oi oi-@(submission.IsSubmitted ? "check" : "x")" style="color: @(submission.IsSubmitted ? "#27ae60" : "#e74c3c");"></span>
+                </td>
+                <td class="align-middle text-start">
+                    시작 : @submission.StartDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US"))<br />
+                    종료 : @submission.EndDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US"))
+                    @((submission is Exam) ? $"({Math.Round((submission.EndDate - submission.StartDate).TotalMinutes)}분)" : "")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="row">
+    <div class="col-12">
+        <button class="btn btn-success float-end" @onclick="Submit">등록</button>
+    </div>
+</div>
+
+<Pagination currentPage="1" totalPages="1"></Pagination>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public List<Submission> Submissions { get; set; }
+
+    protected override void OnInitialized() {
+        Submissions = Submissions.OrderByDescending(a => a.Id).ToList();
+    }
+
+    private void Submit() {
+        NavigationManager.NavigateTo(NavigationManager.Uri + "/editor");
+    }
+
+    private void Attend(Submission submission) {
+        Console.WriteLine($"{submission.Id}번 항목을 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{submission.Id}");
+    }
+}

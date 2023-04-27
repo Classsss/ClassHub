@@ -35,4 +35,12 @@
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
         AuthService.IsLoggedIn = false;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            // Monaco Editor가 있으면 크기를 알맞게 조절하는 함수 호출
+            await JSRuntime.InvokeVoidAsync("updateEditorContainerWidth");
+            await JSRuntime.InvokeVoidAsync("addResizeEventListener");
+        }
+    }
 }

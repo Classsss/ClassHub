@@ -1,0 +1,25 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+@using Newtonsoft.Json
+<Modal>
+    <ModalBody>
+        <p style="font-weight: bold; margin-bottom: 0;">제출 코드</p>
+        <textarea style="width: 100%; height: 200px;">@Code</textarea>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-primary" @onclick="HandleClose">Close</button>
+    </ModalFooter>
+</Modal>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public string Code { get; set; }
+
+    private async Task HandleClose()
+    {
+        await ModalInstance.CloseAsync();
+    }
+}
+
+
+ 

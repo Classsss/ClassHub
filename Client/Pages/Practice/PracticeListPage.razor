@@ -2,16 +2,16 @@
 @layout MainLayout
 @using ClassHub.Client.Models
 
-<h3>PracticeListPage</h3>
-<PracticeList Practices="@practices" />
+<SubmissionList Title="실습" Submissions="@practices" />
 
 @code {
     [Parameter]
     public int RoomId { get; set; }
 
-    List<Practice> practices = new List<Practice> {
-        new Practice { Id = 1, Title = "Introduction to C#", Content = "C#은 어려웡", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30) },
-        new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
-        new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
+    List<Submission> practices = new List<Submission> {
+        new Assignment { Id = 1, Title = "Introduction to C#", Description = "C#은 어려웡", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30), IsSubmitted = true },
+        new Assignment { Id = 2, Title = "Object-oriented Programming with C#", Description = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31), IsSubmitted = true },
+        new Assignment { Id = 3, Title = "Web Development with ASP.NET Core", Description = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2023, 4, 17), EndDate = new DateTime(2023, 5, 17) },
+        new Assignment { Id = 4, Title = "간단한 덧셈", Description = "숫자 두개를 더하는 코드를 구현해보자",Author = "조세형", StartDate = new DateTime(2023, 5, 1), EndDate = new DateTime(2023, 5, 15) },
     };
 }
