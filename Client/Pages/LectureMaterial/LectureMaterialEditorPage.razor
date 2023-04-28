@@ -1,19 +1,24 @@
-﻿@page "/classroom/{roomid:int}/lecturematerial/edit"
+﻿@page "/classroom/{roomid:int}/lecturematerial/edit/{noticeid:int}"
 @layout MainLayout
 @using ClassHub.Shared
 @using ClassHub.Client.Shared.LectureMaterial
 
-<h3>
-	강의자료 작성
-</h3>
-<LectureMaterialEditor ViewChanged="OnListMode" />
+@if (noticeId == 0)
+{
+	<h3>새 강의자료 작성</h3>
+}
+else
+{
+	<h3>강의자료 수정</h3>
+}
+
+<LectureMaterialEditor id="noticeId" />
 
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
-
 	[Parameter]
-	public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+	public int noticeId { get; set; }
 
 	private string Viewmode = "List";
 
@@ -27,24 +32,6 @@
 		new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "이것은 내용 4" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
 		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "이것은 내용 5" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
 	};
-
-	private async Task OnListMode()
-	{
-		Viewmode = "List";
-		await Task.CompletedTask;
-	}
-
-	private async Task OnWriteMode()
-	{
-		Viewmode = "Write";
-		await Task.CompletedTask;
-	}
-
-	private async Task OnDetailMode()
-	{
-		Viewmode = "Detail";
-		await Task.CompletedTask;
-	}
 
 	private async Task OnItemClicked(LectureMaterial lm)
 	{
