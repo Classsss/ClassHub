@@ -1,0 +1,43 @@
+﻿@page "/classroom/{roomid:int}/assignment"
+@layout MainLayout
+@using ClassHub.Client.Models
+
+<SubmissionList Title="과제" Submissions="@Assignments" />
+
+<!--과제 현황 리스트 게시판-->
+@code {
+	[Parameter]
+	public int RoomId { get; set; }
+
+	public List<Submission> Assignments { get; set; } = new List<Submission>()
+	{
+            // TODO: 미리 생성한 리스트를 데이터베이스에서 가져오는 코드로 대체
+
+        new Assignment
+		{
+			Id = 1,
+			Title = "Blazor 프로젝트",
+			Author = "김병대",
+			StartDate = new DateTime(2023, 03, 23, 12, 00, 00),
+			EndDate = new DateTime(2023, 04, 01, 23,50,0),
+			Description = "Blazor를 이용한 웹 애플리케이션 개발",
+			IsSubmitted = true,
+			SubmissionDate = new DateTime(2023, 05, 06, 22, 30, 0),
+			SubmissionFilePath = "/uploads/assignment1.zip"
+		},
+
+		new Assignment
+		{
+			Id = 2,
+			Title = "ASP.NET Core 프로젝트",
+			Author = "송창훈",
+			StartDate = new DateTime(2023, 04, 23, 12, 00, 00),
+			EndDate = new DateTime(2023, 05, 02, 23,50,0),
+			Description = "ASP.NET Core를 이용한 웹 애플리케이션 개발",
+			IsSubmitted = false,
+			SubmissionDate = null,
+			SubmissionFilePath = null
+		}
+
+	};
+}

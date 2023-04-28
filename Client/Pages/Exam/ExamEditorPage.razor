@@ -1,0 +1,165 @@
+﻿@page "/classroom/{roomid:int}/exam/editor"
+@layout MainLayout
+@using Blazored.TextEditor
+@using ClassHub.Client.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<style>
+    .ql-editor{
+        min-height:200px;
+    }
+</style>
+
+<div class="col-md-12">
+    <BackButton Msg="저장하지 않고 나가기" />
+    <div class="card mb-4">
+        <div class="card-header">
+            <input type="text" class="form-control mb-3" placeholder="Title">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" data-target="#editor-tab">Write</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" data-target="#preview-tab">Preview</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body d-flex flex-column align-items-stretch">
+            <BlazoredTextEditor @ref=QuillHtml Placeholder="Write Exam Description...">
+                <ToolbarContent>
+                    <select class="ql-header">
+                        <option selected=""></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
+                    </select>
+                    <span class="ql-formats">
+                        <button class="ql-bold"></button>
+                        <button class="ql-italic"></button>
+                        <button class="ql-underline"></button>
+                        <button class="ql-strike"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <select class="ql-color"></select>
+                        <select class="ql-background"></select>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-list" value="ordered"></button>
+                        <button class="ql-list" value="bullet"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-link"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-align" value=""></button>
+                        <button class="ql-align" value="center"></button>
+                        <button class="ql-align" value="right"></button>
+                        <button class="ql-align" value="justify"></button>
+                    </span>
+
+                </ToolbarContent>
+            </BlazoredTextEditor>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Exam Options
+        </div>
+        <div class="card-body">
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="option1" name="option1">
+                <label class="form-check-label" for="option1">
+                    Option 1
+                </label>
+            </div>
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="option2" name="option2">
+                <label class="form-check-label" for="option2">
+                    Option 2
+                </label>
+            </div>
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="option3" name="option3">
+                <label class="form-check-label" for="option3">
+                    Option 3
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Problem List
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Score</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var problem in problems) {
+                        <tr>
+                            <td>@problem.ProblemId</td>
+                            <td>@problem.Description</td>
+                            <td>@(problem is MultipleChoiceProblem ? "Multiple Choice" : "Short Answer")</td>
+                            <td>@problem.Score</td>
+                            <td><i class="oi oi-pencil" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-end">
+            <button class="btn btn-primary">
+                <i class="oi oi-plus" />
+            </button>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-success" @onclick="Submit">시험 등록</button>
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+
+    List<ExamProblem> problems;
+
+    private BlazoredTextEditor QuillHtml;
+
+    protected override async Task OnInitializedAsync() {
+        problems = new List<ExamProblem>();
+        problems.Add(new MultipleChoiceProblem {
+            ProblemId = 1,
+            Description = "What is the capital of South Korea?",
+            Score = 10,
+            Questions = new string[] { "Seoul", "Busan", "Daegu", "Incheon" },
+            Answer = 0
+        });
+        problems.Add(new ShortAnswerProblem {
+            ProblemId = 2,
+            Description = "What is the capital of South Korea?",
+            Score = 10,
+            Answer = "Seoul"
+        });
+    }
+
+    private void Submit() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+}

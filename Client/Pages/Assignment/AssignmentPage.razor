@@ -1,0 +1,67 @@
+﻿@page "/classroom/{roomid:int}/assignment/{assignmentid:int}"
+@layout MainLayout
+@using ClassHub.Client.Models
+@inject NavigationManager NavigationManager
+@using ClassHub.Client.Shared
+
+<BackButton />
+<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
+    <h1>
+        <span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
+        @assignment.Title
+    </h1>
+</div>
+<div>
+    <div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;">
+        <p style="float: left; margin-right: 50px;">작성자: @assignment.Author</p>
+        <div style="float: right;">
+            <span class="oi oi-eye" aria-hidden="true">공개일</span>
+            <span style="margin-left: 5px;">@assignment.EndDate.ToString("yyyy.MM.dd")</span>
+        </div>
+        <br />
+        <div style="float: right;">
+            <span class="oi oi-eye" aria-hidden="true">마감일</span>
+            <span style="margin-left: 5px;">@assignment.EndDate.ToString("yyyy.MM.dd")</span>
+        </div>
+        <br />
+    </div>
+    <div>@assignment.Description</div>
+    <br />
+    <div class="drop-area border border-3 border-dashed rounded p-3 text-center position-relative">
+        <a href="">ASP.NET Core 프로젝트에 대하여.hwp</a>
+    </div>
+    <hr />
+</div>
+<div style="font-weight:bold; color:#2E3494"><i class="oi oi-file"/>@(" " + "과제제출")</div>
+<div class="p-3 border-4 rounded-3" style="background-color: #F7F7F7;">
+    <div class="text-black fw-bold mb-2">지각제출 불가능</div>
+    <div class="text-black mb-2">미제출</div>
+    <div class="text-black mb-3">점수 : 0</div>
+    <DragDropUpload />
+</div>
+<br />
+<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
+	<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
+	<p style="display: inline-block; margin-right: 10px;">이전글</p>
+	<p style="display: inline-block;">이전글이 없습니다.</p>
+</div>
+<div style="border-bottom: 1px solid grey;">
+	<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
+	<p style="display: inline-block; margin-right: 10px;">다음글</p>
+	<p style="display: inline-block;">다음글이 없습니다.</p>
+</div>
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+
+    [Parameter]
+    public int AssignmentId { get; set; }
+
+    private Assignment assignment;
+
+    protected override async Task OnInitializedAsync() {
+        // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
+        assignment = new Assignment { Id = AssignmentId, Title = "ASP.NET Core 프로젝트", Description = "첨부된 파일을 참고하여 텍스트 파일을 업로드하세요.", Author = "조민경", EndDate = new DateTime(2023, 5, 2, 23, 50, 0), IsSubmitted = false, SubmissionDate = null, SubmissionFilePath = string.Empty };
+    }
+}

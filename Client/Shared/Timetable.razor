@@ -2,6 +2,7 @@
 @using System.Linq
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@inject NavMenuTitleService NavMenuTitleService
 
 <style>
     .timetable td, .timetable th {
@@ -41,7 +42,7 @@
                             }
                             int span = course.EndTime - course.StartTime;
                             <td rowspan=@span>
-                                <button class="btn btn-primary btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
+                                <button class="btn btn-@colors[course.Color] btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
                                     @course.Name
                                     <br />
                                     @course.Instructor
@@ -66,6 +67,8 @@
     [Parameter]
     public List<Section> Sections { get; set; }
 
+    private string[] colors = { "primary", "secondary", "success", "danger", "warning", "info", "light", "dark" };
+
     // 시간표 시작 시간과 종료 시간을 설정하세요.
     private int StartHour => 9;
     private int EndHour => 19;
@@ -74,6 +77,7 @@
         // 해당 강의를 선택했을 때 수행할 작업을 정의하세요.
         Console.WriteLine($"Selected course: {section.Name}");
         //NavigationManager.NavigateTo($"/classroom/{course.Id}");
+        NavMenuTitleService.Title = $"{section.Name}({section.SectionId.ToString("D4")})";
         NavigationManager.NavigateTo($"/classroom/1");
     }
 

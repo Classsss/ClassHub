@@ -1,4 +1,5 @@
-﻿@inject NavigationManager NavigationManager
+﻿@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
 
 <style>
@@ -14,7 +15,7 @@
 
 <h3>공지사항</h3>
 <br />
-<table class="table">
+<table class="table table-striped">
     <thead>
         <tr>
             <th style="width: 10%;">번호</th>
@@ -25,7 +26,7 @@
     </thead>
     <tbody>
         @foreach(var notice in pagednotices) {
-            <tr class="notice-row" @onclick="@(() => Shownotice(notice))" style="cursor:pointer;">
+            <tr class="notice-row" @onclick="@(() => ShowNotice(notice))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@notice.Id</td>
                 <td class="notice-title">@notice.Title</td>
                 <td>@notice.Author</td>
@@ -43,37 +44,66 @@
 @code {
     [Parameter]
     public List<Notice> notices { get; set; }
-    private List<Notice> pagednotices = new List<Notice>();
 
+    private List<Notice> pagednotices = new List<Notice>();
     public int RoomId { get; set; }
-    // 여기부터 페이지네이션 관련 코드
+
     private int currentPage = 1;
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
     private int totalPages = 0;
 
+    // 페이지가 초기화되면 실행(페이지 진입, 새로고침, 공지보고오기 등)
+    protected override async void OnInitialized() {
+        notices = notices.OrderByDescending(a => a.Id).ToList(); // 공지 ID 기준 내림차순
+        CalculateTotalPages();
+        await LoadPageNumber();
+        LoadPagedData();
+        StateHasChanged();
+    }
+
+    // Pagination.razor에서 currentPage가 변경되면 실행
     private async Task OnPageChanged(int newPage) {
         currentPage = newPage;
+        await SavePaginationState();
         LoadPagedData();
     }
 
+    /// <summary>
+    /// 전체 페이지 수 계산
+    /// </summary>
     private void CalculateTotalPages() {
         totalPages = (int)Math.Ceiling((double)notices.Count / pageSize);
     }
 
-    // <== 여기 까지
+    /// <summary>
+    /// 현재 페이지의 공지사항 리스트 로딩
+    /// </summary>
     private void LoadPagedData() {
         pagednotices = notices.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    private void Shownotice(Notice notice) {
+    /// <summary>
+    /// 해당 공지사항 페이지로 이동
+    /// </summary>
+    private void ShowNotice(Notice notice) {
         Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
     }
 
-    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    /// <summary>
+    /// 세션 스토리지에 현재 페이지 번호를 저장
+    /// </summary>
+    private async Task SavePaginationState()
     {
-        notices = notices.OrderByDescending(a => a.Id).ToList();
-        CalculateTotalPages();
-        LoadPagedData();
+        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentPage", currentPage);
+    }
+
+    /// <summary>
+    /// 세션 스토리지에 저장된 현재 페이지 번호를 로딩
+    /// </summary>
+    private async Task LoadPageNumber()
+    {
+        var storedPage = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentPage");
+        if (!string.IsNullOrEmpty(storedPage)) currentPage = int.Parse(storedPage);
     }
 }

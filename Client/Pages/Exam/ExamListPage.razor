@@ -1,0 +1,41 @@
+﻿@page "/classroom/{roomid:int}/exam"
+@layout MainLayout
+@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+
+<SubmissionList Title="시험" Submissions="Exams" />
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+
+    private List<Submission> Exams;
+
+    protected override void OnInitialized() {
+        Exams = new List<Submission>();
+        Exams.Add(new Exam() {
+            Id = 1,
+            Title = "시스템클라우드보안 중간고사",
+            Author = "조민경",
+            StartDate = DateTime.Now.AddDays(-2),
+            EndDate = DateTime.Now.AddDays(-1),
+            IsSubmitted = true
+        });
+        Exams.Add(new Exam() {
+            Id = 2,
+            Title = "컴퓨터공학특론2 중간고사",
+            Author = "문대경",
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddDays(1),
+            IsSubmitted = false
+        });
+        Exams.Add(new Exam() {
+            Id = 3,
+            Title = "이충기 교수님과 함께하는 즐거운 알고리즘",
+            Author = "이충기",
+            StartDate = DateTime.Now.AddDays(1),
+            EndDate = DateTime.Now.AddDays(2),
+            IsSubmitted = false
+        });
+    }
+}

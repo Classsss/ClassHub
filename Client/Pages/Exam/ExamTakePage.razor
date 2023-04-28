@@ -1,0 +1,93 @@
+﻿@page "/classroom/{roomid:int}/exam/{examid:int}"
+@using ClassHub.Client.Models
+@using ClassHub.Client.Shared.ExamProblem
+
+@switch(problem) {
+    case MultipleChoiceProblem multipleChoiceProblem:
+        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" />
+        break;
+    case ShortAnswerProblem shortAnswerProblem:
+        <ShortAnswerDisplay Problem="@shortAnswerProblem" />
+        break;
+    case CodeProblem codeProblem:
+        <CodeProblemDisplay Problem="@codeProblem" />
+        break;
+}
+
+<div class="container">
+    <div class="row justify-content-center align-items-center">
+        <div class="col text-center">
+            <button class="btn btn-primary @((currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+        </div>
+        <div class="col text-center">
+            <p>@(currentProblemIndex+1) / @(problems.Count)</p>
+            <p>남은 시간: 10:00</p>
+        </div>
+        <div class="col text-center">
+            <button class="btn btn-primary" @onclick="NextProblem">
+                @((currentProblemIndex == problems.Count - 1) ? "응시 완료" : "다음 문제")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int ExamId { get; set; }
+
+    [Parameter]
+    public Exam examInfo { get; set; }
+    private int currentProblemIndex;
+    private List<ExamProblem> problems;
+    private ExamProblem problem;
+
+    protected override void OnInitialized() {
+        examInfo = new Exam {
+            Id = 1,
+            StartDate = DateTime.Today.AddDays(-1),
+            EndDate = DateTime.Today.AddDays(1),
+            IsRandomProblem = true,
+            IsShowTimeLimit = true,
+            IsBackToPreviousProblem = true
+        };
+
+        problems = new List<ExamProblem> {
+            new MultipleChoiceProblem {
+                ProblemId = 1,
+                Description = "What is the capital city of France?",
+                Questions = new string[] { "London", "Paris", "Berlin", "Madrid" },
+            },
+            new ShortAnswerProblem {
+                ProblemId = 2,
+                Description = "무엇이 의미 있는 삶인가? (10자 이내)"
+            },
+            new CodeProblem {
+                ProblemId = 3,
+                Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
+                Example = @"int a, b;
+int ans;
+Console.WriteLine(ans);",
+            }
+        };
+
+        var rnd = new Random();
+        problems = problems.OrderBy(item => rnd.Next()).ToList(); // 무작위 셔플
+
+        currentProblemIndex = 0;
+        problem = problems[currentProblemIndex];
+    }
+
+    private void NextProblem() {
+        if(currentProblemIndex < problems.Count - 1) {
+            problem = problems[++currentProblemIndex];
+        }
+    }
+
+    private void PrevProblem() {
+        if(currentProblemIndex > 0) {
+            problem = problems[--currentProblemIndex];
+        }
+    }
+}

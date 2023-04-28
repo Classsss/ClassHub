@@ -34,5 +34,7 @@ namespace ClassHub.Shared
 
         [JsonPropertyName("buildingId")]
         public string BuildingId { get; set; } // °­ÀÇ½Ç (BuildingId)
+
+        public int Color { get; set; } = -1;
     }
 }

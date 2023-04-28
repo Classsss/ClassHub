@@ -2,65 +2,101 @@
 @layout MainLayout
 @using ClassHub.Client.Models
 
-<div class="container mt-4">
-    <h2 class="mb-4">동영상 강의 목록</h2>
-    <div class="list-group">
-        <div class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-center">
-                <div style="width: 10%;"><h5 class="mb-1">회차</h5></div>
-                <div style="width: 40%;"><h5 class="mb-1">강의명</h5></div>
-                <div style="width: 25%;"><h5 class="mb-1">출석인정시간</h5></div>
-                <div style="width: 15%;"><h5 class="mb-1">수강여부</h5></div>
-                <div style="width: 10%;"><h5 class="mb-1">강의보기</h5></div>
-            </div>
-        </div>
-        @foreach (var lecture in lectures)
-        {
-            <div class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-center">
-                    <div style="width: 10%;text-indent: 10px;"><p class="mb-1">@lecture.Id </p></div>
-                    <div style="width: 40%;"><p class="mb-1">@lecture.Title</p></div>
-                    <div style="width: 25%;">
-                        <p class="mb-1" style="text-indent: 25px">
-                            @(
-                                lecture.RunningTime.Hour > 0
-                                ? $"{lecture.RunningTime.Hour}시간 {lecture.RunningTime.Minute}분 {lecture.RunningTime.Second}초"
-                                : $"{lecture.RunningTime.Minute}분 {lecture.RunningTime.Second}초"
-                                )
-                        </p>
-                    </div>
-                    <div style="width: 15%;">
-                        <p class="mb-1" style="text-indent: 27px">@((lecture.IsEnrolled ? "O" : " X"))</p>
-                    </div>
+<h2 class="mb-4">동영상 강의 목록</h2>
+<WeekPicker weekValue = "@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
+<br />
+@foreach (var item in lectures.GroupBy(x => new { x.Week, x.Lesson }))
+{
+    @if (selectedWeek.Contains(item.Key.Week))
+    {
+        <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Lesson)차시</i>
+        <table class="table table-bordered">
+            <tbody>
+                @foreach (var subItem in item)
+                {
+                    <tr>
+                        <td colspan="4" style="font-weight:bold;"><i class="oi oi-media-play" />@(" " + subItem.Title)</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; width:10%">
+                            학습인정기간
+                        </td>
+                        <td style="width:70%">
+                            @(subItem.StartDate.ToString("yyyy년 MM월 dd일 HH시 mm분") + " ~ " + subItem.EndDate.ToString("yyyy년 MM월 dd일 HH시 mm분"))
+                        </td>
+                        <td style ="font-weight:bold; width:10%">
+                            수강상태
+                        </td>
+                        <td class="@(subItem.IsEnrolled ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
+                            <i class="@((subItem.IsEnrolled) ? "oi oi-circle-check" : "oi oi-x")"></i>
+                            @(subItem.IsEnrolled ? "수강" : "미수강")
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuemax="100" aria-valuemin="0" style="@($"width: {subItem.CurrentLearningTime / (float)subItem.TotalLearningTime * 100}%")"></div>
+                            </div>
+                            <div class="text-center" style="font-size:12px">
+                                @(subItem.CurrentLearningTime + "분 / " + subItem.TotalLearningTime + "분")
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="font-size:14px;">@subItem.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <br />
+    }
+}
 
-                    <div style="width: 10%;"><button type="button" class="btn btn-primary btn-sm" onclick="window.open('@lecture.VideoUrl', '_blank')">강의 보기</button></div>
-                </div>
-            </div>
-        }
-    </div>
-</div>
+<style>
+    .progress {
+        height: 20px;
+        margin-bottom: 5px;
+    }
 
+    .progress-bar {
+        background-color: #007bff;
+        transition: none;
+    }
 
+    .enrolled {
+        background-color: #E7F0FD !important;
+        color: #1659EA !important;
+        
+    }
 
-
-
-
-
-
+    .not-enrolled {
+        background-color: #FCFFE5 !important;
+        color: #C2B20C !important;
+    }
+</style>
 
 
 @code {
     [Parameter]
     public int RoomId { get; set; }
 
+    public List<int> selectedWeek = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+
+    private async Task OnWeekChanged(List<int> week)
+    {
+        selectedWeek = week;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
     private List<Lecture> lectures = new List<Lecture>
 	{
         // 샘플 데이터
         // 실제 프로젝트에서는 데이터베이스 또는 API를 통해 동영상 강의 정보를 가져옴
-        new Lecture { Id = 1, Title = "Zior Park - CHRISTIAN (OFFICIAL VIDEO)", Description = "Zior Park's new album \"WHERE DOES SASQUATCH LIVE? PART 1\" just got out on every streaming platform.", VideoUrl = "https://www.youtube.com/watch?v=Dqlr8EDunCM", RunningTime =  new DateTime(1,1,1,0,59,36), IsEnrolled = true },
-        new Lecture { Id = 2, Title = "윤하(YOUNHA) - 사건의 지평선 M/V", Description = "윤하(YOUNHA) - 사건의 지평선 M/V", VideoUrl = "https://www.youtube.com/watch?v=BBdC1rl5sKY", RunningTime =  new DateTime(1,1,1,0,51,13), IsEnrolled = false },
-        new Lecture { Id = 3, Title = "[MV] BOL4(볼빨간사춘기) _ Travel(여행)", Description = @"소중한 일기장처럼 그녀들의 깨끗하고 말간 감정들이 모든 사람들의 마음속에 오래 간직되기를 바라는 Red Diary, 두 번째 페이지.
-        조그마한 방 한 켠, 서랍 안에 숨겨두었던 볼빨간사춘기의 진심이 담긴 이야기들, 지금 전합니다.", VideoUrl = "https://www.youtube.com/watch?v=xRbPAVnqtcs", RunningTime =  new DateTime(1,1,1,0,48,19), IsEnrolled = false },
+        new Lecture { Id = 1, Week = 1, Lesson = 1, Title = "Zior Park - CHRISTIAN (OFFICIAL VIDEO)", Description = "Zior Park의 새 앨범 \"WHERE DOES SASQUATCH LIVE? PART 1\" 모든 스트리밍 플랫폼에서 확인하세요!", StartDate = new DateTime(2023, 03, 02, 08, 0, 0), EndDate = new DateTime(2023, 03, 04, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=Dqlr8EDunCM", TotalLearningTime = 54, CurrentLearningTime = 54, IsEnrolled = true },
+        new Lecture { Id = 2, Week = 1, Lesson = 2, Title = "윤하(YOUNHA) - 사건의 지평선 M/V", Description = "윤하(YOUNHA)님의 사건의 지평선 M/V입니다. 다른 노래도 좋아요!",StartDate = new DateTime(2023, 03, 04, 08, 0, 0), EndDate = new DateTime(2023, 03, 06, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=BBdC1rl5sKY", TotalLearningTime = 112, CurrentLearningTime = 84, IsEnrolled = false },
+        new Lecture { Id = 3, Week = 2, Lesson = 1, Title = "[MV] BOL4(볼빨간사춘기) _ Travel(여행)", Description = @"소중한 일기장처럼 그녀들의 깨끗하고 말간 감정들이 모든 사람들의 마음속에 오래 간직되기를 바라는 Red Diary, 두 번째 페이지.
+        조그마한 방 한 켠, 서랍 안에 숨겨두었던 볼빨간사춘기의 진심이 담긴 이야기들, 지금 전합니다.", StartDate = new DateTime(2023, 03, 09, 0, 10, 0), EndDate = new DateTime(2023, 03, 11, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=xRbPAVnqtcs", TotalLearningTime = 51, CurrentLearningTime = 24, IsEnrolled = false },
 
         // 추가 강의...
     };

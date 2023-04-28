@@ -1,0 +1,66 @@
+﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}/submitresult"
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@inject Blazored.Modal.Services.IModalService ModalService
+
+<h3>제출 내역</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>제출번호</th>
+            <th>결과</th>
+            <th>메모리</th>
+            <th>시간</th>
+            <th>언어</th>
+            <th>제출시간</th>
+            <th>코드확인</th>
+            <th>GPT조언</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>맞았음</td>
+            <td>214KB</td>
+            <td>0ms</td>
+            <td>C</td>
+            <td>2023.4.16 14:20</td>
+            <td><button @onclick="ShowCode">제출 코드 확인</button></td>
+            <td><button @onclick="ShowAdvice">GPT의 조언</button></td>
+        </tr>
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int PracticeId { get; set; }
+
+    private async Task ShowCode()
+    {
+        var parameters = new ModalParameters();
+        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
+
+
+        parameters.Add("Code", samplecode);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<SubmitCode>("제출 코드", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+    }
+
+    private async Task ShowAdvice()
+    {
+        var parameters = new ModalParameters();
+        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
+
+
+        parameters.Add("Code", samplecode);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<AdviceGpt>("GPT 조언", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+    }
+}

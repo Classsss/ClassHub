@@ -1,4 +1,6 @@
-﻿<!--코드 에디터를 변경시키는 드롭다운 메뉴-->
+﻿@inject IJSRuntime JSRuntime
+
+<!--코드 에디터를 변경시키는 드롭다운 메뉴-->
 <div>
     <div style="margin:10px 0;">
         Theme:
@@ -10,15 +12,13 @@
     </div>
     <div style="margin:10px 0;">
         Language:
-        <select @onchange="ChangeLanguage">
+        <select id = "languageSelect" @onchange="ChangeLanguage">
             <!--TODO : Language 옵션 추가-->
-            <option value="python">Python</option>
             <option value="c">C</option>
             <option value="cpp">C++</option>
             <option value="csharp">C#</option>
             <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-            <option value="html">Html</option>
+            <option value="python">Python</option>
         </select>
     </div>
 </div>
@@ -32,30 +32,31 @@
         box-sizing: border-box;
         position: relative;
         height: calc(100vh - 300px);
-        width: calc(100vw - 300px);
+        width: 100%;
         min-width: 600px;
         overflow: auto;
         border: 1px solid black;
-        
-
     }
 </style>
 
 @code {
     [Parameter]
-    public string InitCode { get; set; }
+    public string? InitCode { get; set; }
 
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;
     private string[] decorationIds = new string[0];
+    private string previousValue = "c";
 
     // monaco editor의 Construction 옵션을 정의하여 반환한다.
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor) {
         // TODO : 추후 사양에 따라 에디터 옵션 수정 필요
         return new StandaloneEditorConstructionOptions {
-                Language = "c",
+                Language = previousValue, // previousValue의 초기값을 첫 언어로 설정
                 GlyphMargin = true,
-                Value = ""
+                Value = "",
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions { Enabled = false }
             };
     }
 
@@ -72,11 +73,15 @@
                     GlyphMarginClassName = "decorationGlyphMarginClass"
                 }
             }
-        };
+    };
         // 정의한 Decoration을 에디터에 적용한다.
         decorationIds = await editor.DeltaDecorations(null, newDecorations);
 
-        await editor.SetValue(InitCode);
+        if(InitCode != null) await editor.SetValue(InitCode);
+        else await editor.SetValue(GetTemplateCode(previousValue));
+
+        // practiceEditor의 크기 조절
+        await JSRuntime.InvokeVoidAsync("updateEditorContainerWidth");
     }
 
     // 에디터에 우클릭 시 수행할 로직을 정의한다.
@@ -92,8 +97,34 @@
 
     // Language Select를 변경했을 때 호출된다.
     // 선택한 옵션에 따라 에디터의 Language를 변경한다.
-    private async Task ChangeLanguage(ChangeEventArgs e) {
-        var model = await editor.GetModel();
-        await Global.SetModelLanguage(model, e.Value?.ToString());
+    private async Task ChangeLanguage(ChangeEventArgs e)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "언어를 바꿀시에 코드가 초기화됩니다. 계속하시겠습니까?");
+        if (confirmed)
+        {
+            var model = await editor.GetModel();
+            await Global.SetModelLanguage(model, e.Value?.ToString());
+            if (e.Value != null)
+            {
+                // 선택한 값으로 에디터에 코드 셋팅
+                await editor.SetValue(GetTemplateCode(e.Value.ToString()));
+                previousValue = e.Value.ToString();
+            }
+        }
+        else
+        {
+            // 이전 선택값으로 선택상태를 되돌린다.
+            await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('#languageSelect').value = '{previousValue}'");
+        }
+    }
+
+    private string GetTemplateCode(string language)
+    {
+        if (language == "csharp") return SampleCode.csharp;
+        else if (language == "cpp") return SampleCode.cpp;
+        else if (language == "c") return SampleCode.c;
+        else if (language == "java") return SampleCode.java;
+        else if (language == "python") return SampleCode.python;
+        else return SampleCode.etc;
     }
 }   
