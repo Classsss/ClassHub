@@ -9,7 +9,7 @@
         <input type="text" class="form-control me-2" placeholder="제목">
         <button style="width: 40px; height: 40px; border: 0;" class="oi oi-magnifying-glass"></button>
     </div>
-    <button class="btn btn-success" @onclick="()=>toWriteMode()">작성</button>
+    <button class="btn btn-success" @onclick="@(() => OpenEditor())">작성</button>
 </div>
 
 <table class="table table-striped">
@@ -59,10 +59,7 @@
     public List<LectureMaterial> lecture_materials { get; set; }
 
     [Parameter]
-    public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
-
-    [Parameter]
-    public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+    public EventCallback<List<int>> ViewChanged { get; set; } //Week 값 변경 시 발생하는 콜백이벤트
 
     public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
@@ -71,14 +68,9 @@
     //정렬을 위한 변수
     private bool sortByIDAscending = true;
 
-    private async Task ShowLecMat(LectureMaterial lm)
-    {
-        await ItemClicked.InvokeAsync(lm);
-    }
-
     private void SortById() //강의자료 번호 순 정렬
     {
-        if (sortByIDAscending)
+        if (!sortByIDAscending)
         {
             lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
         }
@@ -88,6 +80,16 @@
         }
 
         sortByIDAscending = !sortByIDAscending;
+    }
+
+    private void ShowLecMat(LectureMaterial lm)
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lm.Id}");
+    }
+
+    private void OpenEditor()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/0/edit");
     }
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
@@ -100,10 +102,5 @@
     {
         selectedWeek = week;
         await Task.CompletedTask;
-    }
-
-    private async Task toWriteMode()
-    {
-        await ViewChanged.InvokeAsync();
     }
 }
