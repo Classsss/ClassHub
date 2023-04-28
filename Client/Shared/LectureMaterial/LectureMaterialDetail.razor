@@ -33,10 +33,10 @@
 
     <div class="d-flex align-items-center justify-content-between mb-2">
         <div>
-            <button class="btn btn-warning" @onclick="()=>toWriteMode()">수정</button>
-            <button class="btn btn-warning" @onclick="()=>toListMode()">삭제</button>
+            <button class="btn btn-warning">수정</button>
+            <button class="btn btn-warning">삭제</button>
         </div>
-        <button class="btn btn-success" @onclick="()=>toListMode()">목록</button>
+        <button class="btn btn-success">목록</button>
     </div>
 }
 
@@ -47,28 +47,8 @@
     [Parameter]
     public LectureMaterial body { get; set; }
 
-    [Parameter]
-    public EventCallback<List<int>> EditClicked { get; set; } //값 변경 시 발생하는 콜백이벤트
-
-    [Parameter]
-    public EventCallback<List<int>> DelClicked { get; set; } //값 변경 시 발생하는 콜백이벤트
-
-    [Parameter]
-    public EventCallback<List<int>> ListClicked { get; set; } //값 변경 시 발생하는 콜백이벤트
-
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
 
     }
-
-    private async Task toListMode()
-    {
-        await ListClicked.InvokeAsync();
-    }
-
-    private async Task toWriteMode()
-    {
-        await EditClicked.InvokeAsync();
-    }
-
 }

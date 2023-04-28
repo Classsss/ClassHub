@@ -3,25 +3,11 @@
 @using ClassHub.Shared
 @using ClassHub.Client.Shared.LectureMaterial
 
-@if (Viewmode == "List")
-{
-	<h3>
-		강의자료
-	</h3>
-	<LectureMaterialList lecture_materials="@lec_mat" ViewChanged="OnWriteMode" ItemClicked="OnItemClicked"/>
-}
-else if (Viewmode == "Write")
-{
-	<h3>
-		강의자료 작성
-	</h3>
-	<LectureMaterialEditor ViewChanged="OnListMode" />
+<h3>
+	강의자료
+</h3>
+<LectureMaterialList lecture_materials="@lec_mat"/>
 
-}else if (Viewmode == "Detail")
-{
-	<BackButton />
-	<LectureMaterialDetail EditClicked="OnWriteMode" DelClicked="OnListMode" ListClicked="OnListMode" body="body" />
-}
 
 @code {
 	[Parameter]
@@ -32,8 +18,6 @@ else if (Viewmode == "Write")
 
 	private string Viewmode = "List";
 
-	private LectureMaterial body;
-
 	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
 	{
 		new LectureMaterial { Id = 1, Week = 1, Title = "강의자료1", Content = "이것은 내용 1" , Author = "조민경", PublishDate = new DateTime(2023, 03, 03, 09, 02, 0), ViewCount = 54 },
@@ -42,29 +26,4 @@ else if (Viewmode == "Write")
 		new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "이것은 내용 4" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
 		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "이것은 내용 5" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
 	};
-
-	private async Task OnListMode()
-	{
-		Viewmode = "List";
-		await Task.CompletedTask;
-	}
-
-	private async Task OnWriteMode()
-	{
-		Viewmode = "Write";
-		await Task.CompletedTask;
-	}
-
-	private async Task OnDetailMode()
-	{
-		Viewmode = "Detail";
-		await Task.CompletedTask;
-	}
-
-	private async Task OnItemClicked(LectureMaterial lm)
-	{
-		Viewmode = "Detail";
-		body = lm;
-		await Task.CompletedTask;
-	}
 }
