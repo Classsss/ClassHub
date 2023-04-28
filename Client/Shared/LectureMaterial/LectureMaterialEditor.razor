@@ -17,8 +17,8 @@
 
 <br />
 <div class="d-flex justify-content-between mb-2">
-    <button class="btn btn-success">목록</button>
-    <button type="submit" class="btn btn-primary">등록</button>
+    <button class="btn btn-success" @onclick="@(()=>OpenDetail())">이전</button>
+    <button type="submit" class="btn btn-primary" @onclick="@(()=>OpenList())">등록</button>
 </div>
 
 <style>
@@ -51,8 +51,18 @@
     {
         if (id != 0)
         {
-            title = lec_mat[id].Title;
-            content = lec_mat[id].Content;
+            title = lec_mat[id - 1].Title;
+            content = lec_mat[id - 1].Content;
         }
+    }
+
+    private void OpenDetail()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    private void OpenList()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }

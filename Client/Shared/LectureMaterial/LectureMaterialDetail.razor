@@ -33,10 +33,10 @@
 
     <div class="d-flex align-items-center justify-content-between mb-2">
         <div>
-            <button class="btn btn-warning">수정</button>
-            <button class="btn btn-warning">삭제</button>
+            <button class="btn btn-warning" @onclick="@(() => OpenEditor())">수정</button>
+            <button class="btn btn-warning" @onclick="@(() => OpenList())">삭제</button>
         </div>
-        <button class="btn btn-success">목록</button>
+        <button class="btn btn-success" @onclick="@(() => OpenList())">이전</button>
     </div>
 }
 
@@ -46,6 +46,16 @@
 @code {
     [Parameter]
     public LectureMaterial body { get; set; }
+
+    private void OpenEditor()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/edit");
+    }
+
+    private void OpenList()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {

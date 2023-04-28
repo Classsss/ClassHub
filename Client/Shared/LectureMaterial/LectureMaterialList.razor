@@ -9,7 +9,7 @@
         <input type="text" class="form-control me-2" placeholder="제목">
         <button style="width: 40px; height: 40px; border: 0;" class="oi oi-magnifying-glass"></button>
     </div>
-    <button class="btn btn-success">작성</button>
+    <button class="btn btn-success" @onclick="@(() => OpenEditor())">작성</button>
 </div>
 
 <table class="table table-striped">
@@ -85,6 +85,11 @@
     private void ShowLecMat(LectureMaterial lm)
     {
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lm.Id}");
+    }
+
+    private void OpenEditor()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/0/edit");
     }
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
