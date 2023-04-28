@@ -1,4 +1,5 @@
-﻿<CascadingBlazoredModal>
+﻿<CascadingAuthenticationState> <!--최상위 태그에 두어 하위태그에게 권한 상태를 전파 -->
+<CascadingBlazoredModal>
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" />
@@ -12,3 +13,4 @@
     </NotFound>
 </Router>
 </CascadingBlazoredModal>
+</CascadingAuthenticationState>
