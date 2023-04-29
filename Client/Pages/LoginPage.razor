@@ -15,13 +15,18 @@
 
 <AuthorizeView>
     <NotAuthorized>
-        <div class="d-flex align-items-center justify-content-center" style="height: 100vh;">
-            <button class="btn btn-primary" @onclick="Login">Login</button>
-        </div>
+        @if (!AuthService.IsLoggedIn)
+        {
+            <div class="d-flex align-items-center justify-content-center" style="height: 100vh;">
+                    <button class="btn btn-primary" @onclick="Login">Login</button>
+            </div>
+        }
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+    string? accessToken;
+
     private void Login() {
         // TODO: 통합 로그인 페이지 이동 구현
         //AuthService.IsLoggedIn = true;
@@ -38,7 +43,7 @@
         }
 
         // 로컬 스토리지에서 AccessToken이 있는지 확인
-        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+        accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
         if (!string.IsNullOrEmpty(accessToken))
         {
             AuthService.IsLoggedIn = true;
