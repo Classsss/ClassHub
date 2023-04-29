@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
 @inject NavigationManager NavigationManager
-
+@inject SSOAuthenticationStateProvider authProvider
 
 <div class="page">
     @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri) {
@@ -34,6 +34,7 @@
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
         AuthService.IsLoggedIn = false;
+        authProvider.StateChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
