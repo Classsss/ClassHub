@@ -17,8 +17,8 @@
 
 <br />
 <div class="d-flex justify-content-between mb-2">
-    <button class="btn btn-success" @onclick="()=>toListMode()">목록</button>
-    <button type="submit" class="btn btn-primary" @onclick="()=>toListMode()">등록</button>
+    <button class="btn btn-success" @onclick="@(()=>OpenDetail())">이전</button>
+    <button type="submit" class="btn btn-primary" @onclick="@(()=>OpenList())">등록</button>
 </div>
 
 <style>
@@ -31,9 +31,6 @@
     [Parameter]
     public LectureMaterial target { get; set; }
 
-    [Parameter]
-    public EventCallback<List<int>> ViewChanged { get; set; } //값 변경 시 발생하는 콜백이벤트
-
     public string title;
     public string content;
 
@@ -41,22 +38,31 @@
 
     public int RoomId { get; set; }
 
+    private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+    {
+        new LectureMaterial { Id = 1, Week = 1, Title = "강의자료1", Content = "이것은 내용 1" , Author = "조민경", PublishDate = new DateTime(2023, 03, 03, 09, 02, 0), ViewCount = 54 },
+        new LectureMaterial { Id = 2, Week = 2, Title = "강의자료2", Content = "이것은 내용 2" , Author = "조민경", PublishDate = new DateTime(2023, 03, 05, 09, 02, 0), ViewCount = 31 },
+        new LectureMaterial { Id = 3, Week = 3, Title = "강의자료3", Content = "이것은 내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 10, 09, 02, 0), ViewCount = 43 },
+        new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "이것은 내용 4" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
+        new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "이것은 내용 5" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
+    };
+
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
-        if (target != null)
+        if (id != 0)
         {
-            title = target.Title;
-            content = target.Content;
+            title = lec_mat[id - 1].Title;
+            content = lec_mat[id - 1].Content;
         }
     }
 
-    private async Task toListMode()
+    private void OpenDetail()
     {
-        await ViewChanged.InvokeAsync();
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 
-    private async Task ClickedSubmit()
+    private void OpenList()
     {
-        await ViewChanged.InvokeAsync();
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }

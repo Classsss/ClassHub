@@ -4,12 +4,27 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @inject NavMenuTitleService NavMenuTitleService
+@inject SSOAuthenticationStateProvider authProvider
 @using ClassHub.Client.Models;
 @using ClassHub.Shared;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 @using Microsoft.AspNetCore.WebUtilities;
 @using Microsoft.JSInterop;
 @using System.Text;
 @using System.Text.Json
+
+<!--Role 테스트용 AuthView-->
+<AuthorizeView Roles="student">
+    <Authorized>
+        <h1>어서와 학생</h1>
+    </Authorized>
+</AuthorizeView>
+<AuthorizeView Roles="professor">
+    <Authorized>
+        <h1>교수님 어서오세요</h1>
+    </Authorized>
+</AuthorizeView>
 
 @if (Sections == null)
 {
@@ -63,35 +78,38 @@ else
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code))
+        if ((QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var id)) && (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code)))
         {
             AuthService.IsLoggedIn = true;
-            exchangeToken(code);
+            exchangeToken(id, code);
         }
 
         // 로컬 스토리지에서 AccessToken이 있는지 확인
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
-        if (!string.IsNullOrEmpty(accessToken)) AuthService.IsLoggedIn = true;
+        if (!string.IsNullOrEmpty(accessToken)) {
+            AuthService.IsLoggedIn = true;
+        }
 
         if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
 
-        NavMenuTitleService.Title = "ClassHub";
+        NavMenuTitleService.Title = "ClassHub"; 
         await getCourses(); //시간표 받아오기
     }
 
-    protected async Task exchangeToken(String code)
+    protected async Task exchangeToken(String id, String code)
     {
         var client = new HttpClient();
         client.BaseAddress = new Uri(NavigationManager.BaseUri);
         var request = new HttpRequestMessage(HttpMethod.Post, "TokenExchange/submit-code");
-
-        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { AuthorizationCode = code }), Encoding.UTF8, "application/json");
+        Console.WriteLine(id + " " + code);
+        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { UserId = id, AuthorizationCode = code }), Encoding.UTF8, "application/json");
         try
         {
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
+            authProvider.StateChanged();
         }
         catch (Exception ex)
         {

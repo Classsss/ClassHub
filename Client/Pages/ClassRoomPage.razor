@@ -2,7 +2,17 @@
 @layout MainLayout
 @using ClassHub.Shared
 @inject HttpClient Http
-
+<!--Role 테스트용 AuthView-->
+<AuthorizeView Roles="student">
+    <Authorized>
+        <h1>어서와 학생</h1>
+    </Authorized>
+</AuthorizeView>
+<AuthorizeView Roles="professor">
+    <Authorized>
+        <h1>교수님 어서오세요</h1>
+    </Authorized>
+</AuthorizeView>
 @if(classRoom == null) {
     <p><em>강의실 정보를 로딩 중입니다...</em></p>
 } else {
