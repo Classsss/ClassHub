@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
 @inject NavigationManager NavigationManager
-
+@inject SSOAuthenticationStateProvider authProvider
 
 <div class="page">
     @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri) {
@@ -32,7 +32,9 @@
     {
         // 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
         AuthService.IsLoggedIn = false;
+        authProvider.StateChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {

@@ -1,0 +1,30 @@
+﻿@page "/classroom/{roomid:int}/lecturematerial/{noticeid:int}"
+@layout MainLayout
+@using ClassHub.Shared
+@using ClassHub.Client.Shared.LectureMaterial
+
+<BackButton />
+<LectureMaterialDetail body="lec_mat[noticeId - 1]" />
+
+@code {
+	[Parameter]
+	public int RoomId { get; set; }
+	[Parameter]
+	public int noticeId { get; set; }
+
+	[Parameter]
+	public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+
+	private string Viewmode = "List";
+
+	private LectureMaterial body;
+
+	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+	{
+		new LectureMaterial { Id = 1, Week = 1, Title = "강의자료1", Content = "이것은 내용 1" , Author = "조민경", PublishDate = new DateTime(2023, 03, 03, 09, 02, 0), ViewCount = 54 },
+		new LectureMaterial { Id = 2, Week = 2, Title = "강의자료2", Content = "이것은 내용 2" , Author = "조민경", PublishDate = new DateTime(2023, 03, 05, 09, 02, 0), ViewCount = 31 },
+		new LectureMaterial { Id = 3, Week = 3, Title = "강의자료3", Content = "이것은 내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 10, 09, 02, 0), ViewCount = 43 },
+		new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "이것은 내용 4" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
+		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "이것은 내용 5" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
+	};
+}
