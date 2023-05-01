@@ -1,5 +1,6 @@
 ﻿@inject NavigationManager NavigationManager
 @using ClassHub.Shared
+
 <div class="form-group">
     <label for="post-title" style="font-weight: bold;">제목</label>
     <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요" @bind="@title">
@@ -20,9 +21,6 @@
     <button class="btn btn-success" @onclick="@(()=>OpenDetail())">이전</button>
     <button type="submit" class="btn btn-primary" @onclick="@(()=>OpenList())">등록</button>
 </div>
-
-<style>
-</style>
 
 @code {
     [Parameter]

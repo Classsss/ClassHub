@@ -2,7 +2,6 @@
 @using ClassHub.Client.Shared
 @inject NavigationManager NavigationManager
 
-
 <style>
     .bg-inProgress {
         color: #27ae60;
@@ -63,11 +62,13 @@
     </tbody>
 </table>
 
+<AuthorizeView Roles="professor">
 <div class="row">
     <div class="col-12">
         <button class="btn btn-success float-end" @onclick="Submit">등록</button>
     </div>
 </div>
+</AuthorizeView>
 
 <Pagination currentPage="1" totalPages="1"></Pagination>
 

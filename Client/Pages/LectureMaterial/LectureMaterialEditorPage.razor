@@ -3,16 +3,18 @@
 @using ClassHub.Shared
 @using ClassHub.Client.Shared.LectureMaterial
 
-@if (noticeId == 0)
-{
-	<h3>새 강의자료 작성</h3>
-}
-else
-{
-	<h3>강의자료 수정</h3>
-}
+<AuthorizeView Roles="professor">
+	@if (noticeId == 0)
+	{
+		<h3>새 강의자료 작성</h3>
+	}
+	else
+	{
+		<h3>강의자료 수정</h3>
+	}
 
-<LectureMaterialEditor id="noticeId" />
+	<LectureMaterialEditor id="noticeId" />
+</AuthorizeView>
 
 @code {
 	[Parameter]

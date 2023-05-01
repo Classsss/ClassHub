@@ -1,15 +1,103 @@
 ﻿@page "/login"
 @inject AuthenticationService AuthService
+@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@inject NavMenuTitleService NavMenuTitleService
+@inject SSOAuthenticationStateProvider authProvider
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+@using Microsoft.AspNetCore.WebUtilities;
+@using Microsoft.JSInterop;
+@using System.Text;
+@using System.Text.Json
 
-<div class="d-flex align-items-center justify-content-center" style="height: 100vh;">
-    <button class="btn btn-primary" @onclick="Login">Login</button>
-</div>
+<AuthorizeView>
+    <NotAuthorized>
+        @if (!AuthService.IsLoggedIn)
+        {
+            <div class="container-fluid" style="height:220px; background-color:#1B2F4A; ">
+                <br>
+                <img src="images/logo.png" class="rounded mx-auto d-block" style="width: 120px; height: 120px;">
+                <br>
+                <p class="text-center fs-4 fw-lighter" style="color:white;">명지대학교 ClassHub에 오신 것을 환영합니다</p>
+            </div>
+            <hr />
+            <div class="container" style="">
+                <div class="row">
+                    <div class="col text-center" style="border: 1px solid gray; border-radius: 5px; padding: 10px; margin-right:10px; height: 150px;">
+                        <h5 class="text-center col-12"><span class="oi oi-account-login" />@(" ")ClassHub 로그인</h5>
+                        <br>
+                        <button class="btn btn-outline-primary" style="width:150px;" @onclick="Login">SSO로그인</button>
+                    </div>
+                    <div class="col text-center" style="border: 1px solid gray; border-radius: 5px; padding: 10px; height: 550px;">
+                        <h5 class="text-center col-12"><span class="oi oi-bell" />@(" ")ClassHub 공지사항</h5>
+                        <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
+                            <ul class="list-group">
+                                @for (int i = 1; i <= 15; i++)
+                                {
+                                    <li class="list-group-item">공지사항 @i</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
+    string? accessToken;
+
     private void Login() {
         // TODO: 통합 로그인 페이지 이동 구현
         //AuthService.IsLoggedIn = true;
-        NavigationManager.NavigateTo($"https://classhubsso.azurewebsites.net/login?client_id=classhub&redirect_uri={NavigationManager.BaseUri}");
+        NavigationManager.NavigateTo($"https://classhubsso.azurewebsites.net/login?client_id=classhub&redirect_uri={NavigationManager.BaseUri + "/login"}");
+    }
+
+    protected async override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if ((QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var id)) && (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code)))
+        {
+            AuthService.IsLoggedIn = true;
+            exchangeToken(id, code);
+        }
+
+        // 로컬 스토리지에서 AccessToken이 있는지 확인
+        accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            // 만약 있다면 Index 페이지로 이동
+            AuthService.IsLoggedIn = true;
+            NavigationManager.NavigateTo(NavigationManager.BaseUri);
+        }
+
+        if (AuthService.IsLoggedIn == false) NavigationManager.NavigateTo("/login");
+
+        NavMenuTitleService.Title = "ClassHub";
+    }
+
+    protected async Task exchangeToken(String id, String code)
+    {
+        var client = new HttpClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        var request = new HttpRequestMessage(HttpMethod.Post, "TokenExchange/submit-code");
+        Console.WriteLine(id + " " + code);
+        request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { UserId = id, AuthorizationCode = code }), Encoding.UTF8, "application/json");
+        try
+        {
+            var response = await client.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
+            authProvider.StateChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error during request: " + ex.Message);
+        }
     }
 }
