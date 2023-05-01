@@ -1,4 +1,4 @@
-﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}"
+@page "/classroom/{roomid:int}/practice/{practiceid:int}"
 @layout MainLayout
 @using ClassHub.Shared
 @using ClassHub.Client.Models
@@ -128,7 +128,7 @@
 
     // 채점 결과를 표시할 변수
     private string Output = "";
-    
+
     // 채점 결과와 동반되는 메시지를 표시할 변수
     private string Message = "";
 
@@ -147,11 +147,17 @@
 
         // 채점 요청을 전송하기 위한 객체 생성
         JudgeRequest request = new JudgeRequest();
-        request.Code = await MonacoEditorReference.editor.GetValue();
-        request.Id = "1";
+
+        // !!!!! 테스트 할때 SampleCode.cs에서 각자 언어에 맞게 수정해서 테스트하세요 
+        // 또 자바의 경우 클래스를 Main대신 Correct로 바꾸세요
+        request.CorrectCode = "import java.util.Scanner;\r\n\r\npublic class Correct {\r\n    public static void main(String[] args) {\r\n        Scanner scanner = new Scanner(System.in);\r\n        int num1 = scanner.nextInt();\r\n        int num2 = scanner.nextInt();\r\n        int result = num1 + num2;\r\n        System.out.println(result);\r\n        scanner.close();\r\n    }\r\n}";
+        request.SubmitCode = await MonacoEditorReference.editor.GetValue();
         var model = await MonacoEditorReference.editor.GetModel();
         var language = await model.GetLanguageId();
         request.Language = language;
+        request.MemoryUsageLimit = 500;
+        request.ExecutionTimeLimit = 500;
+        request.InputCases = new List<string> { "1 1", "5 15" };
 
         // 직렬화
         var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -159,6 +165,7 @@
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 
         // 통신 성공 여부에 따라 구분
+
         if (response.IsSuccessStatusCode) {
             JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
 
@@ -215,6 +222,7 @@
                 } 
             }
             // Invalid Response
+
             else {
                 // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
                 Console.WriteLine("Invalid response");
