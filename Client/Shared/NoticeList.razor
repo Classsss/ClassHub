@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@using ClassHub.Client.Models
+@using ClassHub.Shared
 
 <style>
     .notice-row:hover {
@@ -27,10 +27,10 @@
     <tbody>
         @foreach(var notice in pagednotices) {
             <tr class="notice-row" @onclick="@(() => ShowNotice(notice))" style="cursor:pointer;">
-                <td style="text-indent : 7px;">@notice.Id</td>
-                <td class="notice-title">@notice.Title</td>
-                <td>@notice.Author</td>
-                <td>@notice.PublishDate.ToString("yyyy.MM.dd")</td>
+                <td style="text-indent : 7px;">@notice.notice_id</td>
+                <td class="notice-title">@notice.title</td>
+                <td>@notice.author</td>
+                <td>@notice.publish_date.ToString("yyyy.MM.dd")</td>
             </tr>
         }
     </tbody>
@@ -54,7 +54,7 @@
 
     // 페이지가 초기화되면 실행(페이지 진입, 새로고침, 공지보고오기 등)
     protected override async void OnInitialized() {
-        notices = notices.OrderByDescending(a => a.Id).ToList(); // 공지 ID 기준 내림차순
+        notices = notices.OrderByDescending(a => a.notice_id).ToList(); // 공지 ID 기준 내림차순
         CalculateTotalPages();
         await LoadPageNumber();
         LoadPagedData();
@@ -86,8 +86,8 @@
     /// 해당 공지사항 페이지로 이동
     /// </summary>
     private void ShowNotice(Notice notice) {
-        Console.WriteLine($"{notice.Id}번 공지를 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.Id}");
+        Console.WriteLine($"{notice.notice_id}번 공지를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.notice_id}");
     }
 
     /// <summary>
