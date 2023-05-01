@@ -70,6 +70,7 @@
         accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
         if (!string.IsNullOrEmpty(accessToken))
         {
+            // 만약 있다면 Index 페이지로 이동
             AuthService.IsLoggedIn = true;
             NavigationManager.NavigateTo(NavigationManager.BaseUri);
         }

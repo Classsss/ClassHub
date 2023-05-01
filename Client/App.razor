@@ -2,10 +2,10 @@
     <CascadingBlazoredModal>
         <AuthorizeView>
             <NotAuthorized>
+                <!--인가되지 않은 사용자의 시작 페이지는 LoginPage-->
                 <ClassHub.Client.Pages.LoginPage/>
             </NotAuthorized>
             <Authorized>
-            
                 <Router AppAssembly="@typeof(App).Assembly">
                     <Found Context="routeData">
                         <RouteView RouteData="@routeData" />
