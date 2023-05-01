@@ -1,16 +1,24 @@
 ﻿<CascadingAuthenticationState> <!--최상위 태그에 두어 하위태그에게 권한 상태를 전파 -->
-<CascadingBlazoredModal>
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
-</CascadingBlazoredModal>
+    <CascadingBlazoredModal>
+        <AuthorizeView>
+            <NotAuthorized>
+                <!--인가되지 않은 사용자의 시작 페이지는 LoginPage-->
+                <ClassHub.Client.Pages.LoginPage/>
+            </NotAuthorized>
+            <Authorized>
+                <Router AppAssembly="@typeof(App).Assembly">
+                    <Found Context="routeData">
+                        <RouteView RouteData="@routeData" />
+                        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                    </Found>
+                    <NotFound>
+                        <PageTitle>Not found</PageTitle>
+                        <LayoutView Layout="@typeof(MainLayout)">
+                            <p role="alert">Sorry, there's nothing at this address.</p>
+                        </LayoutView>
+                    </NotFound>
+                </Router>
+            </Authorized>
+        </AuthorizeView>
+    </CascadingBlazoredModal>
 </CascadingAuthenticationState>
