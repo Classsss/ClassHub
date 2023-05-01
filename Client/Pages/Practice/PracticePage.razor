@@ -97,17 +97,7 @@
         // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
         var practices = new List<Practice>
         {
-
-        new Practice { Id = 1, Title = "Introduction to C#", Content = @"<p> Hello World 프로그램은 프로그래밍 언어를 배울 때 가장 먼저 작성하는 프로그램이다. 하지만 이 프로그램에는 입력을 받는 부분이 없다.</p>
-    <p>그래서 여기에서는 여러분의 이름을 입력 받아 이름을 이용하여 인사말을 출력하는 프로그램을 작성해보자.</p>",
-        Author = "John Doe",
-        InputCases = new List<string>(),
-        OutputCases = new List<string>() { "Hello Guy! I'm zinoooooooooooooooooooooooooooooooooooooooooooooooo","I'm Byungmeo\n\n\n\n\n\n\n\n\nhello","난창훈","난윤상","난하윤" },
-        Language = "C",
-        isApplyScore = true,
-        isGptAvailable = true,
-        StartDate = new DateTime(2022, 4, 1),
-        EndDate = new DateTime(2022, 4, 30) },
+        new Practice { Id = 1, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
         new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31) },
         new Practice { Id = 3, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2022, 6, 1), EndDate = new DateTime(2022, 6, 30) },
          new Practice { Id = 4, Title = "간단한 덧셈", Content = "숫자 두개를 더하는 코드를 구현해보자",
@@ -143,29 +133,47 @@
 
     // 채점 서버로 요청을 보냄
     private async Task SubmitCode() {
-        // Message 초기화
+        // Message및 Output 초기화
         Message = "";
+        Output = "채점 준비 중";
 
         // 채점 요청을 전송하기 위한 객체 생성
         JudgeRequest request = new JudgeRequest();
 
-        // !!!!! 테스트 할때 SampleCode.cs에서 각자 언어에 맞게 수정해서 테스트하세요 
-        // 또 자바의 경우 클래스를 Main대신 Correct로 바꾸세요
-        request.CorrectCode = "import java.util.Scanner;\r\n\r\npublic class Correct {\r\n    public static void main(String[] args) {\r\n        Scanner scanner = new Scanner(System.in);\r\n        int num1 = scanner.nextInt();\r\n        int num2 = scanner.nextInt();\r\n        int result = num1 + num2;\r\n        System.out.println(result);\r\n        scanner.close();\r\n    }\r\n}";
+        // !!!!! 테스트 할때 SampleCode.cs에서 각자 언어에 맞게 CorrectCode와 CorrectCodeLanguage 수정
+        request.CorrectCode = "import java.util.Scanner;\r\n\r\npublic class Main {\r\n    public static void main(String[] args) {\r\n        Scanner scanner = new Scanner(System.in);\r\n        int num1 = scanner.nextInt();\r\n        int num2 = scanner.nextInt();\r\n        int result = num1 + num2;\r\n        System.out.println(result);\r\n        scanner.close();\r\n    }\r\n}";
+        request.CorrectCodeLanguage = "java";
         request.SubmitCode = await MonacoEditorReference.editor.GetValue();
         var model = await MonacoEditorReference.editor.GetModel();
         var language = await model.GetLanguageId();
-        request.Language = language;
+        request.SubmitCodeLanguage = language;
         request.MemoryUsageLimit = 500;
         request.ExecutionTimeLimit = 500;
         request.InputCases = new List<string> { "1 1", "5 15" };
 
         // 직렬화
         var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+
+        // 실시간으로 몇 번째 케이스인지 전송받음.
+        var connection = new HubConnectionBuilder()
+        .WithUrl("https://localhost:7182/testhub")
+        .Build();
+
+        // connection.On을 먼저 등록합니다.
+        connection.On<int>("ReceiveCurrentIndex", i =>
+        {
+            Output = $"채점 중: 테스트 케이스 : ({i}/{request.InputCases.Count})";
+            StateHasChanged();
+        });
+
+        await connection.StartAsync();
+
         // 전송
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 
-        // 통신 성공 여부에 따라 구분
+        await connection.StopAsync();
+
+     
 
         if (response.IsSuccessStatusCode) {
             JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
