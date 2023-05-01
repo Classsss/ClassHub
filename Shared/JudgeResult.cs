@@ -1,3 +1,4 @@
+
 ﻿namespace ClassHub.Shared {
     public class JudgeResult {
         // 채점 결과
@@ -18,6 +19,5 @@
         public double ExecutionTime { get; set; } = 0;          // 실행 시간(ms)    // TODO : 기준 정립 필요 (ex. 평균)
         public long MemoryUsage { get; set; } = 0;              // 메모리 사용량(?) // TODO : 단위 지정 필요, 기준 정립 필요 (ex. 평균)
         public string? Message { get; set; }                    // 채점 결과와 동반되는 메시지
-        public string? GptAdvice { get; set; }                  //ChatGPT API 조언을 저장할 변수
     }
 }
