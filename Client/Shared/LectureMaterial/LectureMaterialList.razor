@@ -1,4 +1,5 @@
-﻿@inject NavigationManager NavigationManager
+﻿@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @using ClassHub.Shared
 
 <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true/>
@@ -23,7 +24,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var lec_mat in lecture_materials)
+        @foreach (var lec_mat in paged_lec_mats)
         {
             @if (selectedWeek.Contains(lec_mat.week))
             {
@@ -48,7 +49,7 @@
     </div>
 </AuthorizeView>
 
-<Pagination />
+<Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged"></Pagination>
 
 <style>
     .matlec-row:hover {
@@ -65,8 +66,14 @@
     [Parameter]
     public List<LectureMaterial> lecture_materials { get; set; }
 
+    private List<LectureMaterial> paged_lec_mats = new List<LectureMaterial>();
+
     [Parameter]
     public EventCallback<List<int>> ViewChanged { get; set; } //Week 값 변경 시 발생하는 콜백이벤트
+
+    private int currentPage = 1;
+    private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
+    private int totalPages = 0;
 
     public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 
@@ -74,6 +81,16 @@
 
     //정렬을 위한 변수
     private bool sortByIDAscending = true;
+
+    // 페이지가 초기화되면 실행(페이지 진입, 새로고침, 공지보고오기 등)
+    protected override async void OnInitialized()
+    {
+        lecture_materials = lecture_materials.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
+        CalculateTotalPages();
+        await LoadPageNumber();
+        LoadPagedData();
+        StateHasChanged();
+    }
 
     private void SortById() //강의자료 번호 순 정렬
     {
@@ -109,5 +126,46 @@
     {
         selectedWeek = week;
         await Task.CompletedTask;
+    }
+
+    // Pagination.razor에서 currentPage가 변경되면 실행
+    private async Task OnPageChanged(int newPage)
+    {
+        currentPage = newPage;
+        await SavePaginationState();
+        LoadPagedData();
+    }
+
+    /// <summary>
+    /// 전체 페이지 수 계산
+    /// </summary>
+    private void CalculateTotalPages()
+    {
+        totalPages = (int)Math.Ceiling((double)lecture_materials.Count / pageSize);
+    }
+
+    /// <summary>
+    /// 현재 페이지의 공지사항 리스트 로딩
+    /// </summary>
+    private void LoadPagedData()
+    {
+        paged_lec_mats = lecture_materials.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    /// <summary>
+    /// 세션 스토리지에 현재 페이지 번호를 저장
+    /// </summary>
+    private async Task SavePaginationState()
+    {
+        await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentPage", currentPage);
+    }
+
+    /// <summary>
+    /// 세션 스토리지에 저장된 현재 페이지 번호를 로딩
+    /// </summary>
+    private async Task LoadPageNumber()
+    {
+        var storedPage = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentPage");
+        if (!string.IsNullOrEmpty(storedPage)) currentPage = int.Parse(storedPage);
     }
 }
