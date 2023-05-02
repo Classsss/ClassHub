@@ -25,15 +25,15 @@
     <tbody>
         @foreach (var lec_mat in lecture_materials)
         {
-            @if (selectedWeek.Contains(lec_mat.Week))
+            @if (selectedWeek.Contains(lec_mat.week))
             {
                 <tr class="matlec-row" @onclick="@(() => ShowLecMat(lec_mat))" style="cursor:pointer;">
-                    <td style="text-indent : 7px;">@lec_mat.Id</td>
-                    <td style="text-indent : 7px;">@lec_mat.Week</td>
-                    <td class="notice-title">@lec_mat.Title</td>
-                    <td>@lec_mat.Author</td>
-                    <td>@lec_mat.PublishDate.ToString("yyyy.MM.dd")</td>
-                    <td style="text-indent : 7px;">@lec_mat.ViewCount</td>
+                    <td style="text-indent : 7px;">@lec_mat.content_id</td>
+                    <td style="text-indent : 7px;">@lec_mat.week</td>
+                    <td class="notice-title">@lec_mat.title</td>
+                    <td>@lec_mat.author</td>
+                    <td>@lec_mat.publish_date.ToString("yyyy.MM.dd")</td>
+                    <td style="text-indent : 7px;">@lec_mat.view_count</td>
                 </tr>
             }
         }
@@ -79,11 +79,11 @@
     {
         if (!sortByIDAscending)
         {
-            lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
+            lecture_materials = lecture_materials.OrderByDescending(a => a.content_id).ToList();
         }
         else
         {
-            lecture_materials = lecture_materials.OrderBy(a => a.Id).ToList();
+            lecture_materials = lecture_materials.OrderBy(a => a.content_id).ToList();
         }
 
         sortByIDAscending = !sortByIDAscending;
@@ -91,7 +91,7 @@
 
     private void ShowLecMat(LectureMaterial lm)
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lm.Id}");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lm.content_id}");
     }
 
     private void OpenEditor()
@@ -101,7 +101,7 @@
 
     protected override void OnParametersSet() // OninitializedAsync()를 대체함
     {
-        lecture_materials = lecture_materials.OrderByDescending(a => a.Id).ToList();
+        lecture_materials = lecture_materials.OrderByDescending(a => a.content_id).ToList();
         sortByIDAscending = true;
     }
 
