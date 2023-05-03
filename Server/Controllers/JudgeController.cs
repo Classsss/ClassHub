@@ -18,7 +18,7 @@ namespace ClassHub.Server.Controllers
             [HttpPost]
             public async Task<IActionResult> Post([FromBody] JudgeRequest request)
             {
-\
+
                 // 채점 서버에 채점 요청
                 HttpClient Http = new HttpClient();
                 var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
