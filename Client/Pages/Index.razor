@@ -121,8 +121,9 @@ else
     }
 
     protected async Task getNotifications() {
-        Console.WriteLine("60182147 학번으로 온 모든 알림을 불러옵니다.");
-        Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all/{60182147}");
+        var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
+        Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
+        Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all/{id}");
 
         if(Notifications != null) {
             foreach(StudentNotification notification in Notifications) {
