@@ -1,0 +1,70 @@
+﻿@using ClassHub.Client.Models
+@using ClassHub.Client.Shared
+@using ClassHub.Shared
+@inject NavigationManager NavigationManager
+
+<style>
+    .board-row:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .board-title:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+</style>
+
+<h3>@Title</h3>
+<br />
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th style="width: 10%;">번호</th>
+            <th style="width: 50%;">제목</th>
+            <th style="width: 15%;">작성자</th>
+            <th style="width: 25%;">게시일</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var content in Contents)
+        {
+            <tr class="notice-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
+                <td style="text-indent : 7px;">@content.content_id</td>
+                <td class="notice-title">@content.title</td>
+                <td>@content.author</td>
+                <td>@content.publish_date.ToString("yyyy.MM.dd")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<AuthorizeView Roles="professor">
+<div class="row">
+    <div class="col-12">
+        <button class="btn btn-success float-end">등록</button>
+    </div>
+</div>
+</AuthorizeView>
+
+<Pagination currentPage="1" totalPages="1"></Pagination>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public List<BoardContent> Contents { get; set; }
+
+    public int RoomId { get; set; }
+
+    // 페이지가 초기화되면 실행(페이지 진입, 새로고침, 공지보고오기 등)
+    protected override async void OnInitialized()
+    {
+        
+    }
+
+    private void ShowContents(BoardContent bc)
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{bc.content_id}");
+    }
+}

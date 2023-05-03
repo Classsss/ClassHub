@@ -3,11 +3,7 @@
 @using ClassHub.Shared
 @using ClassHub.Client.Shared.LectureMaterial
 
-<h3>
-	강의자료
-</h3>
-<LectureMaterialList lecture_materials="@lec_mat"/>
-
+<Board Title="강의자료" Contents="@lec_mat" />
 
 @code {
 	[Parameter]
@@ -16,7 +12,7 @@
 	[Parameter]
 	public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
 
-	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+	private List<BoardContent> lec_mat = new List<BoardContent>
 	{
 		new LectureMaterial {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
 		new LectureMaterial {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },

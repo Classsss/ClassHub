@@ -2,20 +2,20 @@
 @layout MainLayout
 @using ClassHub.Shared
 
-<NoticeList notices="@notices" />
+<Board Title="공지사항" Contents="@notices" />
 
 @code {
     [Parameter]
     public int ClassRoomId { get; set; }
 
-    private List<Notice> notices;
+    private List<BoardContent> notices;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
         // notices 변수 초기화
-        notices = new List<Notice>
+        notices = new List<BoardContent>
         {
             new Notice { content_id = 1, title = "캡스톤 실험실습비 사용 절차", contents = "내용 1" , author = "조민경", publish_date = new DateTime(2023,03,03,09,02,0)},
             new Notice { content_id = 2, title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", contents = "내용 2", author = "조민경", publish_date = new DateTime(2023,03,03,10,42,0)},
