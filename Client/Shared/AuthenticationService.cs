@@ -4,8 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BlazorMonaco;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace ClassHub.Client.Shared {
     public class AuthenticationService {
@@ -43,9 +41,13 @@ namespace ClassHub.Client.Shared {
                 var claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out validatedToken);
 
                 //토큰으로부터 정보를 뽑아냄
-                var code = claimsPrincipal.FindFirst("code").Value;
+                var user_id = claimsPrincipal.FindFirst("user_id").Value;
                 var name = claimsPrincipal.FindFirst(ClaimTypes.Name).Value;
                 var role = claimsPrincipal.FindFirst(ClaimTypes.Role).Value;
+
+                //학번/교번과 이름을 로컬 스토리지에 저장
+                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "userID", user_id);
+                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "Name", name);
 
                 return new AuthenticationState(claimsPrincipal);
             }
