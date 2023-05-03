@@ -1,6 +1,6 @@
 ﻿@page "/classroom/{classroomid:int}/notice"
 @layout MainLayout
-@using ClassHub.Shared
+@using ClassHub.Client.Models
 
 <Board Title="공지사항" Contents="@notices" />
 
@@ -17,15 +17,16 @@
         // notices 변수 초기화
         notices = new List<BoardContent>
         {
-            new Notice { content_id = 1, title = "캡스톤 실험실습비 사용 절차", contents = "내용 1" , author = "조민경", publish_date = new DateTime(2023,03,03,09,02,0)},
-            new Notice { content_id = 2, title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", contents = "내용 2", author = "조민경", publish_date = new DateTime(2023,03,03,10,42,0)},
-            new Notice { content_id = 3, title = "개념설계보고 발표 관련", contents = "내용 3", author = "조민경", publish_date = new DateTime(2023,03,24,10,30,0)},
-            new Notice { content_id = 4, title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", contents = "내용 4", author = "조민경", publish_date = new DateTime(2023,03,29,11,44,0)}
+            // Shared에 있는 Notice -> Client에 있는 Notice로 바꿔줘야 하는 문제가 생김
+            new NoticeContent { content_id = 1, title = "캡스톤 실험실습비 사용 절차", contents = "내용 1" , author = "조민경", publish_date = new DateTime(2023,03,03,09,02,0)},
+            new NoticeContent { content_id = 2, title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", contents = "내용 2", author = "조민경", publish_date = new DateTime(2023,03,03,10,42,0)},
+            new NoticeContent { content_id = 3, title = "개념설계보고 발표 관련", contents = "내용 3", author = "조민경", publish_date = new DateTime(2023,03,24,10,30,0)},
+            new NoticeContent { content_id = 4, title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", contents = "내용 4", author = "조민경", publish_date = new DateTime(2023,03,29,11,44,0)}
         };
 
         for (int i = 5; i < 30; i++)
         {
-            notices.Add(new Notice { content_id = i, title = "Test용 " + i, contents = "내용 " + i, author = "정윤상", publish_date = new DateTime(2023, 03, i, 11, i, 0) });
+            notices.Add(new NoticeContent { content_id = i, title = "Test용 " + i, contents = "내용 " + i, author = "정윤상", publish_date = new DateTime(2023, 03, i, 11, i, 0) });
         }
     }
 }
