@@ -21,9 +21,14 @@
     <thead>
         <tr>
             <th style="width: 10%;">번호</th>
+            @if (Title == "강의자료")
+            {
+                <th style="width: 10%;">주차</th>
+            }
             <th style="width: 50%;">제목</th>
-            <th style="width: 15%;">작성자</th>
-            <th style="width: 25%;">게시일</th>
+            <th style="width: 10%;">작성자</th>
+            <th style="width: 10%;">게시일</th>
+            <th style="width: 10%;">조회</th>
         </tr>
     </thead>
     <tbody>
@@ -31,9 +36,15 @@
         {
             <tr class="notice-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@content.content_id</td>
+                @if (Title == "강의자료")
+                {
+                    var lectureMaterial = content as ClassHub.Shared.LectureMaterial;
+                    <td style="text-indent : 7px;">@lectureMaterial.week</td>
+                }
                 <td class="notice-title">@content.title</td>
                 <td>@content.author</td>
                 <td>@content.publish_date.ToString("yyyy.MM.dd")</td>
+                <td style="text-indent : 7px;">@content.view_count</td>
             </tr>
         }
     </tbody>
