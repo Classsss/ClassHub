@@ -1,5 +1,5 @@
 ﻿namespace ClassHub.Shared {
-    internal class LectureMaterial {
+    public class LectureMaterial {
         public int room_id { get; set; } // 강의실 번호
         public int material_id { get; set; } // 강의자료 번호
         public int week { get; set; } // 강의자료 활용 주차
