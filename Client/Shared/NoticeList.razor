@@ -59,6 +59,8 @@
         await LoadPageNumber();
         LoadPagedData();
         StateHasChanged();
+
+        Console.WriteLine(totalPages);
     }
 
     // Pagination.razor에서 currentPage가 변경되면 실행
