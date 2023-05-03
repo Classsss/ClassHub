@@ -149,25 +149,31 @@
         request.SubmitCodeLanguage = language;
         request.MemoryUsageLimit = 500;
         request.ExecutionTimeLimit = 500;
-        request.InputCases = new List<string> { "1 1", "5 15" };
-
-        // 직렬화
-        var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        request.InputCases = new List<string> { "1 1", "5 15","25 40" };
 
         // 실시간으로 몇 번째 케이스인지 전송받음.
         var connection = new HubConnectionBuilder()
-        .WithUrl("https://localhost:7182/testhub")
+        .WithUrl("https://localhost:7182/realtimecasehub")
         .Build();
 
         // connection.On을 먼저 등록합니다.
         connection.On<int>("ReceiveCurrentIndex", i =>
         {
-            Output = $"채점 중: 테스트 케이스 : ({i}/{request.InputCases.Count})";
+            double percent = Math.Truncate(i /(float)request.InputCases.Count*100);
+            if (percent == 100) { percent = 99; }
+            Output = $"채점 중 : ({percent}%)";
             StateHasChanged();
         });
 
+        //연결 시작
         await connection.StartAsync();
-
+       
+        //이때 request의 멤버로 id를 넣어줌
+        request.snederConnectionId = connection.ConnectionId;
+        Console.WriteLine(connection.ConnectionId);
+        // 직렬화
+        var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        
         // 전송
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 

@@ -18,7 +18,9 @@ namespace ClassHub.Server.Controllers
             [HttpPost]
             public async Task<IActionResult> Post([FromBody] JudgeRequest request)
             {
-
+                if (request.snederConnectionId == null) { Console.WriteLine("없대"); }
+                if (request.InputCases == null) { Console.WriteLine("없대"); }
+             
                 // 채점 서버에 채점 요청
                 HttpClient Http = new HttpClient();
                 var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -58,14 +60,18 @@ namespace ClassHub.Server.Controllers
             }
         }
 
-        public class TestHubController : Hub
+        public class RealTimeCaseHubController : Hub
         {
-            public async Task SendCurrentIndex(int i)
+            public async Task SendCurrentIndex(Tuple<int, string> realTimeSendData)
             {
-                await Clients.All.SendAsync("ReceiveCurrentIndex", i);
+                int i = realTimeSendData.Item1;
+                string senderConnectionId = realTimeSendData.Item2;
+                await Clients.Client(senderConnectionId).SendAsync("ReceiveCurrentIndex", i);
              
             }
         }
+
+       
     }
 }
 
