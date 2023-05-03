@@ -15,12 +15,32 @@
 	[Parameter]
 	public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
 
-	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+	private List<BoardContent> lec_mat = new List<BoardContent>
 	{
 		new LectureMaterial {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
 		new LectureMaterial {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
 		new LectureMaterial {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
 		new LectureMaterial {content_id = 4, week = 3, title = "강의자료4", contents = "이것은 내용 4" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
 		new LectureMaterial {content_id = 5, week = 4, title = "강의자료5", contents = "이것은 내용 5" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
+		new LectureMaterial {content_id = 6, week = 5, title = "강의자료6", contents = "이것은 내용 6" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+		new LectureMaterial {content_id = 7, week = 5, title = "강의자료7", contents = "이것은 내용 7" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+		new LectureMaterial {content_id = 8, week = 5, title = "강의자료8", contents = "이것은 내용 8" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+		new LectureMaterial {content_id = 9, week = 5, title = "강의자료9", contents = "이것은 내용 9" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+		new LectureMaterial {content_id = 10, week = 5, title = "강의자료10", contents = "이것은 내용 10" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
+		new LectureMaterial {content_id = 11, week = 5, title = "강의자료11", contents = "이것은 내용 11" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+		new LectureMaterial {content_id = 12, week = 5, title = "강의자료12", contents = "이것은 내용 12" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+		new LectureMaterial {content_id = 13, week = 5, title = "강의자료13", contents = "이것은 내용 13" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+		new LectureMaterial {content_id = 14, week = 5, title = "강의자료14", contents = "이것은 내용 14" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+		new LectureMaterial {content_id = 15, week = 5, title = "강의자료15", contents = "이것은 내용 15" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
+		new LectureMaterial {content_id = 16, week = 5, title = "강의자료16", contents = "이것은 내용 16" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+		new LectureMaterial {content_id = 17, week = 5, title = "강의자료17", contents = "이것은 내용 17" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+		new LectureMaterial {content_id = 18, week = 5, title = "강의자료18", contents = "이것은 내용 18" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+		new LectureMaterial {content_id = 19, week = 5, title = "강의자료19", contents = "이것은 내용 19" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+		new LectureMaterial {content_id = 20, week = 5, title = "강의자료20", contents = "이것은 내용 20" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
+		new LectureMaterial {content_id = 21, week = 5, title = "강의자료21", contents = "이것은 내용 21" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+		new LectureMaterial {content_id = 22, week = 5, title = "강의자료22", contents = "이것은 내용 22" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+		new LectureMaterial {content_id = 23, week = 5, title = "강의자료23", contents = "이것은 내용 23" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+		new LectureMaterial {content_id = 24, week = 5, title = "강의자료24", contents = "이것은 내용 24" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+		new LectureMaterial {content_id = 25, week = 5, title = "강의자료25", contents = "이것은 내용 25" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
 	};
 }
