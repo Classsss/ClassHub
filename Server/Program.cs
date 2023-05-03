@@ -37,8 +37,7 @@ namespace ClassHub {
             app.MapRazorPages();
             app.MapControllers();
             app.MapFallbackToFile("index.html");
-            app.MapHub<TestHubController>("/testhub");
-
+            app.MapHub<RealTimeCaseHubController>("/realtimecasehub");
             app.Run();
         }
     }
