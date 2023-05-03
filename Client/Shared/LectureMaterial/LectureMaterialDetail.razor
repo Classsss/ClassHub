@@ -6,28 +6,28 @@
     <div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
         <h1>
             <span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
-            @body.Title
+            @body.title
         </h1>
     </div>
     <div>
         <div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;">
-            <p style="float: left; margin-right: 50px;">작성자: @body.Author</p>
+            <p style="float: left; margin-right: 50px;">작성자: @body.author</p>
             <div style="float: right;">
                 <span class="oi oi-eye" aria-hidden="true"></span>
-                <span style="margin-left: 5px;">@body.ViewCount</span>
+                <span style="margin-left: 5px;">@body.view_count</span>
                 <span style="margin-left: 10px; margin-right: 10px;">|</span>
                 <span class="oi oi-clock" aria-hidden="true"></span>
-                @if (body.PublishDate.Date == DateTime.Today)
+                @if (body.publish_date.Date == DateTime.Today)
                 { // 글이 올라온 시간이 오늘일 경우 시간만 표시
-                    <span style="margin-left: 5px;">@body.PublishDate.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+                    <span style="margin-left: 5px;">@body.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
                 }
                 else
                 { // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
-                    <span style="margin-left: 5px;">@body.PublishDate.ToString("yyyy.MM.dd")</span>
+                    <span style="margin-left: 5px;">@body.publish_date.ToString("yyyy.MM.dd")</span>
                 }
             </div>
         </div>
-        <div>@body.Content</div>
+        <div>@body.contents</div>
         <hr />
     </div>
 
