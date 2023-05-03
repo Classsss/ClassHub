@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@using ClassHub.Shared
+@using ClassHub.Client.Models
 
 <style>
     .notice-row:hover {
@@ -27,7 +27,7 @@
     <tbody>
         @foreach(var notice in notices) {
             <tr class="notice-row" @onclick="@(() => ShowNotice(notice))" style="cursor:pointer;">
-                <td style="text-indent : 7px;">@notice.notice_id</td>
+                <td style="text-indent : 7px;">@notice.content_id</td>
                 <td class="notice-title">@notice.title</td>
                 <td>@notice.author</td>
                 <td>@notice.publish_date.ToString("yyyy.MM.dd")</td>
@@ -43,9 +43,9 @@
 
 @code {
     [Parameter]
-    public List<Notice> notices { get; set; }
+    public List<NoticeContent> notices { get; set; }
 
-    private List<Notice> pagednotices = new List<Notice>();
+    private List<NoticeContent> pagednotices = new List<NoticeContent>();
     public int RoomId { get; set; }
 
     private int currentPage = 1;
@@ -54,11 +54,13 @@
 
     // 페이지가 초기화되면 실행(페이지 진입, 새로고침, 공지보고오기 등)
     protected override async void OnInitialized() {
-        notices = notices.OrderByDescending(a => a.notice_id).ToList(); // 공지 ID 기준 내림차순
+        notices = notices.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
         CalculateTotalPages();
         await LoadPageNumber();
         LoadPagedData();
         StateHasChanged();
+
+        Console.WriteLine(totalPages);
     }
 
     // Pagination.razor에서 currentPage가 변경되면 실행
@@ -85,9 +87,9 @@
     /// <summary>
     /// 해당 공지사항 페이지로 이동
     /// </summary>
-    private void ShowNotice(Notice notice) {
-        Console.WriteLine($"{notice.notice_id}번 공지를 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.notice_id}");
+    private void ShowNotice(NoticeContent notice) {
+        Console.WriteLine($"{notice.content_id}번 공지를 클릭하였습니다.");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.content_id}");
     }
 
     /// <summary>

@@ -14,15 +14,15 @@ namespace ClassHub.Server.Controllers
         const string passwd = "Mju12345!#";
         const string database = "classdb";
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<List<Notice>>> Get(int id)
+        [HttpGet("{room_id}")]
+        public IEnumerable<Notice> Get(int room_id)
         {
             var connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
             using var connection = new NpgsqlConnection(connectionString);
 
-            var query = $"SELECT * FROM Notice WHERE room_id = {id}";
-            var notices = await connection.QueryAsync<Notice>(query);
-            return notices.ToList();
+            var query = $"SELECT * FROM Notice WHERE room_id = {room_id}";
+            var notices = connection.Query<Notice>(query);
+            return notices;
         }
 
     }

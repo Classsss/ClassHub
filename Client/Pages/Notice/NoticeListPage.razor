@@ -2,28 +2,40 @@
 @layout MainLayout
 @inject HttpClient Http
 @using ClassHub.Shared
+@using ClassHub.Client.Models
 
-<NoticeList notices="@notices" />
+<Board Title="공지사항" Contents="@contents" />
 
 @code {
     [Parameter]
     public int ClassRoomId { get; set; }
 
-    private List<Notice> notices = new List<Notice>(); // 리스트를 초기화합니다.
+
+    private List<BoardContent> contents;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{ClassRoomId}");
+        contents = new List<BoardContent>();
+        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{ClassRoomId}");
         if (notices != null)
         {
-            Console.WriteLine(notices[0].author);
             foreach (var notice in notices)
             {
-                this.notices.Add(notice);
+                this.contents.Add(new NoticeContent()
+                {
+                    room_id = notice.room_id,
+                    content_id = notice.notice_id,
+                    title = notice.title,
+                    author = notice.author,
+                    contents = notice.contents,
+                    publish_date = notice.publish_date,
+                    up_date = notice.up_date,
+                    view_count = notice.view_count
+                });
             }
         }
+        StateHasChanged();
     }
 }
 
