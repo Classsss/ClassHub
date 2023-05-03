@@ -45,7 +45,7 @@
                 <td style="text-indent : 7px;">@content.content_id</td>
                 @if (Title == "강의자료")
                 {
-                    var lectureMaterial = content as ClassHub.Shared.LectureMaterial;
+                    var lectureMaterial = content as LectureMaterialContent;
                     <td style="text-indent : 7px;">@lectureMaterial.week</td>
                 }
                 <td class="notice-title">@content.title</td>
