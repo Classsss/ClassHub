@@ -25,7 +25,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach(var notice in pagednotices) {
+        @foreach(var notice in notices) {
             <tr class="notice-row" @onclick="@(() => ShowNotice(notice))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@notice.notice_id</td>
                 <td class="notice-title">@notice.title</td>
