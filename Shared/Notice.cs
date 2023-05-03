@@ -1,5 +1,5 @@
 ﻿namespace ClassHub.Shared {
-    internal class Notice {
+    public class Notice {
         public int room_id { get; set; } // 강의실 번호
         public int notice_id { get; set; } // 공지 번호
         public string title { get; set; } // 게시글 제목
