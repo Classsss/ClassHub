@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-@using ClassHub.Shared
+@using ClassHub.Client.Models
 
 <style>
     .notice-row:hover {
@@ -43,9 +43,9 @@
 
 @code {
     [Parameter]
-    public List<Notice> notices { get; set; }
+    public List<NoticeContent> notices { get; set; }
 
-    private List<Notice> pagednotices = new List<Notice>();
+    private List<NoticeContent> pagednotices = new List<NoticeContent>();
     public int RoomId { get; set; }
 
     private int currentPage = 1;
@@ -59,6 +59,8 @@
         await LoadPageNumber();
         LoadPagedData();
         StateHasChanged();
+
+        Console.WriteLine(totalPages);
     }
 
     // Pagination.razor에서 currentPage가 변경되면 실행
@@ -85,7 +87,7 @@
     /// <summary>
     /// 해당 공지사항 페이지로 이동
     /// </summary>
-    private void ShowNotice(Notice notice) {
+    private void ShowNotice(NoticeContent notice) {
         Console.WriteLine($"{notice.content_id}번 공지를 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{notice.content_id}");
     }

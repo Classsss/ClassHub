@@ -1,5 +1,5 @@
 ﻿@inject NavigationManager NavigationManager
-@using ClassHub.Shared
+@using ClassHub.Client.Models
 
 @if (body != null)
 {
@@ -47,7 +47,7 @@
 
 @code {
     [Parameter]
-    public LectureMaterial body { get; set; }
+    public LectureMaterialContent body { get; set; }
 
     private void OpenEditor()
     {
