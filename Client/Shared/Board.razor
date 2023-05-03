@@ -164,7 +164,7 @@
 
         foreach (var c in Contents)
         {
-            var lectureMaterial = c as ClassHub.Shared.LectureMaterial;
+            var lectureMaterial = c as LectureMaterialContent;
             if (selectedWeek.Contains(lectureMaterial.week))
             {
                 filteredContents.Add(lectureMaterial);
