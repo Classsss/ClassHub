@@ -4,22 +4,27 @@
 @using ClassHub.Shared
 @using ClassHub.Client.Models
 
-<Board Title="공지사항" Contents="@contents" />
+@if(contents == null) {
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+    </div>
+} else {
+    <Board Title="공지사항" Contents="@contents" />
+}
 
 @code {
     [Parameter]
     public int ClassRoomId { get; set; }
-
 
     private List<BoardContent> contents;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        contents = new List<BoardContent>();
         var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{ClassRoomId}");
         if (notices != null)
         {
+            contents = new List<BoardContent>();
             foreach (var notice in notices)
             {
                 this.contents.Add(new NoticeContent()
@@ -35,7 +40,6 @@
                 });
             }
         }
-        StateHasChanged();
     }
 }
 
