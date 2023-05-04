@@ -1,0 +1,109 @@
+﻿@page "/classroom/{roomid:int}/lecturematerial/edit"
+@page "/classroom/{roomid:int}/lecturematerial/{contentid:int}/edit"
+@page "/classroom/{roomid:int}/notice/edit"
+@page "/classroom/{roomid:int}/notice/{contentid:int}/edit"
+@layout MainLayout
+@inject NavigationManager NavigationManager
+@using ClassHub.Client.Models
+@using System.Text.RegularExpressions;
+
+@if(type == 0) {
+    
+} else {
+    <div class="form-group">
+        <label for="post-title" style="font-weight: bold;">제목</label>
+        <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요" @bind="@title">
+    </div>
+    <br />
+
+    if(type == 1 || type == 3) {
+        <WeekPicker weekValue="@selectedWeek" allowMultipleSelection=false />
+        <br />
+    }
+
+    <div class="form-group">
+        <label for="post-content" style="font-weight: bold;">내용</label>
+        <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요" @bind="@contents"></textarea>
+    </div>
+
+    if(type == 1 || type == 3) {
+        <DragDropUpload />        
+    }
+
+    <br />
+    <div class="d-flex justify-content-between mb-2">
+        <button class="btn btn-success" @onclick="@(()=>OpenDetail())">이전</button>
+        <button type="submit" class="btn btn-primary" @onclick="RegisterContent">등록</button>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int ContentId { get; set; }
+
+    /// <summary>
+    /// 1 - 강의자료 수정, 2 - 공지사항 수정, 3 - 강의자료 게시, 4 - 공지사항 게시
+    /// </summary>
+    private int type = 0;
+    private BoardContent targetBoardContent;
+    private string title;
+    private string contents;
+
+    public List<int> selectedWeek = new List<int>() { 1, };
+
+
+    private List<LectureMaterialContent> lec_mat = new List<LectureMaterialContent>
+        {
+        new LectureMaterialContent {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+        new LectureMaterialContent {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+        new LectureMaterialContent {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+        new LectureMaterialContent {content_id = 4, week = 3, title = "강의자료4", contents = "이것은 내용 4" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+        new LectureMaterialContent {content_id = 5, week = 4, title = "강의자료5", contents = "이것은 내용 5" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
+    };
+
+    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    {
+        string uri = NavigationManager.Uri;
+        if (new Regex("/classroom/[0-9]+/lecturematerial/[0-9]+/edit").IsMatch(uri)) {
+            Console.WriteLine("강의자료 수정");
+            type = 1;
+            // TODO: 수정 해야 하는 강의자료의 정보를 불러옵니다
+
+            // 우선 임시로 함
+            title = lec_mat[ContentId - 1].title;
+            contents = lec_mat[ContentId - 1].contents;
+        } else if (new Regex("/classroom/[0-9]+/lecturematerial/edit").IsMatch(uri)) {
+            Console.WriteLine("강의자료 게시");
+            type = 2;
+        } else if (new Regex("/classroom/[0-9]+/notice/[0-9]+/edit").IsMatch(uri)) {
+            Console.WriteLine("공지사항 수정");
+            type = 3;
+            // TODO: 수정 해야 하는 공지사항의 정보를 불러옵니다
+
+            // 우선 임시로 함
+            title = lec_mat[ContentId - 1].title;
+            contents = lec_mat[ContentId - 1].contents;
+        } else if (new Regex("/classroom/[0-9]+/notice/edit").IsMatch(uri)) {
+            type = 4;
+            Console.WriteLine("공지사항 게시");
+        } else {
+            type = -1;
+            Console.WriteLine("예상하지 못한 접근 경로");
+        }
+    }
+
+    private void OpenDetail() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    private void OpenList() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    private void RegisterContent() {
+        // 웹 서버에게 게시글 등록 작업을 요청
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/"))); // 목록 페이지 또는 게시글 페이지로 돌아갑니다.
+    }
+}

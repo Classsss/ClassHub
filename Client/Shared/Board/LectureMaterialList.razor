@@ -1,5 +1,5 @@
 ﻿@inject NavigationManager NavigationManager
-@using ClassHub.Shared
+@using ClassHub.Client.Models
 
 <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true/>
 <br />
@@ -63,7 +63,7 @@
 
 @code {
     [Parameter]
-    public List<LectureMaterial> lecture_materials { get; set; }
+    public List<LectureMaterialContent> lecture_materials { get; set; }
 
     [Parameter]
     public EventCallback<List<int>> ViewChanged { get; set; } //Week 값 변경 시 발생하는 콜백이벤트
@@ -77,6 +77,7 @@
 
     private void SortById() //강의자료 번호 순 정렬
     {
+        /*
         if (!sortByIDAscending)
         {
             lecture_materials = lecture_materials.OrderByDescending(a => a.content_id).ToList();
@@ -87,9 +88,10 @@
         }
 
         sortByIDAscending = !sortByIDAscending;
+        */
     }
 
-    private void ShowLecMat(LectureMaterial lm)
+    private void ShowLecMat(LectureMaterialContent lm)
     {
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/{lm.content_id}");
     }

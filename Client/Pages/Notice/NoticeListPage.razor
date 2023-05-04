@@ -1,31 +1,47 @@
 ﻿@page "/classroom/{classroomid:int}/notice"
 @layout MainLayout
+@inject HttpClient Http
+@using ClassHub.Client.Models
+@using ClassHub.Client.Shared.Board
 @using ClassHub.Shared
 
-<NoticeList notices="@notices" />
+@if(contents == null) {
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+    </div>
+} else {
+    <Board Title="공지사항" Contents="@contents" />
+}
 
 @code {
     [Parameter]
     public int ClassRoomId { get; set; }
 
-    private List<Notice> notices;
+    private List<BoardContent> contents;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        // notices 변수 초기화
-        notices = new List<Notice>
+        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{ClassRoomId}");
+        if (notices != null)
         {
-            new Notice { content_id = 1, title = "캡스톤 실험실습비 사용 절차", contents = "내용 1" , author = "조민경", publish_date = new DateTime(2023,03,03,09,02,0)},
-            new Notice { content_id = 2, title = "보고서 제출 마감일과 발표 일정(안) (수정 : 3.29)", contents = "내용 2", author = "조민경", publish_date = new DateTime(2023,03,03,10,42,0)},
-            new Notice { content_id = 3, title = "개념설계보고 발표 관련", contents = "내용 3", author = "조민경", publish_date = new DateTime(2023,03,24,10,30,0)},
-            new Notice { content_id = 4, title = "4/3 (월요일 13시~) 팀별 미팅 일정 (장소 : 강의실 Y5441)", contents = "내용 4", author = "조민경", publish_date = new DateTime(2023,03,29,11,44,0)}
-        };
-
-        for (int i = 5; i < 30; i++)
-        {
-            notices.Add(new Notice { content_id = i, title = "Test용 " + i, contents = "내용 " + i, author = "정윤상", publish_date = new DateTime(2023, 03, i, 11, i, 0) });
+            contents = new List<BoardContent>();
+            foreach (var notice in notices)
+            {
+                this.contents.Add(new NoticeContent()
+                {
+                    room_id = notice.room_id,
+                    content_id = notice.notice_id,
+                    title = notice.title,
+                    author = notice.author,
+                    contents = notice.contents,
+                    publish_date = notice.publish_date,
+                    up_date = notice.up_date,
+                    view_count = notice.view_count
+                });
+            }
         }
     }
 }
+
+

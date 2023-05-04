@@ -31,6 +31,8 @@
     /// 현재 페이지 번호를 target으로 변경하고 상태 변경 이벤트를 발생시킵니다.
     /// </summary>
     private async Task GoToPage(int target) {
+        if (target < 1) { target = 1; }
+        if (target > totalPages) { target = totalPages; }
         if(0 < target || target <= totalPages) await onPageChanged.InvokeAsync((currentPage = target));
     }
 }
