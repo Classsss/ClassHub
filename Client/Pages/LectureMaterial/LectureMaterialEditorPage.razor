@@ -1,9 +1,11 @@
-﻿@page "/classroom/{roomid:int}/lecturematerial/{noticeid:int}/edit"
+﻿@page "/classroom/{roomid:int}/lecturematerial/edit"
+@page "/classroom/{roomid:int}/lecturematerial/{contentid:int}/edit"
 @layout MainLayout
 @using ClassHub.Client.Models
+@using ClassHub.Client.Shared.LectureMaterial
 
 <AuthorizeView Roles="professor">
-	@if (noticeId == 0)
+	@if (ContentId == 0)
 	{
 		<h3>새 강의자료 작성</h3>
 	}
@@ -12,14 +14,14 @@
 		<h3>강의자료 수정</h3>
 	}
 
-	<LectureMaterialEditor id="noticeId" />
+	<LectureMaterialEditor id="ContentId" />
 </AuthorizeView>
 
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
 	[Parameter]
-	public int noticeId { get; set; }
+	public int ContentId { get; set; } = 0;
 
 	private LectureMaterialContent body;
 

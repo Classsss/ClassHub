@@ -1,16 +1,16 @@
-﻿@page "/classroom/{roomid:int}/lecturematerial/{noticeid:int}"
+﻿@page "/classroom/{roomid:int}/lecturematerial/{contentid:int}"
 @layout MainLayout
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.LectureMaterial
 
 <BackButton />
-<LectureMaterialDetail body="lec_mat[noticeId - 1]" />
+<LectureMaterialDetail body="lec_mat[ContentId - 1]" />
 
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
 	[Parameter]
-	public int noticeId { get; set; }
+	public int ContentId { get; set; }
 
 	[Parameter]
 	public EventCallback<LectureMaterialContent> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
