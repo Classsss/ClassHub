@@ -54,7 +54,7 @@
 <AuthorizeView Roles="professor">
 <div class="row">
     <div class="col-12">
-        <button class="btn btn-success float-end">등록</button>
+        <button class="btn btn-success float-end" @onclick="Submit">등록</button>
     </div>
 </div>
 </AuthorizeView>
@@ -129,5 +129,12 @@
     {
         var storedPage = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentPage");
         if (!string.IsNullOrEmpty(storedPage)) currentPage = int.Parse(storedPage);
+    }
+
+    /// <summary>
+    /// 게시글 작성 화면에 진입
+    /// </summary>
+    private void Submit() {
+        NavigationManager.NavigateTo(NavigationManager.Uri + "/edit");
     }
 }
