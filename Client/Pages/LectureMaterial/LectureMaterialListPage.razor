@@ -1,29 +1,24 @@
 ﻿@page "/classroom/{roomid:int}/lecturematerial"
 @layout MainLayout
+@using ClassHub.Client.Models
+@using ClassHub.Client.Shared.Board
 @using ClassHub.Shared
-@using ClassHub.Client.Shared.LectureMaterial
 
-<h3>
-	강의자료
-</h3>
-<LectureMaterialList lecture_materials="@lec_mat"/>
-
+<Board Title="강의자료" Contents="@lec_mat" />
 
 @code {
 	[Parameter]
 	public int RoomId { get; set; }
 
 	[Parameter]
-	public EventCallback<LectureMaterial> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+	public EventCallback<LectureMaterialContent> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
 
-	private string Viewmode = "List";
-
-	private List<LectureMaterial> lec_mat = new List<LectureMaterial>
+	private List<BoardContent> lec_mat = new List<BoardContent>
 	{
-		new LectureMaterial { Id = 1, Week = 1, Title = "강의자료1", Content = "이것은 내용 1" , Author = "조민경", PublishDate = new DateTime(2023, 03, 03, 09, 02, 0), ViewCount = 54 },
-		new LectureMaterial { Id = 2, Week = 2, Title = "강의자료2", Content = "이것은 내용 2" , Author = "조민경", PublishDate = new DateTime(2023, 03, 05, 09, 02, 0), ViewCount = 31 },
-		new LectureMaterial { Id = 3, Week = 3, Title = "강의자료3", Content = "이것은 내용 3" , Author = "조민경", PublishDate = new DateTime(2023, 03, 10, 09, 02, 0), ViewCount = 43 },
-		new LectureMaterial { Id = 4, Week = 3, Title = "강의자료4", Content = "이것은 내용 4" , Author = "조민경", PublishDate = new DateTime(2023, 03, 12, 09, 02, 0), ViewCount = 81 },
-		new LectureMaterial { Id = 5, Week = 4, Title = "강의자료5", Content = "이것은 내용 5" , Author = "조민경", PublishDate = new DateTime(2023, 03, 17, 09, 02, 0), ViewCount = 17 },
+		new LectureMaterialContent {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
+		new LectureMaterialContent {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
+		new LectureMaterialContent {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
+		new LectureMaterialContent {content_id = 4, week = 3, title = "강의자료4", contents = "이것은 내용 4" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
+		new LectureMaterialContent {content_id = 5, week = 4, title = "강의자료5", contents = "이것은 내용 5" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
 	};
 }
