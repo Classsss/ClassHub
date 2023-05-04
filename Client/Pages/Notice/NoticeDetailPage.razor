@@ -106,7 +106,15 @@
 				</div>
 
 			</div>
-			<div class="d-flex justify-content-end pb-3 pr-3" style="margin-top:10px;">
+
+			<br />
+			<div class="d-flex align-items-center justify-content-between mb-2">
+				<AuthorizeView Roles="professor">
+					<div>
+						<button class="btn btn-warning" @onclick="Modify">수정</button>
+						<button class="btn btn-warning">삭제</button>
+					</div>
+				</AuthorizeView>
 				<button class="btn btn-primary" @onclick="GoBack">목록</button>
 			</div>
 		</div>
@@ -190,9 +198,13 @@
 						up_date = notice.up_date,
 						view_count = notice.view_count
 					});
-	//			if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+				// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
 			}
 		}
 		StateHasChanged();
+	}
+
+	private void Modify() {
+		NavigationManager.NavigateTo(NavigationManager.Uri + $"/edit");
 	}
 }
