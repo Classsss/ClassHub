@@ -1,8 +1,9 @@
 ﻿@page "/classroom/{classroomid:int}/notice"
 @layout MainLayout
 @inject HttpClient Http
-@using ClassHub.Shared
 @using ClassHub.Client.Models
+@using ClassHub.Client.Shared.Board
+@using ClassHub.Shared
 
 @if(contents == null) {
     <div class="d-flex justify-content-center mt-5">
