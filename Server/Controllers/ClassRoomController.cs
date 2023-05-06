@@ -26,6 +26,16 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
+        // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all' <- 1번 강의실의 모든 강의자료를 불러옴
+        [HttpGet("lecturematerial/all/{room_id}")]
+        public IEnumerable<LectureMaterial> GetAllLectureMaterialsInClassRoom(int room_id) {
+            Console.WriteLine($"room id : {room_id}");
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = $"SELECT * FROM lecturematerial WHERE \"room_id\" = {room_id};"; // room_id가 동일한 모든 공지사항을 찾습니다.
+            var result = connection.Query<LectureMaterial>(query);
+            return result;
+        }
+
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147' <- 학번이 60182147인 학생에게 온 모든 알림을 불러옴
         [HttpGet("notification/all/{student_id}")]
         public IEnumerable<StudentNotification> GetAllNotifications(int student_id) {
