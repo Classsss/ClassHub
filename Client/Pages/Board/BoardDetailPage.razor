@@ -64,14 +64,7 @@
 					<p style="display: inline-block; margin-right: 10px;">다음글</p>
 					@if (nextContent != null)
 					{
-						if (type == "notice")
-						{
-							<a href="@($"/classroom/{RoomId}/notice/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
-						}
-						else if (type == "lecturematerial")
-						{
-							<a href="@($"/classroom/{RoomId}/lecturematerial/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
-						}
+						<a href="@($"/classroom/{RoomId}/{type}/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
 							@if (nextContent.publish_date.Date == DateTime.Today)
@@ -95,14 +88,7 @@
 					<p style="display: inline-block; margin-right: 10px;">이전글</p>
 					@if (prevContent != null)
 					{
-						if (type == "notice")
-						{
-							<a href="@($"/classroom/{RoomId}/notice/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
-						}
-						else if(type == "lecturematerial")
-						{
-							<a href="@($"/classroom/{RoomId}/lecturematerial/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
-						}
+						<a href="@($"/classroom/{RoomId}/{type}/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
 
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
