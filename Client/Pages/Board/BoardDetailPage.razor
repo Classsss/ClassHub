@@ -160,12 +160,12 @@
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
 
-	private BoardContent? GetPreviousContent() // 이전 공지사항을 받아옴
+	private BoardContent? GetPreviousContent() // 이전 컨텐츠를 받아옴
 	{
 		return index-1 >= 0 ? boardContents[index - 1] : null;
 	}
 
-	private BoardContent? GetNextContent() // 다음 공지사항을 받아옴
+	private BoardContent? GetNextContent() // 다음 컨텐츠를 받아옴
 	{
 		return index+1 < boardContents.Count ? boardContents[index + 1] : null;
 	}
