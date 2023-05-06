@@ -1,4 +1,4 @@
-﻿@page "/classroom/{roomid:int}/lecturematerial/{materialid:int}"
+﻿@page "/classroom/{roomid:int}/lecturematerial2/{materialid:int}"
 @layout MainLayout
 @inject HttpClient Http
 @using ClassHub.Client.Models
@@ -21,7 +21,7 @@
 
 	private LectureMaterialContent materialContent;
 	private List<LectureMaterialContent> materialContents;
-
+	private int type = 0;
 	private int index;
 	private NoticeContent? prevnotice;
 	private NoticeContent? nextnotice;

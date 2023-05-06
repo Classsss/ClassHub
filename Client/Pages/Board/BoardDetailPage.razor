@@ -1,0 +1,277 @@
+﻿@page "/classroom/{roomid:int}/lecturematerial/{contentid:int}"
+@page "/classroom/{roomid:int}/notice/{contentid:int}"
+@layout MainLayout
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
+@using System.Text.RegularExpressions;
+
+<BackButton />
+@if (boardContent != null)
+{
+	<div style="min-height: 100vh;">
+		<div class="d-flex flex-column justify-content-between">
+			<div>
+				<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
+					<h1>
+						<span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
+						@boardContent.title
+					</h1>
+				</div>
+				<div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;">
+					<p style="float: left; margin-right: 50px;">작성자: @boardContent.author</p>
+					<div style="float: right;">
+						<span class="oi oi-eye" aria-hidden="true"></span>
+						<span style="margin-left: 5px;">@boardContent.view_count</span>
+						<span style="margin-left: 10px; margin-right: 10px;">|</span>
+						<span class="oi oi-clock" aria-hidden="true"></span>
+						@if (boardContent.publish_date.Date == DateTime.Today)
+						{ // 글이 올라온 시간이 오늘일 경우 시간만 표시
+							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+						}
+						else
+						{ // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
+							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("yyyy.MM.dd")</span>
+						}
+					</div>
+				</div>
+				<img src="@ImageUrl" style="margin-bottom: 15px;" />
+				<div>@(
+								(MarkupString)boardContent.contents
+								)</div> <!--보안에 취약?-->
+				<hr />
+
+				<style>
+					a {
+					color: inherit;
+					text-decoration: none;
+					}
+
+					a:hover {
+					background-color: lightblue;
+					}
+
+					/* 이미지도 최대 가로 너비 100%로 설정 */
+					img {
+					max-width: 100%;
+					}
+				</style>
+
+
+				<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
+					<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
+					<p style="display: inline-block; margin-right: 10px;">다음글</p>
+					@if (nextContent != null)
+					{
+						if (type == "notice")
+						{
+							<a href="@($"/classroom/{RoomId}/notice/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
+						}
+						else if (type == "lecturematerial")
+						{
+							<a href="@($"/classroom/{RoomId}/lecturematerial/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
+						}
+						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+							<span class="oi oi-clock" aria-hidden="true"></span>
+							@if (nextContent.publish_date.Date == DateTime.Today)
+							{
+								<span style="margin-left :5px; margin-right:11px;">@nextContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+							}
+							else
+							{
+								<span style="margin-left :5px;">@nextContent.publish_date.ToString("yyyy.MM.dd")</span>
+							}
+						</span>
+					}
+					else
+					{
+						<p style="display: inline-block;">다음글이 없습니다.</p>
+					}
+				</div>
+
+				<div style="border-bottom: 1px solid grey;">
+					<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
+					<p style="display: inline-block; margin-right: 10px;">이전글</p>
+					@if (prevContent != null)
+					{
+						if (type == "notice")
+						{
+							<a href="@($"/classroom/{RoomId}/notice/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
+						}
+						else if(type == "lecturematerial")
+						{
+							<a href="@($"/classroom/{RoomId}/lecturematerial/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
+						}
+
+						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+							<span class="oi oi-clock" aria-hidden="true"></span>
+							@if (prevContent.publish_date.Date == DateTime.Today)
+							{
+								<span style="margin-left :5px; margin-right:11px;">@prevContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
+							}
+							else
+							{
+								<span style="margin-left :5px;">@prevContent.publish_date.ToString("yyyy.MM.dd")</span>
+							}
+						</span>
+					}
+					else
+					{
+						<p style="display: inline-block;">이전글이 없습니다.</p>
+					}
+				</div>
+
+			</div>
+
+			<br />
+			<div class="d-flex align-items-center justify-content-between mb-2">
+				<AuthorizeView Roles="professor">
+					<div>
+						<button class="btn btn-warning" @onclick="Modify">수정</button>
+						<button class="btn btn-warning">삭제</button>
+					</div>
+				</AuthorizeView>
+				<button class="btn btn-primary" @onclick="GoBack">목록</button>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public int RoomId { get; set; }
+	[Parameter]
+	public int ContentId { get; set; }
+
+	private string ImageUrl = "/images/banner.png";
+
+	private BoardContent boardContent;
+	private List<BoardContent> boardContents;
+
+	private string type = "";
+
+	private int index;
+	private BoardContent? prevContent;
+	private BoardContent? nextContent;
+
+	private void GoBack() // 목록으로 돌아가는 클래스
+	{
+		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+	}
+
+	private BoardContent? GetPreviousContent() // 이전 공지사항을 받아옴
+	{
+		return index-1 >= 0 ? boardContents[index - 1] : null;
+	}
+
+	private BoardContent? GetNextContent() // 다음 공지사항을 받아옴
+	{
+		return index+1 < boardContents.Count ? boardContents[index + 1] : null;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		// TODO: 실제 프로젝트에서는 서버로부터 데이터를 가져옴
+
+	}
+
+	protected override async Task OnParametersSetAsync() {
+		string uri = NavigationManager.Uri;
+
+		if (new Regex("/classroom/[0-9]+/notice/[0-9]").IsMatch(uri))
+		{
+			Console.WriteLine("공지사항 세부");
+			type = "notice";
+		}
+		else if (new Regex("/classroom/[0-9]+/lecturematerial/[0-9]").IsMatch(uri))
+		{
+			Console.WriteLine("강의자료 세부");
+			type = "lecturematerial";
+		}
+
+		// TODO: 게시글이 도중에 삭제되는 경우를 고려하여 게시글 리스트를 다시 로딩하고 index값을 조정하는 작업이 필요함.
+		await LoadContentData();
+		index = boardContents.FindIndex(a => a.content_id == ContentId);
+
+		if(index >= boardContents.Count) {
+			// 마지막 바로 전 게시글을 보고 있다가 다음글 기능을 통해 마지막 게시글으로 이동했는데
+			// 하필이면 그 사이에 마지막 컨텐츠가 삭제되어 리스트 범위를 초과하는 경우
+
+			// Do Something
+			return;
+		}
+
+		boardContent = boardContents[index];
+		prevContent = GetPreviousContent();
+		nextContent = GetNextContent();
+	}
+
+	private async Task LoadContentData() // 컨텐츠의 데이터를 불러오는 메서드
+	{
+		await base.OnInitializedAsync();
+		boardContents = new List<BoardContent>();
+
+		var noticeContents = new List<Notice>();
+		var lectureMaterialContents = new List<LectureMaterial>();
+
+		if (type == "notice")
+		{
+			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{RoomId}");
+		}
+		else if (type == "lecturematerial")
+		{
+			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/lecturematerial/all/{RoomId}");
+		}
+
+		if (type == "notice")
+		{
+			if (noticeContents != null)
+			{
+				foreach (var content in noticeContents)
+				{
+					this.boardContents.Add(new NoticeContent()
+						{
+							room_id = content.room_id,
+							content_id = content.notice_id,
+							title = content.title,
+							author = content.author,
+							contents = content.contents,
+							publish_date = content.publish_date,
+							up_date = content.up_date,
+							view_count = content.view_count
+						});
+					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+				}
+			}
+		}else if (type == "lecturematerial")
+		{
+			if (lectureMaterialContents != null)
+			{
+				foreach (var content in lectureMaterialContents)
+				{
+					this.boardContents.Add(new LectureMaterialContent()
+						{
+							room_id = content.room_id,
+							content_id = content.material_id,
+							title = content.title,
+							week = content.week,
+							author = content.author,
+							contents = content.contents,
+							publish_date = content.publish_date,
+							up_date = content.up_date,
+							view_count = content.view_count
+						});
+					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+				}
+			}
+		}
+
+		boardContents = boardContents.OrderBy(a => a.content_id).ToList(); // ID 기준 내림차순
+		StateHasChanged();
+	}
+
+	private void Modify() {
+		NavigationManager.NavigateTo(NavigationManager.Uri + $"/edit");
+	}
+}
