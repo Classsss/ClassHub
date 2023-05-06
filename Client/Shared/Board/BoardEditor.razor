@@ -107,13 +107,25 @@
     }
 
     private async void RegisterContent() {
+        // TODO: 제목과 관련된 예외처리
+        if(title.Length == 0) {
+            
+        }
+
+        // TODO: 본문과 관련된 예외처리
+        if(contents.Length == 0) {
+            
+        }
+
+        // TODO: 1-강의자료수정, 2-강의자료게시, 3-공지사항수정, 4-공지사항게시
         if(type == 4) {
             // 공지사항 게시
             string jsonString = JsonSerializer.Serialize(new Notice { room_id = RoomId, title = title, author = "Issue-155", contents = contents, publish_date = DateTime.Now, up_date = DateTime.Now, view_count = 0 });
             HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
             await Http.PostAsync("/api/classroom/register/notice", httpContent);
         }
-        // 웹 서버에게 게시글 등록 작업을 요청
-        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/"))); // 목록 페이지 또는 게시글 페이지로 돌아갑니다.
+
+        // 목록 또는 게시글 페이지로 돌아감
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }
