@@ -1,24 +1,42 @@
 ﻿@page "/classroom/{roomid:int}/lecturematerial"
 @layout MainLayout
+@inject HttpClient Http
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.Board
 @using ClassHub.Shared
 
-<Board Title="강의자료" Contents="@lec_mat" />
+@if(contents == null) {
+    <div class="d-flex justify-content-center mt-5">
+        <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+    </div>
+} else {
+    <Board Title="강의자료" Contents="@contents" />
+}
 
 @code {
-	[Parameter]
-	public int RoomId { get; set; }
+    [Parameter]
+    public int RoomId { get; set; }
 
-	[Parameter]
-	public EventCallback<LectureMaterialContent> ItemClicked { get; set; } //항목 클릭 시 발생하는 콜백이벤트
+    private List<BoardContent> contents;
 
-	private List<BoardContent> lec_mat = new List<BoardContent>
-	{
-		new LectureMaterialContent {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
-		new LectureMaterialContent {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
-		new LectureMaterialContent {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
-		new LectureMaterialContent {content_id = 4, week = 3, title = "강의자료4", contents = "이것은 내용 4" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
-		new LectureMaterialContent {content_id = 5, week = 4, title = "강의자료5", contents = "이것은 내용 5" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
-	};
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        var materials = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/lecturematerial/all/{RoomId}");
+        if(materials != null) {
+            contents = new List<BoardContent>();
+            foreach(var material in materials) {
+                this.contents.Add(new LectureMaterialContent() {
+                        room_id = material.room_id,
+                        week = material.week,
+                        content_id = material.material_id,
+                        title = material.title,
+                        author = material.author,
+                        contents = material.contents,
+                        publish_date = material.publish_date,
+                        up_date = material.up_date,
+                        view_count = material.view_count
+                    });
+            }
+        }
+    }
 }

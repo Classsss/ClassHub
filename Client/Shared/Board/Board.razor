@@ -65,9 +65,9 @@
 
 @code {
     [Parameter]
-    public string Title { get; set; }
+    public string? Title { get; set; }
     [Parameter]
-    public List<BoardContent> Contents { get; set; }
+    public List<BoardContent>? Contents { get; set; }
 
     private List<BoardContent> pagedContents = new List<BoardContent>();
 
@@ -78,16 +78,18 @@
 
     protected override async void OnInitialized()
     {
-        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
-        CalculateTotalPages();
-        await LoadPageNumber();
-        LoadPagedData();
-        StateHasChanged();
+        if(Contents != null && Title != null) {
+            Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
+            CalculateTotalPages();
+            await LoadPageNumber();
+            LoadPagedData();
+            StateHasChanged();
+        }
     }
 
-    private void ShowContents(BoardContent bc)
+    private void ShowContents(BoardContent content)
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{bc.content_id}");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{content.content_id}");
     }
 
     // Pagination.razor에서 currentPage가 변경되면 실행
@@ -111,7 +113,9 @@
     /// </summary>
     private void LoadPagedData()
     {
-        pagedContents = Contents.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+        if(Contents != null) {
+            pagedContents = Contents.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+        }
     }
 
     /// <summary>
