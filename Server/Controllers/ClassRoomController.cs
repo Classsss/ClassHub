@@ -26,6 +26,16 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
+        // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all' <- 1번 강의실의 모든 강의자료를 불러옴
+        [HttpGet("lecturematerial/all/{room_id}")]
+        public IEnumerable<LectureMaterial> GetAllLectureMaterialsInClassRoom(int room_id) {
+            Console.WriteLine($"room id : {room_id}");
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = $"SELECT * FROM lecturematerial WHERE \"room_id\" = {room_id};"; // room_id가 동일한 모든 공지사항을 찾습니다.
+            var result = connection.Query<LectureMaterial>(query);
+            return result;
+        }
+
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147' <- 학번이 60182147인 학생에게 온 모든 알림을 불러옴
         [HttpGet("notification/all/{student_id}")]
         public IEnumerable<StudentNotification> GetAllNotifications(int student_id) {
@@ -37,6 +47,24 @@ namespace ClassHub.Server.Controllers {
             connection.Dispose();
 
             return result;
+        }
+
+        // 실제 요청 url 예시 : 'api/classroom/register/notice' <- JSON으로 직렬화된 Notice 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
+        [HttpPost("register/notice")]
+        public void PostNotice([FromBody] Notice notice) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
+                   "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+            connection.Execute(query, notice);
+        }
+
+        // 실제 요청 url 예시 : 'api/classroom/register/lecturematerial' <- JSON으로 직렬화된 LectureMaterial 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
+        [HttpPost("register/lecturematerial")]
+        public void PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
+                   "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count)";
+            connection.Execute(query, lectureMaterial);
         }
     }
 }

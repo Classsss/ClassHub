@@ -1,4 +1,4 @@
-﻿@page "/classroom/{classroomid:int}/notice"
+﻿@page "/classroom/{roomid:int}/notice"
 @layout MainLayout
 @inject HttpClient Http
 @using ClassHub.Client.Models
@@ -15,14 +15,14 @@
 
 @code {
     [Parameter]
-    public int ClassRoomId { get; set; }
+    public int RoomId { get; set; }
 
     private List<BoardContent> contents;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{ClassRoomId}");
+        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{RoomId}");
         if (notices != null)
         {
             contents = new List<BoardContent>();
