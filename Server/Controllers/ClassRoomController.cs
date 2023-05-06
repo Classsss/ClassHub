@@ -38,5 +38,14 @@ namespace ClassHub.Server.Controllers {
 
             return result;
         }
+
+        // 실제 요청 url 예시 : 'api/classroom/register/notice' <- JSON으로 직렬화된 Notice 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
+        [HttpPost("register/notice")]
+        public void PostNotice([FromBody] Notice notice) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
+                   "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+            connection.Execute(query, notice);
+        }
     }
 }
