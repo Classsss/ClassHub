@@ -47,5 +47,14 @@ namespace ClassHub.Server.Controllers {
                    "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
             connection.Execute(query, notice);
         }
+
+        // 실제 요청 url 예시 : 'api/classroom/register/lecturematerial' <- JSON으로 직렬화된 LectureMaterial 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
+        [HttpPost("register/lecturematerial")]
+        public void PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
+                   "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count)";
+            connection.Execute(query, lectureMaterial);
+        }
     }
 }
