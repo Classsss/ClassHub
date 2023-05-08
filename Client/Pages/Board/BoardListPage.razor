@@ -32,6 +32,20 @@
 
     protected override async Task OnInitializedAsync()
     {
+        UpdateTypeAndContents();
+
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        await base.OnInitializedAsync();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateTypeAndContents();
+    }
+
+    private async void UpdateTypeAndContents()
+    {
         string uri = NavigationManager.Uri;
 
         if (new Regex("/classroom/[0-9]+/notice").IsMatch(uri))
