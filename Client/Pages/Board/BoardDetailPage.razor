@@ -40,7 +40,7 @@
 						<span style="margin-left: 5px;">@(boardContent.view_count + 1)</span>
 						<span style="margin-left: 10px; margin-right: 10px;">|</span>
 						<span class="oi oi-clock" aria-hidden="true"></span>
-						@if (boardContent.publish_date.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
+						@if(boardContent.publish_date.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
 							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
 						} else { // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
 							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("yyyy.MM.dd")</span>
@@ -50,29 +50,23 @@
 				<img src="@ImageUrl" style="margin-bottom: 15px; max-width: 100%;" />
 				<div>
 					@((MarkupString)boardContent.contents) <!--보안에 취약?-->
-				</div> 
+				</div>
 				<hr />
 
 				<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
 					<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
 					<p style="display: inline-block; margin-right: 10px;">다음글</p>
-					@if (nextContent != null)
-					{
-						<a class="custom-link" href="@($"/classroom/{RoomId}/notice/{nextContent.content_id}")">@nextContent.title</a>
+					@if(nextContent != null) {
+						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{nextContent.content_id}")">@nextContent.title</a>
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
-							@if (nextContent.publish_date.Date == DateTime.Today)
-							{
+							@if(nextContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@nextContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-							}
-							else
-							{
+							} else {
 								<span style="margin-left :5px;">@nextContent.publish_date.ToString("yyyy.MM.dd")</span>
 							}
 						</span>
-					}
-					else
-					{
+					} else {
 						<p style="display: inline-block;">다음글이 없습니다.</p>
 					}
 				</div>
@@ -80,23 +74,17 @@
 				<div style="border-bottom: 1px solid grey;">
 					<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
 					<p style="display: inline-block; margin-right: 10px;">이전글</p>
-					@if (prevContent != null)
-					{
-						<a class="custom-link" href="@($"/classroom/{RoomId}/lecturematerial/{prevContent.content_id}")">@prevContent.title</a>
+					@if(prevContent != null) {
+						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{prevContent.content_id}")">@prevContent.title</a>
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
-							@if (prevContent.publish_date.Date == DateTime.Today)
-							{
+							@if(prevContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@prevContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-							}
-							else
-							{
+							} else {
 								<span style="margin-left :5px;">@prevContent.publish_date.ToString("yyyy.MM.dd")</span>
 							}
 						</span>
-					}
-					else
-					{
+					} else {
 						<p style="display: inline-block;">이전글이 없습니다.</p>
 					}
 				</div>
@@ -118,6 +106,12 @@
 }
 
 @code {
+	private enum BoardType {
+		None = 0,
+		Notice = 1,
+		LectureMaterial = 2
+	}
+
 	[Parameter]
 	public int RoomId { get; set; }
 	[Parameter]
@@ -131,7 +125,7 @@
 	/// <summary>
 	/// 1 - 공지사항, 2 - 강의자료 게시
 	/// </summary>
-	private int type = 0;
+	private BoardType type = BoardType.None;
 
 	private int index;
 	private BoardContent? prevContent;
@@ -152,23 +146,18 @@
 		return index+1 < boardContents.Count ? boardContents[index + 1] : null;
 	}
 
-	protected override async Task OnInitializedAsync()
-	{
-
-	}
-
 	protected override async Task OnParametersSetAsync() {
 		string uri = NavigationManager.Uri;
 
 		if (new Regex("/classroom/[0-9]+/notice/[0-9]").IsMatch(uri))
 		{
 			Console.WriteLine("공지사항 세부");
-			type = 1;
+			type = BoardType.Notice;
 		}
 		else if (new Regex("/classroom/[0-9]+/lecturematerial/[0-9]").IsMatch(uri))
 		{
 			Console.WriteLine("강의자료 세부");
-			type = 2;
+			type = BoardType.LectureMaterial;
 		}
 
 		// TODO: 게시글이 도중에 삭제되는 경우를 고려하여 게시글 리스트를 다시 로딩하고 index값을 조정하는 작업이 필요함.
@@ -199,51 +188,37 @@
 		var noticeContents = new List<Notice>();
 		var lectureMaterialContents = new List<LectureMaterial>();
 
-		if (type == 1) {
+		if (type == BoardType.Notice) {
 			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
-		} else if (type == 2) {
-			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
-		}
-
-		if (type == 1)
-		{
-			if (noticeContents != null)
-			{
-				foreach (var content in noticeContents)
-				{
-					this.boardContents.Add(new NoticeContent()
-						{
-							room_id = content.room_id,
-							content_id = content.notice_id,
-							title = content.title,
-							author = content.author,
-							contents = content.contents,
-							publish_date = content.publish_date,
-							up_date = content.up_date,
-							view_count = content.view_count
-						});
-					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+			if(noticeContents != null) {
+				foreach(var content in noticeContents) {
+					this.boardContents.Add(new NoticeContent() {
+						room_id = content.room_id,
+						content_id = content.notice_id,
+						title = content.title,
+						author = content.author,
+						contents = content.contents,
+						publish_date = content.publish_date,
+						up_date = content.up_date,
+						view_count = content.view_count
+					});
 				}
 			}
-		}else if (type == 2)
-		{
-			if (lectureMaterialContents != null)
-			{
-				foreach (var content in lectureMaterialContents)
-				{
-					this.boardContents.Add(new LectureMaterialContent()
-						{
-							room_id = content.room_id,
-							content_id = content.material_id,
-							title = content.title,
-							week = content.week,
-							author = content.author,
-							contents = content.contents,
-							publish_date = content.publish_date,
-							up_date = content.up_date,
-							view_count = content.view_count
-						});
-					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+		} else if (type == BoardType.LectureMaterial) {
+			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
+			if(lectureMaterialContents != null) {
+				foreach(var content in lectureMaterialContents) {
+					this.boardContents.Add(new LectureMaterialContent() {
+						room_id = content.room_id,
+						content_id = content.material_id,
+						title = content.title,
+						week = content.week,
+						author = content.author,
+						contents = content.contents,
+						publish_date = content.publish_date,
+						up_date = content.up_date,
+						view_count = content.view_count
+					});
 				}
 			}
 		}
@@ -258,8 +233,8 @@
 
 	private async void Delete() {
 		string requestUri = "";
-		if(type == 1) requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
-		else if(type == 2) requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
+		if(type == BoardType.Notice) requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
+		else if(type == BoardType.LectureMaterial) requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
 		await Http.DeleteAsync(requestUri);
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
@@ -270,11 +245,10 @@
 	private async void IncreaseViewCount(BoardContent content)
 	{
 		string requestUri = "";
-		string kind = "";
-
-		if(type == 1) kind = "notice";
-		else kind = "material";
-
+		string kind;
+		if (type == BoardType.Notice) kind = "notice";
+		else if (type == BoardType.LectureMaterial) kind = "material";
+		else kind = "none";
 		requestUri = $"api/classroom/{content.room_id}/view/{kind}/{content.content_id}";
 		await Http.PutAsJsonAsync(requestUri, new { });
 
