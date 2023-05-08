@@ -260,7 +260,6 @@
 
 	private async void Delete() {
 		string requestUri = "";
-		Console.WriteLine($"RoomId : {RoomId}, ContentId : {ContentId}");
 		if(type == "notice") requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
 		else if(type == "lecturematerial") requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
 		await Http.DeleteAsync(requestUri);
