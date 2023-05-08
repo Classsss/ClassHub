@@ -100,6 +100,35 @@ namespace ClassHub.Server.Controllers {
             connection.Execute(query, notice);
         }
 
+        // Board 조회수를 1 증가시켜 DB에 UPDATE 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/1/view/kind/1'
+        [HttpPut("{room_id}/view/{kind}/{content_id}")]
+        public void IncreaseViewCount(int room_id, string kind, int content_id)
+        {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query="";
+            if (kind == "notice")
+            {
+                query =
+                "UPDATE notice " +
+                "SET view_count = view_count + 1 " +
+                "WHERE room_id = @room_id AND notice_id = @content_id;";
+
+            }
+            else if(kind == "material")
+            {
+                query =
+                "UPDATE lecturematerial " +
+                "SET view_count = view_count + 1 " +
+                "WHERE room_id = @room_id AND material_id = @content_id;";
+            }
+
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("content_id", content_id);
+            connection.Execute(query, parameters);
+        }
+
         // Notice 객체를 DB에 INSERT 합니다.
         // 실제 요청 url 예시 : 'api/classroom/register/notice'
         [HttpPost("register/notice")]
