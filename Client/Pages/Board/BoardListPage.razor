@@ -30,67 +30,52 @@
 
     private List<BoardContent> contents;
 
-    protected override async Task OnInitializedAsync()
-    {
-        UpdateTypeAndContents();
-
+    protected override async Task OnInitializedAsync() {
         NavigationManager.LocationChanged += OnLocationChanged;
-
-        await base.OnInitializedAsync();
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) UpdateTypeAndContents();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) {
         UpdateTypeAndContents();
     }
 
-    private async void UpdateTypeAndContents()
-    {
+    private async void UpdateTypeAndContents() {
         string uri = NavigationManager.Uri;
 
-        if (new Regex("/classroom/[0-9]+/notice").IsMatch(uri))
-        {
+        if (new Regex("/classroom/[0-9]+/notice").IsMatch(uri)) {
             Console.WriteLine("공지사항 목록");
             type = "notice";
         }
-        else if (new Regex("/classroom/[0-9]+/lecturematerial").IsMatch(uri))
-        {
+        else if (new Regex("/classroom/[0-9]+/lecturematerial").IsMatch(uri)) {
             Console.WriteLine("강의자료 목록");
             type = "lecturematerial";
         }
 
-        await base.OnInitializedAsync();
-
-
-        if (type == "notice")
-        {
+        if (type == "notice") {
             var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
-            if (notices != null)
-            {
+            if (notices != null) {
                 contents = new List<BoardContent>();
-                foreach (var notice in notices)
-                {
-                    this.contents.Add(new NoticeContent()
-                        {
-                            room_id = notice.room_id,
-                            content_id = notice.notice_id,
-                            title = notice.title,
-                            author = notice.author,
-                            contents = notice.contents,
-                            publish_date = notice.publish_date,
-                            up_date = notice.up_date,
-                            view_count = notice.view_count
-                        });
+                foreach (var notice in notices) {
+                    this.contents.Add(new NoticeContent() {
+                        room_id = notice.room_id,
+                        content_id = notice.notice_id,
+                        title = notice.title,
+                        author = notice.author,
+                        contents = notice.contents,
+                        publish_date = notice.publish_date,
+                        up_date = notice.up_date,
+                        view_count = notice.view_count
+                    });
                 }
             }
-        }else if (type == "lecturematerial")
-        {
+        } else if (type == "lecturematerial") {
             var materials = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
-            if (materials != null)
-            {
+            if (materials != null) {
                 contents = new List<BoardContent>();
-                foreach (var material in materials)
-                {
+                foreach (var material in materials) {
                     this.contents.Add(new LectureMaterialContent()
                         {
                             room_id = material.room_id,
