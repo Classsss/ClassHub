@@ -18,10 +18,16 @@
 <h3>@Title</h3>
 <br />
 
+@if (Title == "강의자료")
+{
+    <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
+    <br />
+}
+
 <table class="table table-striped">
     <thead>
         <tr>
-            <th style="width: 10%;">번호</th>
+            <th style="width: 10%;" @onclick="@(() => SortById())">번호 <i class=@((sortByIDAscending) ? "oi oi-sort-ascending" : "oi oi-sort-descending") /></th>
             @if (Title == "강의자료")
             {
                 <th style="width: 10%;">주차</th>
@@ -52,25 +58,34 @@
 </table>
 
 <AuthorizeView Roles="professor">
-<div class="row">
-    <div class="col-12">
-        <button class="btn btn-success float-end" @onclick="Submit">등록</button>
+    <div class="row">
+        <div class="col-12">
+            <button class="btn btn-success float-end" @onclick="Submit">등록</button>
+        </div>
     </div>
-</div>
 </AuthorizeView>
 
 <div class="d-flex justify-content-center">
-    <Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged"></Pagination>
+    <Pagination currentPage="currentPage" totalPages="totalPages" onPageChanged="OnPageChanged" @ref="pagination"></Pagination>
 </div>
 
 @code {
     [Parameter]
-    public string? Title { get; set; }
+    public string Title { get; set; }
     [Parameter]
-    public List<BoardContent>? Contents { get; set; }
+    public List<BoardContent> Contents { get; set; }
 
+    public List<int> selectedWeek = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+
+    private List<BoardContent> filteredContents = new List<BoardContent>();
     private List<BoardContent> pagedContents = new List<BoardContent>();
 
+    private Pagination pagination; // Pagination 컴포넌트의 참조
+
+    //정렬을 위한 변수
+    private bool sortByIDAscending = false;
+
+    //페이지네이션을 위한 변수
     public int RoomId { get; set; }
     private int currentPage = 1;
     private int pageSize = 10; // 원하는 페이지당 표시할 항목 수를 설정합니다.
@@ -78,18 +93,30 @@
 
     protected override async void OnInitialized()
     {
-        if(Contents != null && Title != null) {
-            Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
-            CalculateTotalPages();
-            await LoadPageNumber();
-            LoadPagedData();
-            StateHasChanged();
+        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // ID 기준 내림차순
+
+        foreach (var c in Contents)
+        {
+            filteredContents.Add(c);
         }
+
+        InitContentsList();
     }
 
-    private void ShowContents(BoardContent content)
+    private async void InitContentsList()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{content.content_id}");
+        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // ID 기준 내림차순
+
+        CalculateTotalPages();
+        await LoadPageNumber();
+        LoadPagedData();
+        await pagination.GoToPage(currentPage);
+        StateHasChanged();
+    }
+
+    private void ShowContents(BoardContent bc)
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{bc.content_id}");
     }
 
     // Pagination.razor에서 currentPage가 변경되면 실행
@@ -105,7 +132,7 @@
     /// </summary>
     private void CalculateTotalPages()
     {
-        totalPages = (int)Math.Ceiling((double)Contents.Count / pageSize);
+        totalPages = (int)Math.Ceiling((double)filteredContents.Count / pageSize);
     }
 
     /// <summary>
@@ -113,9 +140,7 @@
     /// </summary>
     private void LoadPagedData()
     {
-        if(Contents != null) {
-            pagedContents = Contents.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
-        }
+        pagedContents = filteredContents.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
     /// <summary>
@@ -135,10 +160,47 @@
         if (!string.IsNullOrEmpty(storedPage)) currentPage = int.Parse(storedPage);
     }
 
+    private async Task OnWeekChanged(List<int> week)
+    {
+        selectedWeek = week;
+        filteredContents = new List<BoardContent>();
+
+        foreach (var c in Contents)
+        {
+            var lectureMaterial = c as LectureMaterialContent;
+            if (selectedWeek.Contains(lectureMaterial.week))
+            {
+                filteredContents.Add(lectureMaterial);
+            }
+        }
+
+        sortByIDAscending = false;
+
+        InitContentsList();
+        await Task.CompletedTask;
+    }
+
+    private void SortById() //강의자료 번호 순 정렬
+    {
+        if (sortByIDAscending)
+        {
+            filteredContents = filteredContents.OrderByDescending(a => a.content_id).ToList();
+        }
+        else
+        {
+            filteredContents = filteredContents.OrderBy(a => a.content_id).ToList();
+        }
+
+        sortByIDAscending = !sortByIDAscending;
+
+        InitContentsList();
+    }
+
     /// <summary>
     /// 게시글 작성 화면에 진입
     /// </summary>
-    private void Submit() {
+    private void Submit()
+    {
         NavigationManager.NavigateTo(NavigationManager.Uri + "/edit");
     }
 }
