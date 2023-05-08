@@ -82,6 +82,11 @@
             Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
             CalculateTotalPages();
             await LoadPageNumber();
+            if (currentPage > totalPages)
+            {
+                currentPage = totalPages;
+                await SavePaginationState();
+            }
             LoadPagedData();
             StateHasChanged();
         }
