@@ -34,7 +34,7 @@
 					<p style="float: left; margin-right: 50px;">작성자: @boardContent.author</p>
 					<div style="float: right;">
 						<span class="oi oi-eye" aria-hidden="true"></span>
-						<span style="margin-left: 5px;">@boardContent.view_count</span>
+						<span style="margin-left: 5px;">@(boardContent.view_count + 1)</span>
 						<span style="margin-left: 10px; margin-right: 10px;">|</span>
 						<span class="oi oi-clock" aria-hidden="true"></span>
 						@if (boardContent.publish_date.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
@@ -125,6 +125,9 @@
 	private BoardContent boardContent;
 	private List<BoardContent> boardContents;
 
+	/// <summary>
+	/// 1 - 공지사항, 2 - 강의자료 게시
+	/// </summary>
 	private int type = 0;
 
 	private int index;
@@ -148,7 +151,6 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		// TODO: 실제 프로젝트에서는 서버로부터 데이터를 가져옴
 
 	}
 
@@ -177,10 +179,13 @@
 			// Do Something
 			return;
 		}
-
 		boardContent = boardContents[index];
 		prevContent = GetPreviousContent();
 		nextContent = GetNextContent();
+
+		// 조회수를 증가시킴
+		if (boardContent != null) IncreaseViewCount(boardContent);
+
 	}
 
 	private async Task LoadContentData() // 컨텐츠의 데이터를 불러오는 메서드
@@ -191,9 +196,6 @@
 		var noticeContents = new List<Notice>();
 		var lectureMaterialContents = new List<LectureMaterial>();
 
-		/// <summary>
-		/// 1 - 공지사항, 2 - 강의자료 게시
-		/// </summary>
 		if (type == 1) {
 			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
 		} else if (type == 2) {
@@ -257,5 +259,21 @@
 		else if(type == 2) requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
 		await Http.DeleteAsync(requestUri);
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+	}
+
+	/// <summary>
+	/// 조회수 증가
+	/// </summary>
+	private async void IncreaseViewCount(BoardContent content)
+	{
+		string requestUri = "";
+		string kind = "";
+
+		if(type == 1) kind = "notice";
+		else kind = "material";
+
+		requestUri = $"api/classroom/{content.room_id}/view/{kind}/{content.content_id}";
+		await Http.PutAsJsonAsync(requestUri, new { });
+
 	}
 }
