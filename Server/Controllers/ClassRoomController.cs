@@ -49,22 +49,50 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
-        // 실제 요청 url 예시 : 'api/classroom/register/notice' <- JSON으로 직렬화된 Notice 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
-        [HttpPost("register/notice")]
-        public void PostNotice([FromBody] Notice notice) {
+        // 수정 된 LectureMaterial 객체를 DB에 UPDATE 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/modify/lecturematerial'
+        [HttpPut("modify/lecturematerial")]
+        public void PutLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
-                   "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
-            connection.Execute(query, notice);
+            string query = 
+                "UPDATE lecturematerial " +
+                "SET (week, title, contents, up_date) = (@week, @title, @contents, @up_date) " +
+                "WHERE room_id = @room_id AND material_id = @material_id;";
+            connection.Execute(query, lectureMaterial);
         }
 
-        // 실제 요청 url 예시 : 'api/classroom/register/lecturematerial' <- JSON으로 직렬화된 LectureMaterial 객체를 Body를 통해 받아서 DB에 INSERT 합니다.
+        // LectureMaterial 객체를 DB에 INSERT 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/register/lecturematerial'
         [HttpPost("register/lecturematerial")]
         public void PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
-                   "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count)";
+            string query = 
+                "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
+                "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count)";
             connection.Execute(query, lectureMaterial);
+        }
+
+        // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/modify/notice'
+        [HttpPut("modify/notice")]
+        public void PutNotice([FromBody] Notice notice) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = 
+                "UPDATE notice " +
+                "SET (title, contents, up_date) = (@title, @contents, @up_date) " +
+                "WHERE room_id = @room_id AND notice_id = @notice_id;";
+            connection.Execute(query, notice);
+        }
+
+        // Notice 객체를 DB에 INSERT 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/register/notice'
+        [HttpPost("register/notice")]
+        public void PostNotice([FromBody] Notice notice) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = 
+                "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
+                "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+            connection.Execute(query, notice);
         }
     }
 }
