@@ -26,15 +26,29 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
-        // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all' <- 1번 강의실의 모든 강의자료를 불러옴
-        [HttpGet("lecturematerial/all/{room_id}")]
-        public IEnumerable<LectureMaterial> GetAllLectureMaterialsInClassRoom(int room_id) {
+        // Param으로 받은 ID를 가진 강의실의 모든 강의자료를 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all'
+        [HttpGet("{room_id}/lecturematerial/all")]
+        public IEnumerable<LectureMaterial> GetLectureMaterialListInClassRoom(int room_id) {
             using var connection = new NpgsqlConnection(connectionString);
             string query = 
                 "SELECT * " +
                 "FROM lecturematerial " +
                 "WHERE room_id = @room_id;";
             var result = connection.Query<LectureMaterial>(query, room_id);
+            return result;
+        }
+
+        // Param으로 받은 ID를 가진 강의실의 모든 공지사항을 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/1/notice/all'
+        [HttpGet("{room_id}/notice/all")]
+        public IEnumerable<Notice> GetNoticeListInClassRoom(int room_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query =
+                "SELECT * " +
+                "FROM notice " +
+                "WHERE room_id = @room_id;";
+            var result = connection.Query<Notice>(query, room_id);
             return result;
         }
 
