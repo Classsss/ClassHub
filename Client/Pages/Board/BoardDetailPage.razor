@@ -19,8 +19,11 @@
 </style>
 
 <BackButton />
-@if (boardContent != null)
-{
+@if (boardContent == null) {
+	<div class="d-flex justify-content-center mt-5">
+		<div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+	</div>
+} else {
 	<div style="min-height: 100vh;">
 		<div class="d-flex flex-column justify-content-between">
 			<div>
