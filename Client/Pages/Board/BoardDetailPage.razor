@@ -125,6 +125,9 @@
 	private BoardContent boardContent;
 	private List<BoardContent> boardContents;
 
+	/// <summary>
+	/// 1 - 공지사항, 2 - 강의자료 게시
+	/// </summary>
 	private int type = 0;
 
 	private int index;
@@ -193,9 +196,6 @@
 		var noticeContents = new List<Notice>();
 		var lectureMaterialContents = new List<LectureMaterial>();
 
-		/// <summary>
-		/// 1 - 공지사항, 2 - 강의자료 게시
-		/// </summary>
 		if (type == 1) {
 			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
 		} else if (type == 2) {
@@ -269,9 +269,8 @@
 		string requestUri = "";
 		string kind = "";
 
-		if (type == "lecturematerial") kind = "material";
-		else kind = "notice";
-
+		if(type == 1) kind = "notice";
+		else kind = "material";
 
 		requestUri = $"api/classroom/{content.room_id}/view/{kind}/{content.content_id}";
 		await Http.PutAsJsonAsync(requestUri, new { });
