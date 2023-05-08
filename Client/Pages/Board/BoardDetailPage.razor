@@ -232,9 +232,7 @@
 	}
 
 	private async void Delete() {
-		string requestUri = "";
-		if(type == BoardType.Notice) requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
-		else if(type == BoardType.LectureMaterial) requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
+		string requestUri = requestUri = $"/api/classroom/{RoomId}/delete/{type.ToString().ToLower()}/{ContentId}";
 		await Http.DeleteAsync(requestUri);
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
@@ -244,13 +242,7 @@
 	/// </summary>
 	private async void IncreaseViewCount(BoardContent content)
 	{
-		string requestUri = "";
-		string kind;
-		if (type == BoardType.Notice) kind = "notice";
-		else if (type == BoardType.LectureMaterial) kind = "material";
-		else kind = "none";
-		requestUri = $"api/classroom/{content.room_id}/view/{kind}/{content.content_id}";
+		string requestUri = $"api/classroom/{content.room_id}/view/{type.ToString().ToLower()}/{content.content_id}";
 		await Http.PutAsJsonAsync(requestUri, new { });
-
 	}
 }
