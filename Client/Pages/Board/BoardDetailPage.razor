@@ -201,13 +201,10 @@
 		var noticeContents = new List<Notice>();
 		var lectureMaterialContents = new List<LectureMaterial>();
 
-		if (type == "notice")
-		{
-			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/notice/{RoomId}");
-		}
-		else if (type == "lecturematerial")
-		{
-			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/lecturematerial/all/{RoomId}");
+		if (type == "notice") {
+			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
+		} else if (type == "lecturematerial") {
+			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
 		}
 
 		if (type == "notice")

@@ -21,7 +21,7 @@
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        var materials = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/lecturematerial/all/{RoomId}");
+        var materials = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
         if(materials != null) {
             contents = new List<BoardContent>();
             foreach(var material in materials) {

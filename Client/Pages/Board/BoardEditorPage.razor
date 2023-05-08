@@ -57,9 +57,7 @@
 
     public List<int> selectedWeek = new List<int>() { 1, };
 
-
-    private List<LectureMaterialContent> lec_mat = new List<LectureMaterialContent>
-        {
+    private List<LectureMaterialContent> lec_mat = new List<LectureMaterialContent> {
         new LectureMaterialContent {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
         new LectureMaterialContent {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
         new LectureMaterialContent {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
@@ -76,8 +74,9 @@
             // TODO: 수정 해야 하는 강의자료의 정보를 불러옵니다
 
             // 우선 임시로 함
-            title = lec_mat[ContentId - 1].title;
-            contents = lec_mat[ContentId - 1].contents;
+            targetBoardContent = lec_mat[ContentId - 1];
+            title = targetBoardContent.title;
+            contents = targetBoardContent.contents;
         } else if (new Regex("/classroom/[0-9]+/lecturematerial/edit").IsMatch(uri)) {
             Console.WriteLine("강의자료 게시");
             type = 2;
@@ -87,8 +86,9 @@
             // TODO: 수정 해야 하는 공지사항의 정보를 불러옵니다
 
             // 우선 임시로 함
-            title = lec_mat[ContentId - 1].title;
-            contents = lec_mat[ContentId - 1].contents;
+            targetBoardContent = lec_mat[ContentId - 1];
+            title = targetBoardContent.title;
+            contents = targetBoardContent.contents;
         } else if (new Regex("/classroom/[0-9]+/notice/edit").IsMatch(uri)) {
             type = 4;
             Console.WriteLine("공지사항 게시");
@@ -107,28 +107,63 @@
     }
 
     private async void RegisterContent() {
-        // TODO: 제목과 관련된 예외처리
-        if(title.Length == 0) {
-
-        }
-
-        // TODO: 본문과 관련된 예외처리
-        if(contents.Length == 0) {
-
-        }
-
-        // TODO: 1-강의자료수정, 2-강의자료게시, 3-공지사항수정, 4-공지사항게시
-        if(type == 2) {
+        string jsonString = "";
+        string requestUri = "";
+        if(type == 1) {
+            // 강의자료 수정
+            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+                room_id = RoomId,
+                material_id = ContentId,
+                week = selectedWeek[0],
+                title = title,
+                author = targetBoardContent.author,
+                contents = contents,
+                publish_date = targetBoardContent.publish_date,
+                up_date = DateTime.Now,
+                view_count = targetBoardContent.view_count
+            });
+            requestUri = "/api/classroom/modify/lecturematerial";
+        } else if(type == 2) {
             // 강의자료 게시
-            string jsonString = JsonSerializer.Serialize(new LectureMaterial { room_id = RoomId, week = selectedWeek[0], title = title, author = "Issue-155", contents = contents, publish_date = DateTime.Now, up_date = DateTime.Now, view_count = 0 });
-            HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-            await Http.PostAsync("/api/classroom/register/lecturematerial", httpContent);
+            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+                room_id = RoomId,
+                week = selectedWeek[0],
+                title = title,
+                author = "Issue-155",
+                contents = contents,
+                publish_date = DateTime.Now,
+                up_date = DateTime.Now,
+                view_count = 0
+            });
+            requestUri = "/api/classroom/register/lecturematerial";
+        } else if(type == 3) {
+            // 공지사항 수정
+            jsonString = JsonSerializer.Serialize(new Notice {
+                room_id = RoomId,
+                notice_id = ContentId,
+                title = title,
+                author = targetBoardContent.author,
+                contents = contents,
+                publish_date = targetBoardContent.publish_date,
+                up_date = DateTime.Now,
+                view_count = targetBoardContent.view_count
+            });
+            requestUri = "/api/classroom/modify/notice";
         } else if(type == 4) {
             // 공지사항 게시
-            string jsonString = JsonSerializer.Serialize(new Notice { room_id = RoomId, title = title, author = "Issue-155", contents = contents, publish_date = DateTime.Now, up_date = DateTime.Now, view_count = 0 });
-            HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-            await Http.PostAsync("/api/classroom/register/notice", httpContent);
+            jsonString = JsonSerializer.Serialize(new Notice {
+                room_id = RoomId,
+                title = title,
+                author = "Issue-155",
+                contents = contents,
+                publish_date = DateTime.Now,
+                up_date = DateTime.Now,
+                view_count = 0
+            });
+            requestUri = "/api/classroom/register/notice";
         }
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        await Http.PutAsync(requestUri, httpContent);
 
         // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
