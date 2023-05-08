@@ -110,5 +110,33 @@ namespace ClassHub.Server.Controllers {
                 "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
             connection.Execute(query, notice);
         }
-    }
+
+		// 공지사항을 삭제합니다
+		// 실제 요청 url 예시 : 'api/classroom/1/delete/notice/1'
+		[HttpDelete("{room_id}/delete/notice/{notice_id}")]
+		public void DeleteNotice(int room_id, int notice_id) {
+			using var connection = new NpgsqlConnection(connectionString);
+			string query =
+				"DELETE FROM notice " +
+				"WHERE room_id = @room_id AND notice_id = @notice_id;";
+			var parameters = new DynamicParameters();
+			parameters.Add("room_id", room_id);
+			parameters.Add("notice_id", notice_id);
+			connection.Execute(query, parameters);
+		}
+
+		// 강의자료를 삭제합니다
+		// 실제 요청 url 예시 : 'api/classroom/1/delete/lecturematerial/1'
+		[HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
+		public void DeleteLectureMaterial(int room_id, int material_id) {
+			using var connection = new NpgsqlConnection(connectionString);
+			string query =
+				"DELETE FROM lecturematerial " +
+				"WHERE room_id = @room_id AND material_id = @material_id;";
+			var parameters = new DynamicParameters();
+			parameters.Add("room_id", room_id);
+			parameters.Add("material_id", material_id);
+			connection.Execute(query, parameters);
+		}
+	}
 }
