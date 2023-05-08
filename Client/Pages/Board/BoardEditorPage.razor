@@ -20,8 +20,8 @@
     </div>
     <br />
 
-    if(type == 1 || type == 3) {
-        <WeekPicker weekValue="@selectedWeek" allowMultipleSelection=false />
+    if(type == 1 || type == 2) {
+        <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
         <br />
     }
 
@@ -30,7 +30,7 @@
         <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요" @bind="@contents"></textarea>
     </div>
 
-    if(type == 1 || type == 3) {
+    if(type == 1 || type == 2) {
         <DragDropUpload />        
     }
 
@@ -167,5 +167,12 @@
 
         // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    private async Task OnWeekChanged(List<int> week)
+    {
+        selectedWeek = week;
+        Console.WriteLine(selectedWeek[0]);
+        await Task.CompletedTask;
     }
 }
