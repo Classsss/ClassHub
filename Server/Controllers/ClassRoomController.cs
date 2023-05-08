@@ -84,7 +84,7 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
             string query = 
                 "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
-                "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count)";
+                "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count);";
             connection.Execute(query, lectureMaterial);
         }
 

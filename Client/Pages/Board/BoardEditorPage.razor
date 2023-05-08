@@ -163,7 +163,8 @@
             requestUri = "/api/classroom/register/notice";
         }
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-        await Http.PutAsync(requestUri, httpContent);
+        if(type == 1 || type == 3) await Http.PutAsync(requestUri, httpContent);
+        else await Http.PostAsync(requestUri, httpContent);
 
         // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
