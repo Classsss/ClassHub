@@ -263,8 +263,8 @@
 
 	private async void Delete() {
 		string requestUri = "";
-		if(type == "notice") requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
-		else if(type == "lecturematerial") requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
+		if(type == 1) requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
+		else if(type == 2) requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
 		await Http.DeleteAsync(requestUri);
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}

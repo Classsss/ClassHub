@@ -83,7 +83,7 @@
     private Pagination pagination; // Pagination 컴포넌트의 참조
 
     //정렬을 위한 변수
-    private bool sortByIDAscending = true;
+    private bool sortByIDAscending = false;
 
     //페이지네이션을 위한 변수
     public int RoomId { get; set; }
@@ -93,6 +93,8 @@
 
     protected override async void OnInitialized()
     {
+        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // ID 기준 내림차순
+
         foreach (var c in Contents)
         {
             filteredContents.Add(c);
@@ -103,7 +105,8 @@
 
     private async void InitContentsList()
     {
-        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // 공지 ID 기준 내림차순
+        Contents = Contents.OrderByDescending(a => a.content_id).ToList(); // ID 기준 내림차순
+
         CalculateTotalPages();
         await LoadPageNumber();
         LoadPagedData();
@@ -170,6 +173,8 @@
                 filteredContents.Add(lectureMaterial);
             }
         }
+
+        sortByIDAscending = false;
 
         InitContentsList();
         await Task.CompletedTask;
