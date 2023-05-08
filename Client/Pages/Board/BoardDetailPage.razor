@@ -115,7 +115,7 @@
 				<AuthorizeView Roles="professor">
 					<div>
 						<button class="btn btn-warning" @onclick="Modify">수정</button>
-						<button class="btn btn-warning">삭제</button>
+						<button class="btn btn-warning" @onclick="Delete">삭제</button>
 					</div>
 				</AuthorizeView>
 				<button class="btn btn-primary" @onclick="GoBack">목록</button>
@@ -256,5 +256,13 @@
 
 	private void Modify() {
 		NavigationManager.NavigateTo(NavigationManager.Uri + $"/edit");
+	}
+
+	private async void Delete() {
+		string requestUri = "";
+		if(type == "notice") requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
+		else if(type == "lecturematerial") requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
+		await Http.DeleteAsync(requestUri);
+		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 	}
 }
