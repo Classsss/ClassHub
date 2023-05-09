@@ -7,9 +7,23 @@
 @using ClassHub.Shared;
 @using System.Text.RegularExpressions;
 
+<style>
+	.custom-link {
+		display: inline-block;
+		color: inherit;
+		text-decoration: none;
+	}
+	.custom-link:hover {
+		background-color: lightblue;
+	}
+</style>
+
 <BackButton />
-@if (boardContent != null)
-{
+@if (boardContent == null) {
+	<div class="d-flex justify-content-center mt-5">
+		<div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+	</div>
+} else {
 	<div style="min-height: 100vh;">
 		<div class="d-flex flex-column justify-content-between">
 			<div>
@@ -23,62 +37,36 @@
 					<p style="float: left; margin-right: 50px;">작성자: @boardContent.author</p>
 					<div style="float: right;">
 						<span class="oi oi-eye" aria-hidden="true"></span>
-						<span style="margin-left: 5px;">@boardContent.view_count</span>
+						<span style="margin-left: 5px;">@(boardContent.view_count + 1)</span>
 						<span style="margin-left: 10px; margin-right: 10px;">|</span>
 						<span class="oi oi-clock" aria-hidden="true"></span>
-						@if (boardContent.publish_date.Date == DateTime.Today)
-						{ // 글이 올라온 시간이 오늘일 경우 시간만 표시
+						@if(boardContent.publish_date.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
 							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-						}
-						else
-						{ // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
+						} else { // 글이 올라온 시간이 오늘이 아닐 경우 날짜만 표시
 							<span style="margin-left: 5px;">@boardContent.publish_date.ToString("yyyy.MM.dd")</span>
 						}
 					</div>
 				</div>
-				<img src="@ImageUrl" style="margin-bottom: 15px;" />
-				<div>@(
-								(MarkupString)boardContent.contents
-								)</div> <!--보안에 취약?-->
+				<img src="@ImageUrl" style="margin-bottom: 15px; max-width: 100%;" />
+				<div>
+					@((MarkupString)boardContent.contents) <!--보안에 취약?-->
+				</div>
 				<hr />
-
-				<style>
-					a {
-					color: inherit;
-					text-decoration: none;
-					}
-
-					a:hover {
-					background-color: lightblue;
-					}
-
-					/* 이미지도 최대 가로 너비 100%로 설정 */
-					img {
-					max-width: 100%;
-					}
-				</style>
-
 
 				<div style="border-bottom: 1px solid grey; margin-bottom: 1rem;">
 					<span class="oi oi-arrow-circle-top" aria-hidden="true"></span>
 					<p style="display: inline-block; margin-right: 10px;">다음글</p>
-					@if (nextContent != null)
-					{
-						<a href="@($"/classroom/{RoomId}/{type}/{nextContent.content_id}")" style="display: inline-block;">@nextContent.title</a>
+					@if(nextContent != null) {
+						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{nextContent.content_id}")">@nextContent.title</a>
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
-							@if (nextContent.publish_date.Date == DateTime.Today)
-							{
+							@if(nextContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@nextContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-							}
-							else
-							{
+							} else {
 								<span style="margin-left :5px;">@nextContent.publish_date.ToString("yyyy.MM.dd")</span>
 							}
 						</span>
-					}
-					else
-					{
+					} else {
 						<p style="display: inline-block;">다음글이 없습니다.</p>
 					}
 				</div>
@@ -86,24 +74,17 @@
 				<div style="border-bottom: 1px solid grey;">
 					<span class="oi oi-arrow-circle-bottom" aria-hidden="true"></span>
 					<p style="display: inline-block; margin-right: 10px;">이전글</p>
-					@if (prevContent != null)
-					{
-						<a href="@($"/classroom/{RoomId}/{type}/{prevContent.content_id}")" style="display: inline-block;">@prevContent.title</a>
-
+					@if(prevContent != null) {
+						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{prevContent.content_id}")">@prevContent.title</a>
 						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
-							@if (prevContent.publish_date.Date == DateTime.Today)
-							{
+							@if(prevContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@prevContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
-							}
-							else
-							{
+							} else {
 								<span style="margin-left :5px;">@prevContent.publish_date.ToString("yyyy.MM.dd")</span>
 							}
 						</span>
-					}
-					else
-					{
+					} else {
 						<p style="display: inline-block;">이전글이 없습니다.</p>
 					}
 				</div>
@@ -125,6 +106,12 @@
 }
 
 @code {
+	private enum BoardType {
+		None = 0,
+		Notice = 1,
+		LectureMaterial = 2
+	}
+
 	[Parameter]
 	public int RoomId { get; set; }
 	[Parameter]
@@ -135,7 +122,10 @@
 	private BoardContent boardContent;
 	private List<BoardContent> boardContents;
 
-	private string type = "";
+	/// <summary>
+	/// 1 - 공지사항, 2 - 강의자료 게시
+	/// </summary>
+	private BoardType type = BoardType.None;
 
 	private int index;
 	private BoardContent? prevContent;
@@ -156,24 +146,18 @@
 		return index+1 < boardContents.Count ? boardContents[index + 1] : null;
 	}
 
-	protected override async Task OnInitializedAsync()
-	{
-		// TODO: 실제 프로젝트에서는 서버로부터 데이터를 가져옴
-
-	}
-
 	protected override async Task OnParametersSetAsync() {
 		string uri = NavigationManager.Uri;
 
 		if (new Regex("/classroom/[0-9]+/notice/[0-9]").IsMatch(uri))
 		{
 			Console.WriteLine("공지사항 세부");
-			type = "notice";
+			type = BoardType.Notice;
 		}
 		else if (new Regex("/classroom/[0-9]+/lecturematerial/[0-9]").IsMatch(uri))
 		{
 			Console.WriteLine("강의자료 세부");
-			type = "lecturematerial";
+			type = BoardType.LectureMaterial;
 		}
 
 		// TODO: 게시글이 도중에 삭제되는 경우를 고려하여 게시글 리스트를 다시 로딩하고 index값을 조정하는 작업이 필요함.
@@ -187,10 +171,13 @@
 			// Do Something
 			return;
 		}
-
 		boardContent = boardContents[index];
 		prevContent = GetPreviousContent();
 		nextContent = GetNextContent();
+
+		// 조회수를 증가시킴
+		if (boardContent != null) IncreaseViewCount(boardContent);
+
 	}
 
 	private async Task LoadContentData() // 컨텐츠의 데이터를 불러오는 메서드
@@ -201,51 +188,37 @@
 		var noticeContents = new List<Notice>();
 		var lectureMaterialContents = new List<LectureMaterial>();
 
-		if (type == "notice") {
+		if (type == BoardType.Notice) {
 			noticeContents = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
-		} else if (type == "lecturematerial") {
-			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
-		}
-
-		if (type == "notice")
-		{
-			if (noticeContents != null)
-			{
-				foreach (var content in noticeContents)
-				{
-					this.boardContents.Add(new NoticeContent()
-						{
-							room_id = content.room_id,
-							content_id = content.notice_id,
-							title = content.title,
-							author = content.author,
-							contents = content.contents,
-							publish_date = content.publish_date,
-							up_date = content.up_date,
-							view_count = content.view_count
-						});
-					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+			if(noticeContents != null) {
+				foreach(var content in noticeContents) {
+					this.boardContents.Add(new NoticeContent() {
+						room_id = content.room_id,
+						content_id = content.notice_id,
+						title = content.title,
+						author = content.author,
+						contents = content.contents,
+						publish_date = content.publish_date,
+						up_date = content.up_date,
+						view_count = content.view_count
+					});
 				}
 			}
-		}else if (type == "lecturematerial")
-		{
-			if (lectureMaterialContents != null)
-			{
-				foreach (var content in lectureMaterialContents)
-				{
-					this.boardContents.Add(new LectureMaterialContent()
-						{
-							room_id = content.room_id,
-							content_id = content.material_id,
-							title = content.title,
-							week = content.week,
-							author = content.author,
-							contents = content.contents,
-							publish_date = content.publish_date,
-							up_date = content.up_date,
-							view_count = content.view_count
-						});
-					// if (notice.notice_id == NoticeId) noticeContent = noticeContents.LastOrDefault();
+		} else if (type == BoardType.LectureMaterial) {
+			lectureMaterialContents = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
+			if(lectureMaterialContents != null) {
+				foreach(var content in lectureMaterialContents) {
+					this.boardContents.Add(new LectureMaterialContent() {
+						room_id = content.room_id,
+						content_id = content.material_id,
+						title = content.title,
+						week = content.week,
+						author = content.author,
+						contents = content.contents,
+						publish_date = content.publish_date,
+						up_date = content.up_date,
+						view_count = content.view_count
+					});
 				}
 			}
 		}
@@ -259,10 +232,17 @@
 	}
 
 	private async void Delete() {
-		string requestUri = "";
-		if(type == "notice") requestUri = $"/api/classroom/{RoomId}/delete/notice/{ContentId}";
-		else if(type == "lecturematerial") requestUri = $"/api/classroom/{RoomId}/delete/lecturematerial/{ContentId}";
+		string requestUri = requestUri = $"/api/classroom/{RoomId}/delete/{type.ToString().ToLower()}/{ContentId}";
 		await Http.DeleteAsync(requestUri);
 		NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+	}
+
+	/// <summary>
+	/// 조회수 증가
+	/// </summary>
+	private async void IncreaseViewCount(BoardContent content)
+	{
+		string requestUri = $"api/classroom/{content.room_id}/view/{type.ToString().ToLower()}/{content.content_id}";
+		await Http.PutAsJsonAsync(requestUri, new { });
 	}
 }
