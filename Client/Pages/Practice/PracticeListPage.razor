@@ -3,18 +3,16 @@
 @using ClassHub.Client.Models
 @inject HttpClient Http
 
-<SubmissionList Title="실습" Assignment="@practices" />
-
+<SubmissionList Title="실습" Submissions="@practices" />
 
 @code {
     [Parameter]
-    public int Id { get; set; }
-    private Assignment? practices;
+    public int RoomId { get; set; }
+    private List<Submission>? practices  = new List<Submission>();
 
-    protected async override void OnInitialized()
-    {
-        // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
-        practices = await Http.GetFromJsonAsync<Assignment>($"api/classroom/{Id}");
+    protected async override void OnInitialized(){      
+        // RoomId와 매칭되는 실습의 정보를 가져옵니다.
+        practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/{RoomId}");
         StateHasChanged();
     }
     

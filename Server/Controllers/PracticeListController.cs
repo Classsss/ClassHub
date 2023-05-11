@@ -3,8 +3,7 @@ using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
-using System.Collections.Generic;
-using System.Linq;
+
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -16,30 +15,33 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
+        //Todo: Submit과 연동해서 제출여부 확인, 
 
         // 해당 강의실에 올라온 실습 리스트를 보여준다.
         [HttpGet("{room_id}")]
-        public IEnumerable<Assignment> GetPracticeList(int room_id) {
-            var connection = new NpgsqlConnection(connectionString);
-
+        public List<Submission> GetPracticeList(int room_id) {
+            using var connection = new NpgsqlConnection(connectionString);
             string query;
 
+            //실습 리스트
+            List<Submission> practiceList = new List<Submission>();
 
-            List<Assignment> practiceList = new List<Assignment>();
+            // 강의실 번호가 room_id인 실습들을 찾습니다.
+            query = "SELECT * FROM codeassignment WHERE room_id = @room_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            var codeAssignments = connection.Query<CodeAssignment>(query,parameters);
             
-                query = $"SELECT * FROM codeassignment WHERE \"room_id\" = {room_id};"; // 강의실 번호가 id인 실습들을 찾습니다.
-            var codeAssignments = connection.Query<CodeAssignment>(query);
-
-            foreach(CodeAssignment codeAssignment in codeAssignments)
+            // 문제 번호가 problem_id인 문제를 찾은 후 practice를 생성하고 practiceList에 추가합니다.
+            foreach (CodeAssignment codeAssignment in codeAssignments)
             {
-                query = $"SELECT * FROM codeproblem WHERE \"problem_id\" = {codeAssignment.problem_id};"; // 강의실 번호가 id인 강의실을 찾습니다.
-                Shared.CodeProblem codeProblem = connection.Query<Shared.CodeProblem>(query).FirstOrDefault();
-                practiceList.Add(new Assignment { Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.content, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = true });
+                query = "SELECT * FROM codeproblem WHERE problem_id = @problem_id;";
+                var parametersProblem = new DynamicParameters();
+                parametersProblem.Add("problem_id", codeAssignment.problem_id);
+                Shared.CodeProblem codeProblem = connection.Query<Shared.CodeProblem>(query,parametersProblem).FirstOrDefault();
+                practiceList.Add(new Assignment {Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.contents, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = true });
             }
-            connection.Dispose();
-
-            IEnumerable<Assignment> practiceEnumerable = practiceList;
-            return practiceEnumerable;
+            return practiceList;
         }
     }
 }
