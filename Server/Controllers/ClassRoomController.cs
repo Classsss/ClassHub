@@ -116,16 +116,24 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/register/notice'
         [HttpPost("register/notice")]
         public void PostNotice([FromBody] Notice notice) {
-            using var connection = new NpgsqlConnection(connectionString);
-            string query = 
-                "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
-                "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
-            connection.Execute(query, notice);
+            using(var connection = new NpgsqlConnection(connectionString)) {
+                string query =
+                    "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
+                    "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+                connection.Execute(query, notice);
+            }
+
+            InsertNotification(new ClassRoomNotification {
+                room_id = notice.room_id,
+                message = notice.title,
+                uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
+                notify_date = DateTime.Now
+            });
         }
 
-		// 공지사항을 삭제합니다
-		// 실제 요청 url 예시 : 'api/classroom/1/delete/notice/1'
-		[HttpDelete("{room_id}/delete/notice/{notice_id}")]
+        // 공지사항을 삭제합니다
+        // 실제 요청 url 예시 : 'api/classroom/1/delete/notice/1'
+        [HttpDelete("{room_id}/delete/notice/{notice_id}")]
 		public void DeleteNotice(int room_id, int notice_id) {
 			using var connection = new NpgsqlConnection(connectionString);
 			string query =
@@ -150,7 +158,7 @@ namespace ClassHub.Server.Controllers {
 			parameters.Add("material_id", material_id);
 			connection.Execute(query, parameters);
 		}
-	}
+
         // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
         [HttpGet("notification/all/{student_id}")]
@@ -173,4 +181,58 @@ namespace ClassHub.Server.Controllers {
             }
             return result;
         }
+
+        // 강의실 테이블에 알림을 등록합니다.
+        // 아직은 클라이언트에서 직접적으로 알림 INSERT를 요청하는 작업이 없기에 API를 생성하지 않습니다.
+        public void InsertNotification(ClassRoomNotification roomNotification) {
+            using var connection = new NpgsqlConnection(connectionString);
+            connection.Open(); // 트랜잭션을 사용하는 경우 직접 Open() 하는 것을 권장
+
+            // 동시성 문제 때문에 여러 개의 쿼리를 마치 하나의 작업처럼 실행시키도록 하기 위해 트랜잭션 단위로 묶습니다.
+            using(var transaction = connection.BeginTransaction()) {
+                try {
+                    string query1 = // 다음 notification_id 시퀀스를 가져옵니다. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 2로 바뀜)
+                        "SELECT nextval('classroomnotification_notification_id_seq');";
+                    int seq = connection.QuerySingle<int>(query1, transaction: transaction);
+
+                    string query2 = // ClassRoomNotification 테이블에 데이터를 INSERT
+                        "INSERT INTO classroomnotification (room_id, notification_id, message, uri, notify_date) " +
+                        "VALUES (@room_id, @notification_id, @message, @uri, @notify_date);";
+                    var query2_params = new DynamicParameters();
+                    query2_params.Add("room_id", roomNotification.room_id);
+                    query2_params.Add("notification_id", seq);
+                    query2_params.Add("message", roomNotification.message);
+                    query2_params.Add("uri", roomNotification.uri);
+                    query2_params.Add("notify_date", roomNotification.notify_date);
+                    connection.Execute(query2, roomNotification);
+
+                    string query3 = // 해당 ClassRoom에서 강의를 수강 중인 모든 학생의 학번을 SELECT
+                        "SELECT student_id " +
+                        "FROM student " +
+                        "WHERE room_id = @room_id;";
+                    int[] students = connection.Query<int>(query3, roomNotification.room_id).ToArray();
+
+                    foreach(var student_id in students) {
+                        Console.WriteLine($"알림 등록을 시도함. 강의실({roomNotification.room_id}), 학번({student_id}), 알림번호({roomNotification.notification_id})");
+                        string query4 = // 학번별로 StudentNotification 테이블에 데이터를 INSERT
+                            "INSERT INTO studentnotification (room_id, student_id, notification_id, is_read) " +
+                            "VALUES (@room_id, @student_id, @notification_id, @is_read);";
+                        var query4_params = new DynamicParameters();
+                        query4_params.Add("room_id", roomNotification.room_id);
+                        query4_params.Add("student_id", student_id);
+                        query4_params.Add("notification_id", roomNotification.notification_id);
+                        query4_params.Add("is_read", false);
+                        connection.Execute(query4, query4_params);
+                    }
+
+                    // 모든 쿼리가 성공적으로 실행되면 트랜잭션 커밋
+                    transaction.Commit();
+                } catch(Exception ex) {
+                    _logger.LogError("알림을 INSERT 하던 중 문제가 발생하여 RollBack 합니다.");
+                    _logger.LogError($"msg :\n{ex.Message}");
+                    transaction.Rollback();
+                }
+            }
+        }
+    }
 }
