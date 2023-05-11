@@ -28,7 +28,9 @@ namespace ClassHub.Server.Controllers {
                 "SELECT * " +
                 "FROM classroom " +
                 "WHERE room_id = @room_id;";
-            var result = connection.QuerySingle<ClassRoom>(query, room_id); // ID는 고유하므로, 하나만 반환되는 것이 자명하여 QuerySingle 사용
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            var result = connection.QuerySingle<ClassRoom>(query, parameters); // ID는 고유하므로, 하나만 반환되는 것이 자명하여 QuerySingle 사용
             return result;
         }
 
@@ -41,7 +43,9 @@ namespace ClassHub.Server.Controllers {
                 "SELECT * " +
                 "FROM lecturematerial " +
                 "WHERE room_id = @room_id;";
-            var result = connection.Query<LectureMaterial>(query, room_id);
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            var result = connection.Query<LectureMaterial>(query, parameters);
             return result;
         }
 
@@ -54,7 +58,9 @@ namespace ClassHub.Server.Controllers {
                 "SELECT * " +
                 "FROM notice " +
                 "WHERE room_id = @room_id;";
-            var result = connection.Query<Notice>(query, room_id);
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            var result = connection.Query<Notice>(query, parameters);
             return result;
         }
 
