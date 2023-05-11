@@ -87,6 +87,8 @@ else
         NavMenuTitleService.Title = "ClassHub"; 
         await getCourses(); //시간표 받아오기
         await getNotifications(); //알림 받아오기
+
+        Console.WriteLine(await UserInfo.GetUserIdAsync(JSRuntime)); //이런식으로 활용하면 된단다 진호야
     }
 
     protected async Task getCourses()
