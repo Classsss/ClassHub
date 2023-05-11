@@ -78,7 +78,7 @@
     [Parameter]
     public List<Submission> Submissions { get; set; }
 
-    protected override void OnInitialized() {
+    protected override void OnParametersSet(){
         Submissions = Submissions.OrderByDescending(a => a.Id).ToList();
     }
 
