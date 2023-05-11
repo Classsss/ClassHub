@@ -1,3 +1,4 @@
+using ClassHub.Server.Controllers;
 using ClassHub.Server.Controllers.ClassHub.Server.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -37,7 +38,7 @@ namespace ClassHub {
             app.MapRazorPages();
             app.MapControllers();
             app.MapFallbackToFile("index.html");
-            app.MapHub<RealTimeCaseHubController>("/realtimecasehub");
+            app.MapHub<RealTimeSubmitHubController>("/realtimesubmithub");
             app.Run();
         }
     }
