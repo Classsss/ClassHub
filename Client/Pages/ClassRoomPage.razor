@@ -1,7 +1,10 @@
 ﻿@page "/classroom/{id:int}"
 @layout MainLayout
 @using ClassHub.Shared
+@using ClassHub.Client.Models
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
+
 <!--Role 테스트용 AuthView-->
 <AuthorizeView Roles="student">
     <Authorized>
@@ -26,8 +29,9 @@
                     <h3 class="text-center col-12">공지사항</h3>
                     <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
                         <ul class="list-group">
-                            @for(int i = 1; i <= 20; i++) {
-                                <li class="list-group-item">공지사항 @i</li>
+                            @foreach(var content in contents)
+                            {
+                                <li class="list-group-item" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">@content.title</li>
                             }
                         </ul>
                     </div>
@@ -52,10 +56,33 @@
     public int Id { get; set; }
 
     private ClassRoom? classRoom;
+    private List<BoardContent>? contents;
 
     protected async override void OnInitialized() {
         // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
         classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{Id}");
-        StateHasChanged();
+
+        var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{Id}/notice/all");
+        if (notices != null) {
+            contents = new List<BoardContent>();
+            foreach (var notice in notices) {
+                this.contents.Add(new NoticeContent() {
+                    room_id = notice.room_id,
+                    content_id = notice.notice_id,
+                    title = notice.title,
+                    author = notice.author,
+                    contents = notice.contents,
+                    publish_date = notice.publish_date,
+                    up_date = notice.up_date,
+                    view_count = notice.view_count
+                });
+            }
+            contents = contents.OrderByDescending(a => a.content_id).ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void ShowContents(BoardContent boardContent) {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{boardContent.content_id}");
     }
 }
