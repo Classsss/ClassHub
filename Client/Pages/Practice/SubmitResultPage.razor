@@ -1,7 +1,16 @@
 ﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}/submitresult"
 @using Blazored.Modal
 @using Blazored.Modal.Services
+@using ClassHub.Shared
+@using System.Collections.ObjectModel
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Collections.Specialized
+@using Microsoft.Extensions.Primitives
+
+@inject HttpClient Http
 @inject Blazored.Modal.Services.IModalService ModalService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <h3>제출 내역</h3>
 
@@ -19,47 +28,173 @@
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>1</td>
-            <td>맞았음</td>
-            <td>214KB</td>
-            <td>0ms</td>
-            <td>C</td>
-            <td>2023.4.16 14:20</td>
-            <td><button @onclick="ShowCode">제출 코드 확인</button></td>
-            <td><button @onclick="ShowAdvice">GPT의 조언</button></td>
-        </tr>
+        @if (submitList != null)
+        {
+            @foreach (var submit in submitList)
+            {
+                <tr>
+                    <td>@submit.submit_id</td>
+                    <td>
+                        @if (submit.status == "Accepted") {
+                        <td style="color: green;">맞았습니다.</td>
+                        } else if (submit.status == "Pending") {
+                        <td style="color: gray;">채점 준비 중</td>
+                        } else if (submit.status.Contains("%")) {
+                        <td style="color: black;">@submit.status</td>
+                        } else {
+                        <td style="color: red;">
+                                @{
+                                    switch (submit.status) {
+                                        case "WrongAnswer":
+                                            @("틀렸습니다.")
+                                            break;
+                                        case "CompileError":
+                                            @("컴파일 에러.")
+                                            break;
+                                        case "RuntimeError":
+                                            @("런타임 에러.")
+                                            break;
+                                        case "TimeLimitExceeded":
+                                            @("시간 초과")
+                                            break;
+                                        case "MemoryLimitExceeded":
+                                            @("메모리 초과")
+                                            break;
+                                        case "PresentationError":
+                                            @("출력 형식 오류")
+                                            break;
+                                        case "OutputLimitExceeded":
+                                            @("출력 한도 초과")
+                                            break;
+                                        case "JudgementFailed":
+                                            @("채점 실패")
+                                            break;
+                                    }
+                                }
+                        </td>
+                        }
+
+                        
+                    </td>
+                        <td>@submit.mem_usage</td>
+                    <td>@submit.exec_time</td>
+                    <td>@submit.language</td>
+                    <td>@submit.submit_date</td>
+                    <td><button @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
+                    <td><button @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8">제출한 내역이 없습니다.</td>
+            </tr>
+        }
     </tbody>
 </table>
-
 @code {
+
     [Parameter]
     public int RoomId { get; set; }
     [Parameter]
     public int PracticeId { get; set; }
 
-    private async Task ShowCode()
-    {
+    private List<CodeSubmit> submitList = new List<CodeSubmit>();
+
+    HubConnection connection;
+    //초기화
+    protected async override void OnInitialized(){
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        submitList = await Http.GetFromJsonAsync<List<CodeSubmit>>($"api/CodeSubmit/room_id/{RoomId}/practice_id/{PracticeId}/student_id/{int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"))}");
+        submitList = submitList.OrderByDescending(a => a.submit_id).ToList();
+
+        StateHasChanged();
+    }
+
+    //페이지 옮기기 새로고침 등을 하면 연결을 끊는다.
+    private async void HandleLocationChanged(object sender, LocationChangedEventArgs e) {
+        await connection.StopAsync();
+    }
+
+    // 서버로부터 주기적으로 업데이트된 list를 받아 실시간으로 채점 정보를 출력한다.
+    protected override async Task OnAfterRenderAsync(bool firstRender){
+
+        if (firstRender) {
+            await base.OnAfterRenderAsync(firstRender);
+
+            connection = new HubConnectionBuilder()
+             .WithUrl("https://localhost:7182/realtimesubmithub")
+             .Build();
+
+            await connection.StartAsync();
+
+            // connection.On을 등록합니다.
+            connection.On<List<CodeSubmit>>("ReceiveList", _submitList => {
+                submitList.Clear();
+                submitList = _submitList.ToList();
+                submitList = submitList.OrderByDescending(a => a.submit_id).ToList();
+                StateHasChanged();
+            });
+
+            int StudentId = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"));
+            string query = $"SELECT * FROM codesubmit WHERE \"room_id\" = {RoomId} AND \"assignment_id\" = {PracticeId} AND \"student_id\" = {StudentId};";
+            await connection.InvokeAsync("StartDatabaseWatcher",query);
+        }
+        
+
+    }
+
+    // 현재 채점 상태를 status에 따라 출력
+    private string getStatus(string status){
+        switch (status)
+        {
+            case "Accepted":
+                return "맞았습니다.\n";
+            case "WrongAnswer":
+                return "틀렸습니다.\n";
+            // todo : 컴파일 에러와 런타임 에러 원인 확실히 잡히면 밑에 원인 추가
+            case "CompileError":
+                return "컴파일 에러.\n";
+            case "RuntimeError":
+                return "런타임 에러.\n";
+            case "TimeLimitExceeded":
+                return "시간 초과\n";
+            case "MemoryLimitExceeded":
+                return "메모리 초과.\n";
+            case "PresentationError":
+                return "출력 형식 오류\n";
+            case "OutputLimitExceeded":
+                return "출력 한도 초과\n";
+            case "JudgementFailed":
+                return "채점 실패\n";
+            case "Pending":
+                return "채점 중\n";
+        }
+        return status;
+        /* // 메시지가 유효하면 화면에 표시
+        if (judgeResult.Message != null)
+            {
+            Message = judgeResult.Message;
+        }*/
+    }
+
+    // 작성한 코드를 Modal로 띄운다.
+    private async Task ShowCode(string code){
         var parameters = new ModalParameters();
-        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
-
-
-        parameters.Add("Code", samplecode);
+        parameters.Add("Code", code);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
-        var modalReference = ModalService.Show<SubmitCode>("제출 코드", parameters, modalOptions);
+        var modalReference = ModalService.Show<SubmittedCodeModal>("제출 코드", parameters, modalOptions);
 
         var result = await modalReference.Result;
     }
 
-    private async Task ShowAdvice()
-    {
+    // 작성한 코드에 대한 gpt의 조언을 Modal로 띄운다.
+    private async Task ShowAdvice(string code){
         var parameters = new ModalParameters();
-        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
-
-
-        parameters.Add("Code", samplecode);
+        parameters.Add("Code", code);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
-        var modalReference = ModalService.Show<AdviceGpt>("GPT 조언", parameters, modalOptions);
+        var modalReference = ModalService.Show<AdviceGptModal>("GPT 조언", parameters, modalOptions);
 
         var result = await modalReference.Result;
     }
