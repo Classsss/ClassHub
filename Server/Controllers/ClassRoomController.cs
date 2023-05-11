@@ -22,13 +22,13 @@ namespace ClassHub.Server.Controllers {
 		// Param으로 받은 ID를 가진 강의실의 정보를 불러옴
 		// 실제 요청 url 예시 : 'api/classroom/1'
 		[HttpGet("{room_id}")]
-        public ClassRoom? GetClassRoom(int room_id) {
+        public ClassRoom GetClassRoom(int room_id) {
             using var connection = new NpgsqlConnection(connectionString);
             var query = 
                 "SELECT * " +
                 "FROM classroom " +
                 "WHERE room_id = @room_id;";
-            var result = connection.Query<ClassRoom>(query, room_id).FirstOrDefault(); // ID는 고유하므로, 하나만 반환되는 것이 자명하여 FirstOrDefault()를 통해 첫 번째 요소를 반환합니다. (없으면 기본값)
+            var result = connection.QuerySingle<ClassRoom>(query, room_id); // ID는 고유하므로, 하나만 반환되는 것이 자명하여 QuerySingle 사용
             return result;
         }
 
