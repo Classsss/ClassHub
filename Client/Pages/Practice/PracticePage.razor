@@ -5,8 +5,11 @@
 @using System.Text.Json
 @using System.Text
 @using Microsoft.AspNetCore.SignalR.Client;
+@using Newtonsoft.Json.Linq;
+
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @inherits LayoutComponentBase
 
 @*todo : 중간에 리사이즈 선 구현, 브라우저 사이즈에 따라 유연하게 대처 , 제출 내역 확인 *@
@@ -49,16 +52,16 @@
                     <h5 style="font-weight: bold;">문제 설명</h5>
                     <div>@((MarkupString)practice.Content)</div>
                     <hr />
-                    @foreach (var i in Enumerable.Range(0, practice.OutputCases.Count()))
+                    @foreach (var i in Enumerable.Range(0, practice.ExamOutputCases.Count()))
                     {
                         <div class="row" style="margin-top: 30px;">
                             <div class="col-6">
                                 <h6>입력케이스 @(i+1)</h6>
-                                <textarea disabled="disabled" rows="5" cols="30" wrap="off" style="white-space: pre-wrap; overflow-x: auto;">@(string.IsNullOrEmpty(practice.InputCases.ElementAtOrDefault(i)) ? "" : practice.InputCases[i])</textarea>
+                                <textarea disabled="disabled" rows="5" cols="30" wrap="off" style="white-space: pre-wrap; overflow-x: auto;">@(string.IsNullOrEmpty(practice.ExamInputCases.ElementAtOrDefault(i)) ? "" : practice.ExamInputCases[i])</textarea>
                             </div>
                             <div class="col-6">
                                 <h6>출력케이스 @(i+1)</h6>
-                                <textarea disabled="disabled" rows="5" cols="30" wrap="off" style="white-space: pre-wrap; overflow-x: auto;">@practice.OutputCases[i]</textarea>
+                                <textarea disabled="disabled" rows="5" cols="30" wrap="off" style="white-space: pre-wrap; overflow-x: auto;">@practice.ExamOutputCases[i]</textarea>
                             </div>
                         </div>
                     }
@@ -90,57 +93,7 @@
     [Parameter]
     public int PracticeId { get; set; }
 
-    private Practice practice;
-
-    protected override async Task OnInitializedAsync()
-    {
-
-        // 실제 프로젝트에서는 서버로부터 데이터를 가져옴
-        var practices = new List<Practice>
-        {
-        new Practice { Id = 1, Title = "Introduction to C#", Content = "C#은 어려웡",
-        Author = "John Doe",
-        InputCases = new List<string>(){ "1 1","5 10","15 15"},
-        OutputCases = new List<string>() { "2","15","30" },
-        Language = "C",
-        isApplyScore = true,
-        isGptAvailable = true,
-        StartDate = new DateTime(2022, 4, 1),
-        EndDate = new DateTime(2022, 4, 30) },
-          new Practice { Id = 2, Title = "Object-oriented Programming with C#", Content = "Object-oriented with C#은 어려웡",
-        Author = "Jane Smith",
-        InputCases = new List<string>(){ "1 1","5 10","15 15"},
-        OutputCases = new List<string>() { "2","15","30" },
-        Language = "C",
-        isApplyScore = true,
-        isGptAvailable = true,
-        StartDate = new DateTime(2022, 4, 1),
-        EndDate = new DateTime(2022, 4, 30) },
-          new Practice { Id = 1, Title = "Web Development with ASP.NET Core", Content = "ASP.NET Core는 어려웡",
-        Author = "Bob Johnson",
-        InputCases = new List<string>(){ "1 1","5 10","15 15"},
-        OutputCases = new List<string>() { "2","15","30" },
-        Language = "C",
-        isApplyScore = true,
-        isGptAvailable = true,
-        StartDate = new DateTime(2022, 4, 1),
-        EndDate = new DateTime(2022, 4, 30) },
-        new Practice { Id = 4, Title = "간단한 덧셈", Content = "숫자 두개를 더하는 코드를 구현해보자",
-        Author = "조세형",
-        InputCases = new List<string>(){ "1 1","5 10","15 15"},
-        OutputCases = new List<string>() { "2","15","30" },
-        Language = "C",
-        isApplyScore = true,
-        isGptAvailable = true,
-        StartDate = new DateTime(2022, 4, 1),
-        EndDate = new DateTime(2022, 4, 30) },
-    };
-
-        // Id가 현재 페이지의 Id와 일치하는 practice 객체를 찾아 초기화합니다.
-        practice = practices.FirstOrDefault(p => p.Id == PracticeId);
-
-    }
-
+    private Practice practice = new Practice();
 
     // 채점 결과를 표시할 변수
     private string Output = "";
@@ -151,127 +104,69 @@
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
 
+
+    protected override async Task OnInitializedAsync(){
+        // 실습 데이터를 받아온다.
+        practice = await Http.GetFromJsonAsync<Practice>($"api/practice/room_id/{RoomId}/practice_id/{PracticeId}");
+
+        StateHasChanged();
+    }
+
     private async Task CheckSubmitHistory(){
         Console.WriteLine($"{practice.Id}번 과제의 제출내역을 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + "/submitresult");
     }
 
     // 채점 서버로 요청을 보냄
-    private async Task SubmitCode() {
+    private async Task SubmitCode()
+    {
         // Message및 Output 초기화
         Message = "";
         Output = "채점 준비 중";
 
-        // 채점 요청을 전송하기 위한 객체 생성
-        JudgeRequest request = new JudgeRequest();
-
-        // !!!!! 테스트 할때 SampleCode.cs에서 각자 언어에 맞게 CorrectCode와 CorrectCodeLanguage 수정
-        request.CorrectCode = "import java.util.Scanner;\r\n\r\npublic class Main {\r\n    public static void main(String[] args) {\r\n        Scanner scanner = new Scanner(System.in);\r\n        int num1 = scanner.nextInt();\r\n        int num2 = scanner.nextInt();\r\n        int result = num1 + num2;\r\n        System.out.println(result);\r\n        scanner.close();\r\n    }\r\n}";
-        request.CorrectCodeLanguage = "java";
-        request.SubmitCode = await MonacoEditorReference.editor.GetValue();
+        //모나코에디터로부터 현재 설정된 언어를 가져오기 위한 코드
         var model = await MonacoEditorReference.editor.GetModel();
         var language = await model.GetLanguageId();
-        request.SubmitCodeLanguage = language;
-        request.MemoryUsageLimit = 500;
-        request.ExecutionTimeLimit = 500;
-        request.InputCases = new List<string> { "1 1", "5 15","25 40" };
 
-        // 실시간으로 몇 번째 케이스인지 전송받음.
-        var connection = new HubConnectionBuilder()
-        .WithUrl("https://localhost:7182/realtimecasehub")
-        .Build();
-
-        // connection.On을 먼저 등록합니다.
-        connection.On<int>("ReceiveCurrentIndex", i =>
-        {
-            double percent = Math.Truncate(i /(float)request.InputCases.Count*100);
-            if (percent == 100) { percent = 99; }
-            Output = $"채점 중 : ({percent}%)";
-            StateHasChanged();
-        });
-
-        //연결 시작
-        await connection.StartAsync();
-       
-        //이때 request의 멤버로 id를 넣어줌
-        request.snederConnectionId = connection.ConnectionId;
-        Console.WriteLine(connection.ConnectionId);
-        // 직렬화
-        var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        // 채점 요청을 전송하기 위한 객체 생성
+        JudgeRequest requestJudge = new JudgeRequest
+            {
+                CorrectCode = practice.CorrectCode,
+                CorrectCodeLanguage = practice.Language,
+                SubmitCode = await MonacoEditorReference.editor.GetValue(),
+                SubmitCodeLanguage = language,
+                MemoryUsageLimit = 500,
+                ExecutionTimeLimit = 50,
+                InputCases = practice.IntputCases,
+                SubmitId = 1
+      };
+        // 제출 결과를 생성하기 위한 객체 생성
+        CodeSubmit requestSubmit = new CodeSubmit
+            {
+                room_id = RoomId,
+                assignment_id = PracticeId,
+                week = 1,
+                submit_date = DateTime.Now,
+                status = JudgeResult.JResult.Pending.ToString(),
+                submit_id = 1,
+                student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID")),
+                exec_time = 0,
+                mem_usage = 0,
+                code = await MonacoEditorReference.editor.GetValue(),
+                message = " ",
+                language = language
+            };
         
-        // 전송
+        //하나로 묶어준다.
+        Tuple<JudgeRequest, CodeSubmit> requestTuple = new Tuple<JudgeRequest, CodeSubmit>(requestJudge,requestSubmit);
+        // 직렬화
+        var content = new StringContent(JsonSerializer.Serialize(requestTuple), Encoding.UTF8, "application/json");
+
+        // 제출 내역 창으로 이동한다.
+        CheckSubmitHistory();
+
+        // 중아서버로 채점 정보를 전송
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 
-        await connection.StopAsync();
-
-     
-
-        if (response.IsSuccessStatusCode) {
-            JudgeResult? judgeResult = await response.Content.ReadFromJsonAsync<JudgeResult>();
-
-            // Valid response
-            if (judgeResult != null) {
-                switch (judgeResult.Result) {
-                    case JudgeResult.JResult.Accepted:
-                        Output = "맞았습니다.\n실행 시간(ms) : " + string.Format("{0:F3}", judgeResult.ExecutionTime) + "\n메모리 사용량(KB) : " + judgeResult.MemoryUsage;
-                        Console.WriteLine("맞았습니다.");
-                        Console.WriteLine("실행 시간(ms) : " + judgeResult.ExecutionTime);
-                        Console.WriteLine("메모리 사용량(KB) : " + judgeResult.MemoryUsage);
-                        break;
-                    case JudgeResult.JResult.WrongAnswer:
-                        Output = "틀렸습니다.";
-                        Console.WriteLine("틀렸습니다.");
-                        break;
-                    case JudgeResult.JResult.CompileError:
-                        Output = "컴파일 에러";
-                        Console.WriteLine("컴파일 에러");
-                        break;
-                    case JudgeResult.JResult.RuntimeError:
-                        Output = "런타임 에러";
-                        Console.WriteLine("런타임 에러");
-                        break;
-                    case JudgeResult.JResult.TimeLimitExceeded:
-                        Output = "시간 초과";
-                        Console.WriteLine("시간 초과");
-                        break;
-                    case JudgeResult.JResult.MemoryLimitExceeded:
-                        Output = "메모리 초과";
-                        Console.WriteLine("메모리 초과");
-                        break;
-                    case JudgeResult.JResult.PresentationError:
-                        Output = "출력 형식 오류";
-                        Console.WriteLine("출력 형식 오류");
-                        break;
-                    case JudgeResult.JResult.OutputLimitExceeded:
-                        Output = "출력 한도 초과";
-                        Console.WriteLine("출력 한도 초과");
-                        break;
-                    case JudgeResult.JResult.JudgementFailed:
-                        Output = "채점 실패";
-                        Console.WriteLine("채점 실패");
-                        break;
-                    case JudgeResult.JResult.Pending:
-                        Output = "채점 미완료";
-                        Console.WriteLine("채점 미완료");
-                        break;
-                }
-
-                // 메시지가 유효하면 화면에 표시
-                if (judgeResult.Message != null) {
-                    Message = judgeResult.Message;
-                } 
-            }
-            // Invalid Response
-
-            else {
-                // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
-                Console.WriteLine("Invalid response");
-            }
-        }
-        // Post 요청 실패
-        else {
-            // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
-            Console.WriteLine("Failed to post data " + response.StatusCode);
-        }
     }
 }
