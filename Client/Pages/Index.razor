@@ -121,10 +121,12 @@ else
     }
 
     protected async Task getNotifications() {
+        // 로컬 스토리지에서 AccessToken 받아오기
+        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+
         var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
         Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
-        Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all/{id}");
-
+        Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all/{id}/{accessToken}");
         if(Notifications != null) {
             foreach(StudentNotification notification in Notifications) {
                 Console.WriteLine(notification.message);
