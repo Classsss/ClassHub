@@ -74,6 +74,13 @@ namespace ClassHub.Server.Controllers {
                 "SET (week, title, contents, up_date) = (@week, @title, @contents, @up_date) " +
                 "WHERE room_id = @room_id AND material_id = @material_id;";
             connection.Execute(query, lectureMaterial);
+
+            InsertNotification(new ClassRoomNotification {
+                room_id = lectureMaterial.room_id,
+                message = $"(수정) {lectureMaterial.title}",
+                uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
+                notify_date = DateTime.Now
+            });
         }
 
         // LectureMaterial 객체를 DB에 INSERT 합니다.
@@ -85,18 +92,33 @@ namespace ClassHub.Server.Controllers {
                 "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
                 "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count);";
             connection.Execute(query, lectureMaterial);
+
+            InsertNotification(new ClassRoomNotification {
+                room_id = lectureMaterial.room_id,
+                message = lectureMaterial.title,
+                uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
+                notify_date = DateTime.Now
+            });
         }
 
         // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
         // 실제 요청 url 예시 : 'api/classroom/modify/notice'
         [HttpPut("modify/notice")]
         public void PutNotice([FromBody] Notice notice) {
-            using var connection = new NpgsqlConnection(connectionString);
-            string query = 
+            using(var connection = new NpgsqlConnection(connectionString)) {
+                string query =
                 "UPDATE notice " +
                 "SET (title, contents, up_date) = (@title, @contents, @up_date) " +
                 "WHERE room_id = @room_id AND notice_id = @notice_id;";
-            connection.Execute(query, notice);
+                connection.Execute(query, notice);
+            }
+
+            InsertNotification(new ClassRoomNotification {
+                room_id = notice.room_id,
+                message = $"(수정) {notice.title}",
+                uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
+                notify_date = DateTime.Now
+            });
         }
 
         // Board 조회수를 1 증가시켜 DB에 UPDATE 합니다.
