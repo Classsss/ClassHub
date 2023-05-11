@@ -58,36 +58,31 @@
     private ClassRoom? classRoom;
     private List<BoardContent>? contents;
 
-    protected async override void OnInitialized()
-    {
+    protected async override void OnInitialized() {
         // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
         classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{Id}");
 
         var notices = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{Id}/notice/all");
-        if (notices != null)
-        {
+        if (notices != null) {
             contents = new List<BoardContent>();
-            foreach (var notice in notices)
-            {
-                this.contents.Add(new NoticeContent()
-                    {
-                        room_id = notice.room_id,
-                        content_id = notice.notice_id,
-                        title = notice.title,
-                        author = notice.author,
-                        contents = notice.contents,
-                        publish_date = notice.publish_date,
-                        up_date = notice.up_date,
-                        view_count = notice.view_count
-                    });
+            foreach (var notice in notices) {
+                this.contents.Add(new NoticeContent() {
+                    room_id = notice.room_id,
+                    content_id = notice.notice_id,
+                    title = notice.title,
+                    author = notice.author,
+                    contents = notice.contents,
+                    publish_date = notice.publish_date,
+                    up_date = notice.up_date,
+                    view_count = notice.view_count
+                });
             }
             contents = contents.OrderByDescending(a => a.content_id).ToList();
             StateHasChanged();
         }
     }
 
-    private void ShowContents(BoardContent bc)
-    {
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{bc.content_id}");
+    private void ShowContents(BoardContent boardContent) {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{boardContent.content_id}");
     }
 }
