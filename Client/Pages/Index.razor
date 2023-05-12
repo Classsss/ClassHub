@@ -76,7 +76,7 @@ else
 
 @code {
     private List<Section>? Sections;
-    private List<StudentNotification>? Notifications;
+    private List<ClassRoomNotification>? Notifications;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -122,11 +122,11 @@ else
 
     protected async Task getNotifications() {
         var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
-        Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
-        Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all/{id}");
+        Console.WriteLine($"{id} 학번으로 온 모든 강의실 알림을 불러옵니다.");
+        Notifications = await Http.GetFromJsonAsync<List<ClassRoomNotification>>($"api/classroom/notification/all/{id}");
 
         if(Notifications != null) {
-            foreach(StudentNotification notification in Notifications) {
+            foreach(ClassRoomNotification notification in Notifications) {
                 Console.WriteLine(notification.message);
             }
         }

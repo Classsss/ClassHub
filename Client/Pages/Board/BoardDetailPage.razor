@@ -242,7 +242,9 @@
 	/// </summary>
 	private async void IncreaseViewCount(BoardContent content)
 	{
-		string requestUri = $"api/classroom/{content.room_id}/view/{type.ToString().ToLower()}/{content.content_id}";
+		string kind = type.ToString().ToLower();
+		if (kind == "lecturematerial") kind = "material";
+		string requestUri = $"api/classroom/{content.room_id}/view/{kind}/{content.content_id}";
 		await Http.PutAsJsonAsync(requestUri, new { });
 	}
 }
