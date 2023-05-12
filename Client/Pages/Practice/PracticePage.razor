@@ -12,7 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inherits LayoutComponentBase
 
-@*todo : 중간에 리사이즈 선 구현, 브라우저 사이즈에 따라 유연하게 대처 , 제출 내역 확인 *@
+@*todo : 중간에 리사이즈 선 구현, 브라우저 사이즈에 따라 유연하게 대처 *@
 
 <BackButton />
 <div class="container-fluid">
@@ -73,10 +73,6 @@
             <MonacoEditor @ref="MonacoEditorReference" />
             <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
             <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
-            <div id="output-number">
-                <h3>결과: @Output</h3>
-                <pre><h3>@Message</h3></pre>
-            </div>
         </div>
     </div>
 </div>
@@ -94,12 +90,6 @@
     public int PracticeId { get; set; }
 
     private Practice practice = new Practice();
-
-    // 채점 결과를 표시할 변수
-    private string Output = "";
-
-    // 채점 결과와 동반되는 메시지를 표시할 변수
-    private string Message = "";
 
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
@@ -120,10 +110,7 @@
     // 채점 서버로 요청을 보냄
     private async Task SubmitCode()
     {
-        // Message및 Output 초기화
-        Message = "";
-        Output = "채점 준비 중";
-
+  
         //모나코에디터로부터 현재 설정된 언어를 가져오기 위한 코드
         var model = await MonacoEditorReference.editor.GetModel();
         var language = await model.GetLanguageId();

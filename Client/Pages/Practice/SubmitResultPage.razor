@@ -12,29 +12,33 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
-<h3>제출 내역</h3>
+<div style="background-color: whitesmoke; padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
+    <h3 style="display: inline-block;">
+        제출 내역
+    </h3>
+</div>
+
 
 <table class="table">
     <thead>
         <tr>
-            <th>제출번호</th>
-            <th>결과</th>
-            <th>메모리</th>
-            <th>시간</th>
-            <th>언어</th>
-            <th>제출시간</th>
-            <th>코드확인</th>
+            <th style="border-right: 1px solid black;">제출 번호</th>
+            <th style="border-right: 1px solid black;">결과</th>
+            <th style="border-right: 1px solid black;">메모리</th>
+            <th style="border-right: 1px solid black;">시간</th>
+            <th style="border-right: 1px solid black;">언어</th>
+            <th style="border-right: 1px solid black;">제출 시간</th>
+            <th style="border-right: 1px solid black;">코드 확인</th>
             <th>GPT조언</th>
         </tr>
     </thead>
+
     <tbody>
-        @if (submitList != null)
-        {
-            @foreach (var submit in submitList)
-            {
-                <tr>
-                    <td>@submit.submit_id</td>
-                    <td>
+        @if (submitList != null) {
+            @foreach (var submit in submitList) {
+                <tr style="border-bottom: 1px solid black;">
+                    <td style="border-right: 1px solid black;">@submit.submit_id</td>
+                    <td style="border-right: 1px solid black;">
                         @if (submit.status == "Accepted") {
                         <td style="color: green;">맞았습니다.</td>
                         } else if (submit.status == "Pending") {
@@ -74,24 +78,23 @@
                         </td>
                         }
 
-                        
+
                     </td>
-                        <td>@submit.mem_usage</td>
-                    <td>@submit.exec_time</td>
-                    <td>@submit.language</td>
-                    <td>@submit.submit_date</td>
-                    <td><button @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
+                    <td style="border-right: 1px solid black;">@submit.mem_usage kb</td>
+                    <td style="border-right: 1px solid black;">@submit.exec_time ms</td>
+                    <td style="border-right: 1px solid black;">@submit.language</td>
+                    <td style="border-right: 1px solid black;">@submit.submit_date</td>
+                    <td style="border-right: 1px solid black;"><button @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
                     <td><button @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
                 </tr>
             }
-        }
-        else
-        {
+        } else {
             <tr>
                 <td colspan="8">제출한 내역이 없습니다.</td>
             </tr>
         }
     </tbody>
+
 </table>
 @code {
 
