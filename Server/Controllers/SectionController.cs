@@ -14,11 +14,11 @@ namespace ClassHub.Server.Controllers {
             _logger = logger;
         }
 
-        [HttpGet("{id}/{token}")]
-        public async Task<IActionResult> GET(int id, string token)
+        [HttpGet]
+        public async Task<IActionResult> GET(int userId, string accessToken)
         {
             //앱 서버로 수강과목 출력을 요청
-            if (await AuthService.isValidToken(token)) {
+            if (await AuthService.isValidToken(accessToken)) {
                 Console.WriteLine("성공");
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://academicinfo.azurewebsites.net/");

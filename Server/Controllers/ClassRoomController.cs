@@ -60,9 +60,9 @@ namespace ClassHub.Server.Controllers {
 
         // Param으로 받은 학번을 가진 학생에게 온 모든 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
-        [HttpGet("notification/all/{student_id}/{token}")]
-        public async Task<IActionResult> GetAllNotificationsAsync(int student_id, string token) {
-            if (!await AuthService.isValidToken(token)) {
+        [HttpGet("notification/all")]
+        public async Task<IActionResult> GetAllNotificationsAsync([FromQuery] int student_id, [FromQuery] string accessToken) {
+            if (!await AuthService.isValidToken(accessToken)) {
                 return Unauthorized("Invalid token");
             }
 
@@ -72,6 +72,7 @@ namespace ClassHub.Server.Controllers {
                 "FROM studentnotification " +
                 "WHERE student_id = @student_id;";
             var result = connection.Query<StudentNotification>(query, student_id);
+
             return Ok(result);
         }
 
