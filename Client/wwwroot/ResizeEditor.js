@@ -28,3 +28,20 @@ function setPaginationInfo(key, value) {
 function getPaginationInfo(key) {
     return localStorage.getItem(key);
 }
+
+function toggleSidebar() {
+    console.log(document.getElementById("sidebar"))
+    let sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("collapse")) {
+        sidebar.classList.remove("collapse");
+    } else {
+        sidebar.classList.add("collapse");
+    }
+}
+
+window.reloadVideo = function () {
+    var video = document.querySelector("video");
+    if (video) {
+        video.load();
+    }
+}

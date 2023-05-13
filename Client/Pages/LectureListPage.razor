@@ -1,10 +1,21 @@
 ﻿@page "/classroom/{roomid:int}/lecture"
 @layout MainLayout
+@inject NavigationManager NavigationManager
 @using ClassHub.Client.Models
+@using System.Text.Json
 
 <h2 class="mb-4">동영상 강의 목록</h2>
 <WeekPicker weekValue = "@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
 <br />
+
+<style>
+    .Lecture-row:hover {
+        background-color: #bdc3c7;
+        cursor: pointer;
+    }
+
+</style>
+
 @foreach (var item in lectures.GroupBy(x => new { x.Week, x.Lesson }))
 {
     @if (selectedWeek.Contains(item.Key.Week))
@@ -14,8 +25,8 @@
             <tbody>
                 @foreach (var subItem in item)
                 {
-                    <tr>
-                        <td colspan="4" style="font-weight:bold;"><i class="oi oi-media-play" />@(" " + subItem.Title)</td>
+                    <tr class="Lecture-row" @onclick="@(() => Showlecture(subItem))">
+                        <td colspan="4" style="font-weight:bold;"><i class="oi oi-media-play"/>@(" " + subItem.Title)</td>
                     </tr>
                     <tr>
                         <td style="font-weight:bold; width:10%">
@@ -81,7 +92,7 @@
     public int RoomId { get; set; }
 
     public List<int> selectedWeek = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-
+    public int selectedid;
     private async Task OnWeekChanged(List<int> week)
     {
         selectedWeek = week;
@@ -90,14 +101,20 @@
     }
 
     private List<Lecture> lectures = new List<Lecture>
-	{
+        {
         // 샘플 데이터
         // 실제 프로젝트에서는 데이터베이스 또는 API를 통해 동영상 강의 정보를 가져옴
-        new Lecture { Id = 1, Week = 1, Lesson = 1, Title = "Zior Park - CHRISTIAN (OFFICIAL VIDEO)", Description = "Zior Park의 새 앨범 \"WHERE DOES SASQUATCH LIVE? PART 1\" 모든 스트리밍 플랫폼에서 확인하세요!", StartDate = new DateTime(2023, 03, 02, 08, 0, 0), EndDate = new DateTime(2023, 03, 04, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=Dqlr8EDunCM", TotalLearningTime = 54, CurrentLearningTime = 54, IsEnrolled = true },
-        new Lecture { Id = 2, Week = 1, Lesson = 2, Title = "윤하(YOUNHA) - 사건의 지평선 M/V", Description = "윤하(YOUNHA)님의 사건의 지평선 M/V입니다. 다른 노래도 좋아요!",StartDate = new DateTime(2023, 03, 04, 08, 0, 0), EndDate = new DateTime(2023, 03, 06, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=BBdC1rl5sKY", TotalLearningTime = 112, CurrentLearningTime = 84, IsEnrolled = false },
-        new Lecture { Id = 3, Week = 2, Lesson = 1, Title = "[MV] BOL4(볼빨간사춘기) _ Travel(여행)", Description = @"소중한 일기장처럼 그녀들의 깨끗하고 말간 감정들이 모든 사람들의 마음속에 오래 간직되기를 바라는 Red Diary, 두 번째 페이지.
-        조그마한 방 한 켠, 서랍 안에 숨겨두었던 볼빨간사춘기의 진심이 담긴 이야기들, 지금 전합니다.", StartDate = new DateTime(2023, 03, 09, 0, 10, 0), EndDate = new DateTime(2023, 03, 11, 23, 50, 0), VideoUrl = "https://www.youtube.com/watch?v=xRbPAVnqtcs", TotalLearningTime = 51, CurrentLearningTime = 24, IsEnrolled = false },
+        new Lecture { Id = 1, Week = 1, Lesson = 1, Title = "론칭, 모니터링, 시스템 유지 보수", Description = "기계학습 1주차 첫번째 강의 입니다.", StartDate = new DateTime(2023, 03, 02, 08, 0, 0), EndDate = new DateTime(2023, 03, 04, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b792a89749565", TotalLearningTime = 54, CurrentLearningTime = 54, IsEnrolled = true },
+        new Lecture { Id = 2, Week = 1, Lesson = 2, Title = "Colab을 활용한 실습", Description = "기계학습 1주차 두번째 강의 입니다.",StartDate = new DateTime(2023, 03, 04, 08, 0, 0), EndDate = new DateTime(2023, 03, 06, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b793719d29ec2", TotalLearningTime = 112, CurrentLearningTime = 84, IsEnrolled = false },
+        new Lecture { Id = 3, Week = 1, Lesson = 3, Title = "교차 검증을 사용한 정확도(accuracy) 측정", Description = "기계학습 1주차 세번째 강의 입니다.", StartDate = new DateTime(2023, 03, 09, 0, 10, 0), EndDate = new DateTime(2023, 03, 11, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b79504e8c9853", TotalLearningTime = 51, CurrentLearningTime = 24, IsEnrolled = false },
 
         // 추가 강의...
     };
+
+    private void Showlecture(Lecture lecture) {
+        selectedid = lecture.Id;
+        Console.WriteLine($"{lecture.Id}번 강의를 클릭하였습니다.");
+        var lecturesJson = JsonSerializer.Serialize(lectures);
+        NavigationManager.NavigateTo($"/classroom/{RoomId}/lecture/{lecture.Id}?lectures={Uri.EscapeDataString(lecturesJson)}");
+    }
 }
