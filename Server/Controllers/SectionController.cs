@@ -18,7 +18,7 @@ namespace ClassHub.Server.Controllers {
         public async Task<IActionResult> GET(int userId, string accessToken)
         {
             //앱 서버로 수강과목 출력을 요청
-            if (await AuthService.isValidToken(accessToken)) {
+            if (await AuthService.isValidToken(userId, accessToken)) {
                 Console.WriteLine("성공");
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://academicinfo.azurewebsites.net/");

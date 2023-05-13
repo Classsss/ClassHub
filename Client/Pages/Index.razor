@@ -123,7 +123,7 @@ else
                     }
                 }
             } catch(Exception e) {
-                
+                Console.WriteLine(e);
             }
         }
         // 화면을 다시 그립니다.
@@ -138,13 +138,16 @@ else
         {
             var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
             Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
-            Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
-            if (Notifications != null)
-            {
-                foreach (StudentNotification notification in Notifications)
-                {
-                    Console.WriteLine(notification.message);
+
+            try {
+                Notifications = await Http.GetFromJsonAsync<List<StudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
+                if (Notifications != null) {
+                    foreach (StudentNotification notification in Notifications) {
+                        Console.WriteLine(notification.message);
+                    }
                 }
+            } catch (Exception e) {
+                Console.WriteLine(e);
             }
         }
 

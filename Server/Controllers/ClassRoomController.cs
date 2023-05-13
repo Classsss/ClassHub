@@ -62,7 +62,7 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
         [HttpGet("notification/all")]
         public async Task<IActionResult> GetAllNotificationsAsync([FromQuery] int student_id, [FromQuery] string accessToken) {
-            if (!await AuthService.isValidToken(accessToken)) {
+            if (!await AuthService.isValidToken(student_id, accessToken)) {
                 return Unauthorized("Invalid token");
             }
 
