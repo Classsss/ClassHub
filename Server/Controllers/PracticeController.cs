@@ -60,7 +60,7 @@ namespace ClassHub.Server.Controllers {
 
                 //이제 practice모델에 필요한 값들을 넣어줍니다.
                 Practice practice = new Practice { Id = codeAssignment.assignment_id, Title = codeProblem.title, Author = codeProblem.author, Content = codeProblem.contents, ExamInputCases = examInput,
-                    ExamOutputCases = examoutput, Language = codeProblem.standard_language, isApplyScore = true, isGptAvailable = true, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date,
+                    ExamOutputCases = examoutput, Language = codeProblem.standard_language, isApplyScore = codeAssignment.is_apply_score, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date,
                     IntputCases = input, CorrectCode = codeProblem.standard_code };
           
                 return practice;      
