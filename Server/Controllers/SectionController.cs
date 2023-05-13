@@ -14,8 +14,8 @@ namespace ClassHub.Server.Controllers {
             _logger = logger;
         }
 
-        [HttpPost("{id}/{token}")]
-        public async Task<IActionResult> POST(int id, string token)
+        [HttpGet("{id}/{token}")]
+        public async Task<IActionResult> GET(int id, string token)
         {
             //앱 서버로 수강과목 출력을 요청
             if (await AuthService.isValidToken(token)) {

@@ -61,15 +61,18 @@ namespace ClassHub.Server.Controllers {
         // Param으로 받은 학번을 가진 학생에게 온 모든 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
         [HttpGet("notification/all/{student_id}/{token}")]
-        public async Task<IEnumerable<StudentNotification>> GetAllNotificationsAsync(int student_id, string token) {
-            //if (await AuthService.isValidToken(token))
+        public async Task<IActionResult> GetAllNotificationsAsync(int student_id, string token) {
+            if (!await AuthService.isValidToken(token)) {
+                return Unauthorized("Invalid token");
+            }
+
             using var connection = new NpgsqlConnection(connectionString);
             var query =
                 "SELECT * " +
                 "FROM studentnotification " +
                 "WHERE student_id = @student_id;";
             var result = connection.Query<StudentNotification>(query, student_id);
-            return result;
+            return Ok(result);
         }
 
         // 수정 된 LectureMaterial 객체를 DB에 UPDATE 합니다.

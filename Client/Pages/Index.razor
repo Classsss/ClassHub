@@ -86,8 +86,6 @@ else
 
         NavMenuTitleService.Title = "ClassHub"; 
 
-
-
         Console.WriteLine(await UserInfo.GetUserIdAsync(JSRuntime)); //이런식으로 활용하면 된단다 진호야
     }
 
@@ -106,50 +104,27 @@ else
             var id = await UserInfo.GetUserIdAsync(JSRuntime);
 
             //앱 서버로 수강과목 출력을 요청
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(NavigationManager.BaseUri);
-            var request = new HttpRequestMessage(HttpMethod.Post, $"/Section/{id}/{accessToken}");
-            var response = await client.SendAsync(request);
-
-            if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-
-                Console.WriteLine(content);
-                Sections = JsonSerializer.Deserialize<List<Section>>(content);
-
+            try {
+                Sections = await Http.GetFromJsonAsync<List<Section>>($"/Section/{id}/{accessToken}");
                 // 색상 부여
-                if (Sections != null)
-                {
+                if (Sections != null) {
                     int colorIndex = 0;
-                    for (int i = 0; i < Sections.Count; i++)
-                    {
+                    for (int i = 0; i < Sections.Count; i++) {
                         var section1 = Sections[i];
-                        if (section1.Color == -1)
-                        {
+                        if (section1.Color == -1) {
                             section1.Color = colorIndex++;
-                            for (int j = i + 1; j < Sections.Count; j++)
-                            {
+                            for (int j = i + 1; j < Sections.Count; j++) {
                                 var section2 = Sections[j % 8];
                                 if (section1.SectionId == section2.SectionId)
                                     section2.Color = section1.Color;
                             }
-                        }
-                        else
+                        } else
                             continue;
                     }
                 }
-            } else {
-                Console.WriteLine("토큰 만료");
-                // 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
-                await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
-                await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
-                AuthService.IsLoggedIn = false;
-                authProvider.StateChanged();
-
-                NavigationManager.NavigateTo(NavigationManager.BaseUri + "login");
+            } catch(Exception e) {
+                
             }
-
         }
         // 화면을 다시 그립니다.
         StateHasChanged(); 
@@ -172,6 +147,8 @@ else
                 }
             }
         }
+
+        // 화면을 다시 그립니다.
         StateHasChanged();
     }
 }
