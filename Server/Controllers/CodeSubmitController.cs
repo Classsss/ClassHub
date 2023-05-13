@@ -16,7 +16,7 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        // 채점요청이 오면 일단 실습 db를 insert한다.
+        // 초기의 실습 db를 insert한다.
         [HttpPost("insert")]
         public int InsertSubmit([FromBody] CodeSubmit codeSubmit)
         {
@@ -42,7 +42,7 @@ namespace ClassHub.Server.Controllers {
             return submitId;
         }
 
-        //해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
+        // 해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
         [HttpGet("room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
         public List<CodeSubmit> GetSubmit(int room_id, int practice_id, int student_id){
             using var connection = new NpgsqlConnection(connectionString);
@@ -59,7 +59,7 @@ namespace ClassHub.Server.Controllers {
             return submitList;
         }
 
-        // 채점 결과로 업데이트한다.
+        // 채점 결과를 업데이트한다.
         [HttpPut("update")]
         public void UpdateSubmit([FromBody] Tuple<JudgeResult, int> result){
             var judgeData = result.Item1;
@@ -69,7 +69,6 @@ namespace ClassHub.Server.Controllers {
 
             string query;
 
-            //채점 결과를 업데이트 합니다.
             query = "UPDATE codesubmit SET  status = @status,  exec_time = exec_time, mem_usage = @mem_usage WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
             parameters.Add("status", judgeData.Result.ToString());

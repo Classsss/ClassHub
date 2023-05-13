@@ -15,8 +15,6 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        //Todo : GPT여부나 성적반영여부 넣을건지 고민중
-
         // 해당 강의실의 해당 Id와 실습 Id에 맞는 실습을 보여준다.
         [HttpGet("room_id/{room_id}/practice_id/{practice_id}")]
         public Practice GetPractice(int room_id, int practice_id){

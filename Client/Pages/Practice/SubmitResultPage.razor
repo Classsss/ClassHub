@@ -12,12 +12,12 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
+<BackButton />
 <div style="background-color: whitesmoke; padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
     <h3 style="display: inline-block;">
         @PracticeId 번 과제 제출 내역
     </h3>
 </div>
-
 
 <table class="table">
     <thead>
@@ -106,7 +106,7 @@
     private List<CodeSubmit> submitList = new List<CodeSubmit>();
 
     HubConnection connection;
-    //초기화
+    // 초기화 할때 일단 내역을 보여준다.
     protected async override void OnInitialized(){
         NavigationManager.LocationChanged += HandleLocationChanged;
         submitList = await Http.GetFromJsonAsync<List<CodeSubmit>>($"api/CodeSubmit/room_id/{RoomId}/practice_id/{PracticeId}/student_id/{int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"))}");
@@ -115,14 +115,13 @@
         StateHasChanged();
     }
 
-    //페이지 옮기기 새로고침 등을 하면 연결을 끊는다.
+    //페이지 옮기기 새로고침 등을 하면 signalR 연결을 끊는다.
     private async void HandleLocationChanged(object sender, LocationChangedEventArgs e) {
         await connection.StopAsync();
     }
 
     // 서버로부터 주기적으로 업데이트된 list를 받아 실시간으로 채점 정보를 출력한다.
     protected override async Task OnAfterRenderAsync(bool firstRender){
-
         if (firstRender) {
             await base.OnAfterRenderAsync(firstRender);
 
@@ -144,8 +143,6 @@
             string query = $"SELECT * FROM codesubmit WHERE \"room_id\" = {RoomId} AND \"assignment_id\" = {PracticeId} AND \"student_id\" = {StudentId};";
             await connection.InvokeAsync("StartDatabaseWatcher",query);
         }
-        
-
     }
 
     // 현재 채점 상태를 status에 따라 출력
