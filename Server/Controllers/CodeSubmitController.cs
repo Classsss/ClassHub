@@ -77,6 +77,22 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("submit_id", submit_id);
             connection.Execute(query,parameters);
         }
+
+        // 채점 결과를 실패로 처리한다.
+        [HttpPut("fail")]
+        public void JudgeFail([FromBody]int submit_id) {    
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query;
+
+            query = "UPDATE codesubmit SET status = @status WHERE submit_id = @submit_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("status", JudgeResult.JResult.JudgementFailed.ToString());
+            parameters.Add("submit_id", submit_id);
+           
+            connection.Execute(query, parameters);
+        }
+
     }
 
     //코드 제출 내역을 위한 Hub
@@ -95,7 +111,6 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
             isDatabaseWatcherRunning[connectionId] = true;
             while (isDatabaseWatcherRunning[connectionId]) {
-                    Console.WriteLine(connectionId+"와 연결 중 DB");
                     List<CodeSubmit> submitList = connection.Query<CodeSubmit>(query).ToList();
 
                     await Clients.Client(connectionId).SendAsync("ReceiveList", submitList);
@@ -107,7 +122,6 @@ namespace ClassHub.Server.Controllers {
         // 채점서버로부터 진행 현황을 제공받아 제출한 코드의 status를 업데이트한다.
         public async Task PercentageWatcher(double percent, int submit_id){
             string connectionId = Context.ConnectionId;
-            Console.WriteLine(connectionId + "와 연결 중 Percent");
             using var connection = new NpgsqlConnection(connectionString);
             string query = "UPDATE codesubmit SET status = '채점중(' || @percent || ')%' WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
