@@ -2,6 +2,7 @@
 @layout MainLayout
 @using ClassHub.Client.Models
 @inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
 <SubmissionList Title="실습" Submissions="@practices" />
 
@@ -10,9 +11,10 @@
     public int RoomId { get; set; }
     private List<Submission>? practices  = new List<Submission>();
 
-    protected async override void OnInitialized(){      
+    protected async override void OnInitialized(){
         // RoomId와 매칭되는 실습의 정보를 가져옵니다.
-        practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/{RoomId}");
+        practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/room_id/{RoomId}/student_id/{int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"))}");
+
         StateHasChanged();
     }
     
