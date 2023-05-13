@@ -28,3 +28,19 @@ function setPaginationInfo(key, value) {
 function getPaginationInfo(key) {
     return localStorage.getItem(key);
 }
+
+function showConfirm(Title,message ,check) {
+    return Swal.fire({
+        title: Title,
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: check,
+        cancelButtonColor: '#d33',
+        cancelButtonText: '취소'
+
+    }).then((result) => {
+        return result.isConfirmed;
+    });
+}

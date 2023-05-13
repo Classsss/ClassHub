@@ -5,6 +5,7 @@
 @layout MainLayout
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @using Blazored.TextEditor
 @using ClassHub.Client.Models
 @using ClassHub.Shared
@@ -182,8 +183,12 @@
         }
     }
 
-    private void OpenDetail() {
-        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    private async void OpenDetail() {
+        bool result = await JSRuntime.InvokeAsync<bool>("showConfirm","사이트에서 나가시겠습니까?" ,"변경사항이 저장되지 않을 수 있습니다.","나가기");
+        if (result)
+        {
+            NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+        }
     }
 
     private void OpenList() {
