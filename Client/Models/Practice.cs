@@ -8,7 +8,6 @@
         public List<string> ExamOutputCases { get; set; } = new List<string>();//출력 케이스
         public string Language { get; set; } // 사용 언어
         public bool isApplyScore { get; set; } //점수 반영 여부
-        public bool isGptAvailable { get; set; } //GPT 사용 가능 여부
         public DateTime StartDate { get; set; } // 시작일
         public DateTime EndDate { get; set; } // 종료일
         public List<string> IntputCases { get; set; } = new List<string>();// 실제 입력 케이스
