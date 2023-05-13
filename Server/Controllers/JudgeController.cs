@@ -21,47 +21,56 @@ namespace ClassHub.Server.Controllers
                 var judgeData = request.Item1;
                 var submitData = request.Item2;
 
-                // 채점중인 레코드를 insert 
+                // 초기의 채점 내역을 insert하기 위해 submitController에 요청 
                 using var httpClient = new HttpClient();
                 var contentSubmit = new StringContent(JsonSerializer.Serialize(submitData), Encoding.UTF8, "application/json");
                 var responseSubmit = await httpClient.PostAsync("https://localhost:7182/api/CodeSubmit/insert", contentSubmit);
 
+                // 생성된 submit_id를 받아준다.
                 int submitId = await responseSubmit.Content.ReadFromJsonAsync<int>();
 
-                // 채점 서버에 채점 요청
+                // 채점 서버에 채점 요청한다.
                 judgeData.SubmitId = submitId;
                 var contentJudge = new StringContent(JsonSerializer.Serialize(judgeData), Encoding.UTF8, "application/json");
-                var responseJudge = await httpClient.PostAsync("https://localhost:7135/Judge", contentJudge);
+                try {
+                    var responseJudge = await httpClient.PostAsync("https://localhost:7135/Judge", contentJudge);
 
-                // Post 요청 및 응답 받기 성공
-                if (responseJudge.IsSuccessStatusCode){
+                    // Post 요청 및 응답 받기 성공
+                    if (responseJudge.IsSuccessStatusCode) {
 
-                    Console.WriteLine("Data posted successfully");
+                        Console.WriteLine("Data posted successfully");
 
-                    JudgeResult? judgeResult = await responseJudge.Content.ReadFromJsonAsync<JudgeResult>();
+                        JudgeResult? judgeResult = await responseJudge.Content.ReadFromJsonAsync<JudgeResult>();
 
-                    // Valid response
-                    if (judgeResult != null){
-                        Tuple<JudgeResult, int> result = new Tuple<JudgeResult, int>(judgeResult, submitId);
-                        //채점 완료 후 db 업데이트 요청
-                        var contentResult = new StringContent(JsonSerializer.Serialize(result), Encoding.UTF8, "application/json");
-                        await httpClient.PutAsync("https://localhost:7182/api/CodeSubmit/update", contentResult);
-                        return Ok(judgeResult);
+                        // 채점 성공
+                        if (judgeResult != null) {
+                            Tuple<JudgeResult, int> result = new Tuple<JudgeResult, int>(judgeResult, submitId);
+                            //채점 완료 후 db 업데이트 요청
+                            var contentResult = new StringContent(JsonSerializer.Serialize(result), Encoding.UTF8, "application/json");
+                            await httpClient.PutAsync("https://localhost:7182/api/CodeSubmit/update", contentResult);
+                            return Ok(judgeResult);
+                        }
+                        // 옮지 않은 반응(채점 실패)
+                        else {
+                            Console.WriteLine("Invalid response");
+                            var contentResult = new StringContent(JsonSerializer.Serialize(submitId), Encoding.UTF8, "application/json");
+                            await httpClient.PutAsync("https://localhost:7182/api/CodeSubmit/fail", contentResult);
+                            return BadRequest("JudgeServer와 통신 실패");
+                        }
                     }
-                    // Invalid response
-                    else{
-                        // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
-                        Console.WriteLine("Invalid response");
+                    // Post 요청 실패
+                    else {
+                        Console.WriteLine("Failed to post data " + responseJudge.StatusCode);
+                        var contentResult = new StringContent(JsonSerializer.Serialize(submitId), Encoding.UTF8, "application/json");
+                        await httpClient.PutAsync("https://localhost:7182/api/CodeSubmit/fail", contentResult);
                         return BadRequest("JudgeServer와 통신 실패");
                     }
-                }
-                // Post 요청 실패
-                else{
-                    Console.WriteLine("Failed to post data " + responseJudge.StatusCode);
-                    // TODO : JudgeServer로 보낸 Post 요청이 실패했을 때 처리
+                }catch(Exception ex) {      // 채점 서버 무응답시 실패 처리
+                    Console.WriteLine("Failed to post data " + ex);
+                    var contentResult = new StringContent(JsonSerializer.Serialize(submitId), Encoding.UTF8, "application/json");
+                    await httpClient.PutAsync("https://localhost:7182/api/CodeSubmit/fail", contentResult);
                     return BadRequest("JudgeServer와 통신 실패");
                 }
-
             }
         }
     }
