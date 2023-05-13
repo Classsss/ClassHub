@@ -71,6 +71,11 @@
                            <button class="ql-align" value="justify"></button>
                        </span>
                    </ToolbarContent>
+                   <EditorContent>
+                       @if(type == 1 || type == 3){
+                           @QuillHtml.LoadHTMLContent(contents);
+                       }
+                   </EditorContent>
                 </BlazoredTextEditor>
            </div>
        </div>
@@ -100,7 +105,7 @@
     public int ContentId { get; set; }
 
     /// <summary>
-    /// 1 - 강의자료 수정, 2 - 공지사항 수정, 3 - 강의자료 게시, 4 - 공지사항 게시
+    /// 1 - 강의자료 수정, 2 - 강의자료 게시, 3 - 공지사항 수정, 4 - 공지사항 게시
     /// </summary>
     private int type = 0;
     private BoardContent? targetBoardContent;
@@ -186,7 +191,7 @@
     private async void RegisterContent() {
         string jsonString = "";
         string requestUri = "";
-        contents = await QuillHtml.GetHTML();
+        contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
             jsonString = JsonSerializer.Serialize(new LectureMaterial {
