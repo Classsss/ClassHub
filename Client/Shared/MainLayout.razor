@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
+@inject Blazored.Modal.Services.IModalService ModalService
 @inject NavigationManager NavigationManager
 @inject SSOAuthenticationStateProvider authProvider
 
@@ -13,7 +14,7 @@
     <main>
         <div class="top-row px-4">
             <a class="oi oi-envelope-closed" aria-hidden="true"></a>
-            <a class="oi oi-bell" aria-hidden="true"></a>
+            <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
         </div>
         <article class="content px-4">
@@ -35,6 +36,15 @@
         await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
         AuthService.IsLoggedIn = false;
         authProvider.StateChanged();
+    }
+
+    private async void OpenNotificationList() {
+        var parameters = new ModalParameters();
+        //parameters.Add("Code", samplecode);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Medium };
+        var modalReference = ModalService.Show<NotificationModal>("알림 목록", parameters, modalOptions);
+
+        var result = await modalReference.Result;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
