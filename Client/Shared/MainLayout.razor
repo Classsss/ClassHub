@@ -40,7 +40,8 @@
 
     private async void OpenNotificationList() {
         var parameters = new ModalParameters();
-        //parameters.Add("Code", samplecode);
+        int student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"));
+        parameters.Add("StudentId", student_id);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Medium };
         var modalReference = ModalService.Show<NotificationModal>("알림 목록", parameters, modalOptions);
 
