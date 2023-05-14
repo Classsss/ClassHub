@@ -70,7 +70,9 @@
         </div>
         <div class="col-md-4" style="height: 100%; width: 55%;">
             <MonacoEditor @ref="MonacoEditorReference" />
-            <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+            @if (role == "student"){
+                <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+            }
             <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
         </div>
     </div>
@@ -87,7 +89,7 @@
     public int RoomId { get; set; }
     [Parameter]
     public int PracticeId { get; set; }
-
+    private string role;
     private Practice practice = new Practice();
 
     // MonacoEditor 컴포넌트 참조 변수
@@ -95,6 +97,7 @@
 
     // 초기화 할때 실습 데이터를 받아온다.
     protected override async Task OnInitializedAsync(){
+        role = await UserInfo.GetRoleAsync(JSRuntime);
         practice = await Http.GetFromJsonAsync<Practice>($"api/practice/room_id/{RoomId}/practice_id/{PracticeId}");
         StateHasChanged();
     }
@@ -138,7 +141,7 @@
                 submit_date = DateTime.Now,
                 status = JudgeResult.JResult.Pending.ToString(),
                 submit_id = 1,
-                student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID")),
+                student_id = await UserInfo.GetUserIdAsync(JSRuntime),
                 exec_time = 0,
                 mem_usage = 0,
                 code = await MonacoEditorReference.editor.GetValue(),

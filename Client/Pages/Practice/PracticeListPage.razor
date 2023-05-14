@@ -4,17 +4,21 @@
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 
-<SubmissionList Title="실습" Submissions="@practices" />
+<SubmissionList Title="실습" Role = "@role" Submissions="@practices" />
 
 @code {
     [Parameter]
     public int RoomId { get; set; }
     private List<Submission>? practices  = new List<Submission>();
-
+    private string role;
     protected async override void OnInitialized(){
         // RoomId와 매칭되는 실습의 정보를 가져옵니다.
-        practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/room_id/{RoomId}/student_id/{int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"))}");
-
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        if (role == "student"){
+            practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/student/room_id/{RoomId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        } else {
+            practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/professor/room_id/{RoomId}");
+        }
         StateHasChanged();
     }
     

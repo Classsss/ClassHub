@@ -42,8 +42,8 @@ namespace ClassHub.Server.Controllers {
             return submitId;
         }
 
-        // 해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
-        [HttpGet("room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
+        // 학생이 해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
+        [HttpGet("student/room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
         public List<CodeSubmit> GetSubmit(int room_id, int practice_id, int student_id){
             using var connection = new NpgsqlConnection(connectionString);
             string query;
@@ -55,6 +55,22 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("practice_id", practice_id);
             parameters.Add("student_id", student_id);
             List<CodeSubmit> submitList = connection.Query<CodeSubmit>(query,parameters).ToList();
+
+            return submitList;
+        }
+
+        // 교수가 해당 강의실의 실습번호에 해당하는 제출리스트들을 불러온다.
+        [HttpGet("professor/room_id/{room_id}/practice_id/{practice_id}")]
+        public List<CodeSubmit> GetSubmit(int room_id, int practice_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query;
+
+            query = "SELECT * FROM codesubmit WHERE room_id = @room_id AND assignment_id = @practice_id;";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("practice_id", practice_id);
+            List<CodeSubmit> submitList = connection.Query<CodeSubmit>(query, parameters).ToList();
 
             return submitList;
         }
