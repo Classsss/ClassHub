@@ -20,10 +20,10 @@ namespace ClassHub.Server.Controllers
             private const string JUDGESERVER_ADDRESS = "http://20.196.210.96:5000/Judge";
        
             [HttpPost]
-            public async Task<IActionResult> Post([FromBody] Tuple<JudgeRequest, CodeSubmit> request){
+            public async Task<IActionResult> Post([FromBody] RequestSubmitContainer request){
                 //튜플에서 데이터 분리
-                var judgeData = request.Item1;
-                var submitData = request.Item2;
+                var judgeData = request.JudgeRequest;
+                var submitData = request.CodeSubmit;
 
                 // 초기의 채점 내역을 insert하기 위해 submitController에 요청 
                 using var httpClient = new HttpClient();

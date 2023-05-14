@@ -150,9 +150,9 @@
             };
 
         //하나로 묶어준다.
-        Tuple<JudgeRequest, CodeSubmit> requestTuple = new Tuple<JudgeRequest, CodeSubmit>(requestJudge,requestSubmit);
+        RequestSubmitContainer requestSubmitContainer = new RequestSubmitContainer(requestJudge, requestSubmit);
         // 직렬화
-        var content = new StringContent(JsonSerializer.Serialize(requestTuple), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonSerializer.Serialize(requestSubmitContainer), Encoding.UTF8, "application/json");
         // 제출 내역 창으로 이동한다.
         CheckSubmitHistory();
         // 서버에 채점을 요청한다.
