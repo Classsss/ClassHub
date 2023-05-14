@@ -28,3 +28,36 @@ function setPaginationInfo(key, value) {
 function getPaginationInfo(key) {
     return localStorage.getItem(key);
 }
+
+function toggleSidebar() {
+    console.log(document.getElementById("sidebar"))
+    let sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("collapse")) {
+        sidebar.classList.remove("collapse");
+    } else {
+        sidebar.classList.add("collapse");
+    }
+}
+
+window.reloadVideo = function () {
+    var video = document.querySelector("video");
+    if (video) {
+        video.load();
+    }
+}
+
+function showConfirm(Title, message, check) {
+    return Swal.fire({
+        title: Title,
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: check,
+        cancelButtonColor: '#d33',
+        cancelButtonText: '취소'
+
+    }).then((result) => {
+        return result.isConfirmed;
+    });
+}

@@ -1,0 +1,159 @@
+﻿@page "/classroom/{roomid:int}/lecture/{lectureid:int}"
+@using ClassHub.Client.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Collections.Generic
+
+        <h3>기계학습</h3>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <div class="d-flex">
+            <div id="sidebar" class="collapse">
+                <div class="d-flex justify-content-between align-items-center" style="background-color: #333; padding: 10px;">
+                    <span style="color: white; font-size: 18px;">Table of Contents</span>
+                    <button style="color: white; background-color: transparent; border: none; font-size: 18px; cursor: pointer;" @onclick="ToggleSidebar">X</button>
+                </div>
+                <div class="list-group">
+                    @foreach (var lecture in lectures) {
+                        <a class="list-group-item list-group-item-action @(lecture.Id == LectureId ? "active" : "")"
+                       @onclick="@(() => ShowLecture(lecture.Id))" style="cursor:pointer;">@lecture.Title</a>
+                    }
+                </div>
+            </div>
+
+            <div class="video-container">
+                <video controls>
+            <source src="@SelectedLecture.VideoUrl" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+
+            <div class="video-controls">
+                <button @onclick="ToggleSidebar">목차</button>
+                <button @onclick="@(() => ShowLecture(LectureId - 1))" disabled="@IsPrevDisabled">이전</button>
+                <button @onclick="@(() => ShowLecture(LectureId + 1))" disabled="@IsNextDisabled">다음</button>
+                <button @onclick="GoBack">종료</button>
+            </div>
+
+            </div>
+        </div>
+
+<style>
+    .video-container {
+        background-color: black;
+        position: relative;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100vh;
+        width: 100%;
+    }
+
+        .video-container video {
+            width: 80%;
+            float: right;
+        }
+
+    .video-controls {
+        position: absolute;
+        bottom: 50px;
+        right: 0;
+        background-color: grey;
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+        .video-controls button {
+            color: white;
+            background-color: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+            .video-controls button:hover {
+                color: orange;
+            }
+
+
+    #sidebar {
+        width: 30%;
+        background-color: grey;
+    }
+
+        #sidebar .list-group-item.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #sidebar .d-flex {
+            background-color: #333;
+            padding: 10px;
+            color: white;
+            font-size: 18px;
+        }
+
+        #sidebar button {
+            color: white;
+            background-color: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+</style>
+
+
+
+
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int LectureId { get; set; }
+
+    private int index;
+    public bool IsPrevDisabled => lectures.FirstOrDefault(lecture => lecture.Id == LectureId - 1) == null;
+    public bool IsNextDisabled => lectures.FirstOrDefault(lecture => lecture.Id == LectureId + 1) == null;
+
+
+    public Lecture SelectedLecture { get; set; }
+
+    private async Task ToggleSidebar() {
+        await JSRuntime.InvokeVoidAsync("toggleSidebar");
+    }
+
+    private List<Lecture> lectures = new List<Lecture>
+    {
+        // 샘플 데이터
+        // 실제 프로젝트에서는 데이터베이스 또는 API를 통해 동영상 강의 정보를 가져옴
+        new Lecture { Id = 1, Week = 1, Lesson = 1, Title = "론칭, 모니터링, 시스템 유지 보수", Description = "기계학습 1주차 첫번째 강의 입니다.", StartDate = new DateTime(2023, 03, 02, 08, 0, 0), EndDate = new DateTime(2023, 03, 04, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b792a89749565", TotalLearningTime = 54, CurrentLearningTime = 54, IsEnrolled = true },
+        new Lecture { Id = 2, Week = 1, Lesson = 2, Title = "Colab을 활용한 실습", Description = "기계학습 1주차 두번째 강의 입니다.",StartDate = new DateTime(2023, 03, 04, 08, 0, 0), EndDate = new DateTime(2023, 03, 06, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b793719d29ec2", TotalLearningTime = 112, CurrentLearningTime = 84, IsEnrolled = false },
+        new Lecture { Id = 3, Week = 1, Lesson = 3, Title = "교차 검증을 사용한 정확도(accuracy) 측정", Description = "기계학습 1주차 세번째 강의 입니다.", StartDate = new DateTime(2023, 03, 09, 0, 10, 0), EndDate = new DateTime(2023, 03, 11, 23, 50, 0), VideoUrl = "https://ch-17094775.kinxzone.com/name/ch_17094775/187b79504e8c9853", TotalLearningTime = 51, CurrentLearningTime = 24, IsEnrolled = false },
+
+        // 추가 강의...
+    };
+
+    private void GoBack() // 목록으로 돌아가는 클래스
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    protected override async Task OnParametersSetAsync() {
+        SelectedLecture = lectures.FirstOrDefault(lecture => lecture.Id == LectureId);
+    }
+
+    private async Task ShowLecture(int id) {
+        var selectedLecture = lectures.FirstOrDefault(lecture => lecture.Id == id);
+        if (selectedLecture == null) return;
+
+        LectureId = id;
+        SelectedLecture = lectures.FirstOrDefault(lecture => lecture.Id == id);
+        await JSRuntime.InvokeVoidAsync("reloadVideo");
+        StateHasChanged();
+    }
+
+}
