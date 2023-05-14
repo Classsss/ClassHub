@@ -2,7 +2,7 @@
 ﻿namespace ClassHub.Shared {
     public class JudgeRequest {
 
-        public string snederConnectionId { get; set; }    // 제출자의 connectionId
+        public int SubmitId { get; set; }                 // 제출한 문제의 Id
         public string CorrectCode { get; set; }           // 교수가 제출한 정답 코드
         public string SubmitCode { get; set; }            // 학생이 에디터에 작성하여 제출한 코드
         public string CorrectCodeLanguage { get; set; }   // 정답 코드의 언어

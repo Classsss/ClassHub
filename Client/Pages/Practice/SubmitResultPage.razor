@@ -1,65 +1,261 @@
 ﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}/submitresult"
 @using Blazored.Modal
 @using Blazored.Modal.Services
+@using ClassHub.Shared
+@using System.Collections.ObjectModel
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Collections.Specialized
+@using Microsoft.Extensions.Primitives
+
+@inject HttpClient Http
 @inject Blazored.Modal.Services.IModalService ModalService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
-<h3>제출 내역</h3>
-
+<BackButton />
+<div style="background-color: whitesmoke; padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
+    <div style="display: flex; align-items: center;">
+          @if (role == "professor") {
+        <select class="form-select" aria-label="Default select example" @bind="sortKey" style="display: inline-block; width: auto;">
+            @foreach (var option in SortOptions) {
+                <option value="@option.Value">@option.Label</option>
+            }
+        </select>
+         }
+        <h3 style="margin: 0 auto;">
+            @PracticeId 번 실습 제출 내역
+        </h3>
+        @if (role == "professor") {
+        <SortDropdown SelectedSortKey="@sortKey" OnSortOptionChanged="@((string value) => sortKey = value)" />
+        }
+    </div>
+</div>
 <table class="table">
     <thead>
         <tr>
-            <th>제출번호</th>
-            <th>결과</th>
-            <th>메모리</th>
-            <th>시간</th>
-            <th>언어</th>
-            <th>제출시간</th>
-            <th>코드확인</th>
-            <th>GPT조언</th>
+            @if (role == "professor") {
+                <th style="border: 1px solid darkgray;">학번</th>
+            }
+            <th style="border: 1px solid darkgray;">제출 번호</th>
+            <th style="border: 1px solid darkgray;">결과</th>
+            <th style="border: 1px solid darkgray;">메모리</th>
+            <th style="border: 1px solid darkgray;">시간</th>
+            <th style="border: 1px solid darkgray;">언어</th>
+            <th style="border: 1px solid darkgray;">제출 시간</th>
+            <th style="border: 1px solid darkgray;">코드 확인</th>
+            @if (role == "student") {
+                <th style="border: 1px solid darkgray;">GPT조언</th>
+            }
         </tr>
     </thead>
+
     <tbody>
-        <tr>
-            <td>1</td>
-            <td>맞았음</td>
-            <td>214KB</td>
-            <td>0ms</td>
-            <td>C</td>
-            <td>2023.4.16 14:20</td>
-            <td><button @onclick="ShowCode">제출 코드 확인</button></td>
-            <td><button @onclick="ShowAdvice">GPT의 조언</button></td>
-        </tr>
+        @if (submitList != null) {
+            @foreach (CodeSubmit submit in submitList) {
+                <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
+                    @if (role == "professor") {
+                    <td style="border: 1px solid darkgray;">@submit.student_id</td>
+                    }
+                    <td style="border: 1px solid darkgray;">@submit.submit_id</td>
+                    <td style="border: 1px solid darkgray;">
+                        @if (submit.status == "Accepted") {
+                        <td style="color: green;">맞았습니다.</td>
+                        } else if (submit.status == "Pending") {
+                        <td style="color: gray;">채점 준비 중</td>
+                        } else if (submit.status.Contains("%")) {
+                        <td style="color: black;">@submit.status</td>
+                        } else {
+                        <td style="color: red;">
+                                @{
+                                    switch (submit.status) {
+                                        case "WrongAnswer":
+                                            @("틀렸습니다.")
+                                            break;
+                                        case "CompileError":
+                                            @("컴파일 에러.")
+                                            break;
+                                        case "RuntimeError":
+                                            @("런타임 에러.")
+                                            break;
+                                        case "TimeLimitExceeded":
+                                            @("시간 초과")
+                                            break;
+                                        case "MemoryLimitExceeded":
+                                            @("메모리 초과")
+                                            break;
+                                        case "PresentationError":
+                                            @("출력 형식 오류")
+                                            break;
+                                        case "OutputLimitExceeded":
+                                            @("출력 한도 초과")
+                                            break;
+                                        case "JudgementFailed":
+                                            @("채점 실패")
+                                            break;
+                                    }
+                                }
+                        </td>
+                        }
+
+
+                    </td>
+                    <td style="border: 1px solid darkgray;">@submit.mem_usage kb</td>
+                    <td style="border: 1px solid darkgray;">@submit.exec_time ms</td>
+                    <td style="border: 1px solid darkgray;">@submit.language</td>
+                    <td style="border: 1px solid darkgray;">@submit.submit_date</td>
+                    <td style="border: 1px solid darkgray;"><button @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
+                     @if (role == "student") {
+                    <td><button @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
+                    }
+                </tr>
+            }
+        } else {
+            <tr>
+                <td colspan="8">제출한 내역이 없습니다.</td>
+            </tr>
+        }
     </tbody>
 </table>
-
 @code {
+
     [Parameter]
     public int RoomId { get; set; }
     [Parameter]
     public int PracticeId { get; set; }
+    [Parameter]
+    public EventCallback<string> OnSortOptionChanged { get; set; }
 
-    private async Task ShowCode()
+      private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
+
+    private List<CodeSubmit> submitList = new List<CodeSubmit>();
+    private string role;
+    private int student_id;
+    private string sortKey;
+    HubConnection connection;
+
+    // 정렬 기준
+    private readonly List<(string Value, string Label)> SortOptions = new List<(string Value, string Label)>
     {
+        ("submit_id", "제출 번호순"),
+        ("student_id", "학생 아이디순"),
+        ("status", "상태순")
+    };
+
+    // 정렬하는 함수
+    public void SortBySubmission() {
+        if (sortKey == "status") {
+            submitList = submitList.OrderByDescending(a => a.status == "맞았습니다").ThenBy(a => a.status).ToList();
+        } else {
+            submitList = submitList.OrderByDescending(a => a.GetType().GetProperty(sortKey).GetValue(a)).ToList();
+        }
+        StateHasChanged();
+    }
+
+    // select할때마다 호출된다.
+    protected async Task OnSelectedSortKeyChanged() {
+        await OnSortOptionChanged.InvokeAsync(sortKey);
+        submitList = submitList.OrderByDescending(a => a.GetType().GetProperty(sortKey).GetValue(a)).ToList();
+        StateHasChanged();
+    }
+
+    // 초기화 할때 일단 내역을 보여준다.  
+    // 교수와 학생은 구분한다.
+    protected async override void OnInitialized(){
+        sortKey = "submit_id"; // 선택한 기본값
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        if(role == "student") {
+            student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+            submitList = await Http.GetFromJsonAsync<List<CodeSubmit>>($"api/CodeSubmit/student/room_id/{RoomId}/practice_id/{PracticeId}/student_id/{student_id}");
+        } else {
+            submitList = await Http.GetFromJsonAsync<List<CodeSubmit>>($"api/CodeSubmit/professor/room_id/{RoomId}/practice_id/{PracticeId}");
+        }
+        SortBySubmission();
+    }
+
+    //페이지 옮기기 새로고침 등을 하면 signalR 연결을 끊는다.
+    private async void HandleLocationChanged(object sender, LocationChangedEventArgs e) {
+        await connection.StopAsync();
+    }
+
+    // 서버로부터 주기적으로 업데이트된 list를 받아 실시간으로 채점 정보를 출력한다.
+    protected override async Task OnAfterRenderAsync(bool firstRender){
+        if (firstRender) {
+            await base.OnAfterRenderAsync(firstRender);
+
+            connection = new HubConnectionBuilder()
+             .WithUrl(CLASSHUB_CODESUBMIT_REALTIME)
+             .Build();
+
+            await connection.StartAsync();
+
+            // connection.On을 등록합니다.
+            connection.On<List<CodeSubmit>>("ReceiveList", _submitList => {
+                submitList.Clear();
+                submitList = _submitList.ToList();
+                SortBySubmission();
+            });
+
+            string query;
+            if(role == "student") {
+                query = $"SELECT * FROM codesubmit WHERE \"room_id\" = {RoomId} AND \"assignment_id\" = {PracticeId} AND \"student_id\" = {student_id};";
+            } else {
+                query = $"SELECT * FROM codesubmit WHERE \"room_id\" = {RoomId} AND \"assignment_id\" = {PracticeId};";
+            }
+            await connection.InvokeAsync("StartDatabaseWatcher",query);
+        }
+    }
+
+    // 현재 채점 상태를 status에 따라 출력
+    private string getStatus(string status){
+        switch (status)
+        {
+            case "Accepted":
+                return "맞았습니다.\n";
+            case "WrongAnswer":
+                return "틀렸습니다.\n";
+            // todo : 컴파일 에러와 런타임 에러 원인 확실히 잡히면 밑에 원인 추가
+            case "CompileError":
+                return "컴파일 에러.\n";
+            case "RuntimeError":
+                return "런타임 에러.\n";
+            case "TimeLimitExceeded":
+                return "시간 초과\n";
+            case "MemoryLimitExceeded":
+                return "메모리 초과.\n";
+            case "PresentationError":
+                return "출력 형식 오류\n";
+            case "OutputLimitExceeded":
+                return "출력 한도 초과\n";
+            case "JudgementFailed":
+                return "채점 실패\n";
+            case "Pending":
+                return "채점 중\n";
+        }
+        return status;
+        /* // 메시지가 유효하면 화면에 표시
+        if (judgeResult.Message != null)
+            {
+            Message = judgeResult.Message;
+        }*/
+    }
+
+    // 작성한 코드를 Modal로 띄운다.
+    private async Task ShowCode(string code){
         var parameters = new ModalParameters();
-        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
-
-
-        parameters.Add("Code", samplecode);
+        parameters.Add("Code", code);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
-        var modalReference = ModalService.Show<SubmitCode>("제출 코드", parameters, modalOptions);
+        var modalReference = ModalService.Show<SubmittedCodeModal>("제출 코드", parameters, modalOptions);
 
         var result = await modalReference.Result;
     }
 
-    private async Task ShowAdvice()
-    {
+    // 작성한 코드에 대한 gpt의 조언을 Modal로 띄운다.
+    private async Task ShowAdvice(string code){
         var parameters = new ModalParameters();
-        string samplecode = "#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\", a + b)\n}";
-
-
-        parameters.Add("Code", samplecode);
+        parameters.Add("Code", code);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
-        var modalReference = ModalService.Show<AdviceGpt>("GPT 조언", parameters, modalOptions);
+        var modalReference = ModalService.Show<AdviceGptModal>("GPT 조언", parameters, modalOptions);
 
         var result = await modalReference.Result;
     }

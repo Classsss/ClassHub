@@ -42,13 +42,42 @@ namespace ClassHub.Client.Shared {
 
             return 0;
         }
+
+
+
+        public static async Task<string> GetRoleAsync(IJSRuntime jsRuntime) {
+            var accessToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (accessToken != null) {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes("ClassHubOnTheBuilding"); //대칭키 암호화
+                try {
+                    var validationParameters = new TokenValidationParameters //JWT토큰 검증 정보 
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                    SecurityToken validatedToken;
+                    var claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out validatedToken);
+                    //토큰으로부터 정보를 뽑아냄
+                    var role = claimsPrincipal.FindFirst(ClaimTypes.Role).Value;
+                    return role;
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    return null;
+                }
+            }
+
+            return null;
+        }
     }
+
     public class SSOAuthenticationStateProvider : AuthenticationStateProvider //인증 상태를 제공하는 Provider 클래스
     {
         private readonly IJSRuntime jsRuntime;
 
-        public SSOAuthenticationStateProvider(IJSRuntime jsRuntime)
-        {
+        public SSOAuthenticationStateProvider(IJSRuntime jsRuntime) {
             this.jsRuntime = jsRuntime;
         }
 
@@ -61,8 +90,7 @@ namespace ClassHub.Client.Shared {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes("ClassHubOnTheBuilding"); //대칭키 암호화
 
-            try
-            {
+            try {
                 var validationParameters = new TokenValidationParameters //JWT토큰 검증 정보 
                 {
                     ValidateIssuerSigningKey = true,
@@ -82,11 +110,10 @@ namespace ClassHub.Client.Shared {
                 //학번/교번과 이름을 로컬 스토리지에 저장
                 await jsRuntime.InvokeVoidAsync("localStorage.setItem", "userID", user_id);
                 await jsRuntime.InvokeVoidAsync("localStorage.setItem", "Name", name);
+                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "Role", role);
 
                 return new AuthenticationState(claimsPrincipal);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }

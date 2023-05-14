@@ -1,19 +1,25 @@
 ﻿@page "/classroom/{roomid:int}/practice"
 @layout MainLayout
 @using ClassHub.Client.Models
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
-<h3>실습 목록</h3>
-<SubmissionList Title="실습" Submissions="@practices" />
-
+<SubmissionList Title="실습" Role = "@role" Submissions="@practices" />
 
 @code {
     [Parameter]
     public int RoomId { get; set; }
-
-    List<Submission> practices = new List<Submission> {
-        new Assignment { Id = 1, Title = "Introduction to C#", Description = "C#은 어려웡", Author = "John Doe", StartDate = new DateTime(2022, 4, 1), EndDate = new DateTime(2022, 4, 30), IsSubmitted = true },
-        new Assignment { Id = 2, Title = "Object-oriented Programming with C#", Description = "Object-oriented with C#은 어려웡", Author = "Jane Smith", StartDate = new DateTime(2022, 5, 1), EndDate = new DateTime(2022, 5, 31), IsSubmitted = true },
-        new Assignment { Id = 3, Title = "Web Development with ASP.NET Core", Description = "ASP.NET Core는 어려웡",Author = "Bob Johnson", StartDate = new DateTime(2023, 4, 17), EndDate = new DateTime(2023, 5, 17) },
-        new Assignment { Id = 4, Title = "간단한 덧셈", Description = "숫자 두개를 더하는 코드를 구현해보자",Author = "조세형", StartDate = new DateTime(2023, 5, 1), EndDate = new DateTime(2023, 5, 15) },
-    };
+    private List<Submission>? practices  = new List<Submission>();
+    private string role;
+    protected async override void OnInitialized(){
+        // RoomId와 매칭되는 실습의 정보를 가져옵니다.
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        if (role == "student"){
+            practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/student/room_id/{RoomId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        } else {
+            practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/professor/room_id/{RoomId}");
+        }
+        StateHasChanged();
+    }
+    
 }
