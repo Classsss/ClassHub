@@ -29,7 +29,7 @@ function getPaginationInfo(key) {
     return localStorage.getItem(key);
 }
 
-function showConfirm(Title,message ,check) {
+function showConfirm(Title, message, check) {
     return Swal.fire({
         title: Title,
         text: message,
