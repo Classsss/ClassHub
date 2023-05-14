@@ -145,15 +145,35 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("register/lecturematerial")]
         public void PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = 
-                "INSERT INTO lecturematerial (room_id, week, title, author, contents, publish_date, up_date, view_count) " +
-                "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count);";
-            connection.Execute(query, lectureMaterial);
+            connection.Open();
+
+            // material_id 시퀀스를 가져오던 중 다른 사용자가 INSERT 작업을 수행하면 곤란하기 때문에 하나의 트랜잭션으로 묶음
+            using(var transaction = connection.BeginTransaction()) {
+                try {
+                    string query1 = // 다음 material_id 시퀀스를 가져옴.
+                        "SELECT nextval('lecturematerial_material_id_seq');";
+                    lectureMaterial.material_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
+
+                    _logger.LogInformation($"PostLectureMaterial?room_id={lectureMaterial.room_id}&material_id={lectureMaterial.material_id}");
+
+                    string query2 =
+                        "INSERT INTO lecturematerial (room_id, material_id, week, title, author, contents, publish_date, up_date, view_count) " +
+                        "VALUES (@room_id, @material_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+                    connection.Execute(query2, lectureMaterial);
+
+                    transaction.Commit();
+                } catch(Exception ex) {
+                    _logger.LogError("강의자료 게시 중 문제가 발생하여 RollBack 합니다.");
+                    _logger.LogError($"msg :\n{ex.Message}");
+                    transaction.Rollback();
+                    return;
+                }
+            }
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
                 message = lectureMaterial.title,
-                uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
+                uri = $"classroom/{lectureMaterial.room_id}/lecturematerial/{lectureMaterial.material_id}",
                 notify_date = DateTime.Now
             });
         }
