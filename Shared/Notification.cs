@@ -14,4 +14,9 @@
         public int notification_id { get; set; }
         public bool is_read { get; set; }
     }
+
+    public class DisplayStudentNotification : ClassRoomNotification {
+        public bool is_read { get; set; }
+        public string title { get; set; }
+    }
 }

@@ -1,0 +1,20 @@
+﻿@page "/logout"
+@inject AuthenticationService AuthService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject SSOAuthenticationStateProvider authProvider
+
+
+@code {
+    protected async override void OnInitialized()
+    {
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "userID");
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "Name");
+        AuthService.IsLoggedIn = false;
+        authProvider.StateChanged();
+
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + "login");
+    }
+}

@@ -9,6 +9,40 @@ namespace ClassHub.Client.Shared {
     public class AuthenticationService {
         public bool IsLoggedIn { get; set; }
     }
+
+    public static class UserInfo {
+        public static async Task<int> GetUserIdAsync(IJSRuntime jsRuntime) {
+            var accessToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+
+            if (accessToken != null) {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes("ClassHubOnTheBuilding"); //대칭키 암호화
+
+                try {
+                    var validationParameters = new TokenValidationParameters //JWT토큰 검증 정보 
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+
+                    SecurityToken validatedToken;
+                    var claimsPrincipal = tokenHandler.ValidateToken(accessToken, validationParameters, out validatedToken);
+
+                    //토큰으로부터 정보를 뽑아냄
+                    var user_id = claimsPrincipal.FindFirst("user_id").Value;
+
+                    return int.Parse(user_id);
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    return 0;
+                }
+            }
+
+            return 0;
+        }
+    }
     public class SSOAuthenticationStateProvider : AuthenticationStateProvider //인증 상태를 제공하는 Provider 클래스
     {
         private readonly IJSRuntime jsRuntime;
