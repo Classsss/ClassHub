@@ -77,7 +77,9 @@ namespace ClassHub.Server.Controllers {
                 "SELECT * " +
                 "FROM studentnotification " +
                 "WHERE student_id = @student_id;";
-            var result = connection.Query<StudentNotification>(query, student_id);
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+            var result = connection.Query<ClassRoomNotification>(query, parameters);
 
             return Ok(result);
         }
