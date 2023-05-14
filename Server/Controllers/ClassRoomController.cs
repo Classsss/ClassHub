@@ -75,7 +75,7 @@ namespace ClassHub.Server.Controllers {
                 "WHERE room_id = @room_id AND material_id = @material_id;";
             connection.Execute(query, lectureMaterial);
 
-            InsertNotification(new ClassRoomNotification {
+            InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
                 message = $"(수정) {lectureMaterial.title}",
                 uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
@@ -93,7 +93,7 @@ namespace ClassHub.Server.Controllers {
                 "VALUES (@room_id, @week, @title, @author, @contents, @publish_date, @up_date, @view_count);";
             connection.Execute(query, lectureMaterial);
 
-            InsertNotification(new ClassRoomNotification {
+            InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
                 message = lectureMaterial.title,
                 uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
@@ -113,7 +113,7 @@ namespace ClassHub.Server.Controllers {
                 connection.Execute(query, notice);
             }
 
-            InsertNotification(new ClassRoomNotification {
+            InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = notice.room_id,
                 message = $"(수정) {notice.title}",
                 uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
@@ -151,7 +151,7 @@ namespace ClassHub.Server.Controllers {
                 connection.Execute(query, notice);
             }
 
-            InsertNotification(new ClassRoomNotification {
+            InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = notice.room_id,
                 message = notice.title,
                 uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
@@ -216,8 +216,7 @@ namespace ClassHub.Server.Controllers {
 
         // 강의실 테이블에 알림을 등록합니다.
         // 아직은 클라이언트에서 직접적으로 알림 INSERT를 요청하는 작업이 없기에 API를 생성하지 않습니다.
-        public void InsertNotification(ClassRoomNotification roomNotification) {
-            _logger.LogInformation($"InsertNotification?room_id={roomNotification.room_id}; notification_id={roomNotification.notification_id})");
+        public void InsertNotificationWithStudent(ClassRoomNotification roomNotification) {
             using var connection = new NpgsqlConnection(connectionString);
             connection.Open(); // 트랜잭션을 사용하는 경우 직접 Open() 하는 것을 권장
 
@@ -227,6 +226,7 @@ namespace ClassHub.Server.Controllers {
                     string query1 = // 다음 notification_id 시퀀스를 가져옴. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 실제 DB내 시퀀스는 2로 바뀜)
                         "SELECT nextval('classroomnotification_notification_id_seq');";
                     roomNotification.notification_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
+                    _logger.LogInformation($"InsertNotificationWithStudent?room_id={roomNotification.room_id}; notification_id={roomNotification.notification_id})");
 
                     string query2 = // ClassRoomNotification 테이블에 데이터를 INSERT
                         "INSERT INTO classroomnotification (room_id, notification_id, message, uri, notify_date) " +
