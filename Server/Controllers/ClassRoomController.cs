@@ -64,6 +64,26 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
+        // Param으로 받은 학번을 가진 학생에게 온 모든 알림을 불러옴 (모든 수강 강의)
+        // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
+        [HttpGet("notification/all")]
+        public async Task<IActionResult> GetAllNotificationsAsync([FromQuery] int student_id, [FromQuery] string accessToken) {
+            if (!await AuthService.isValidToken(student_id, accessToken)) {
+                return Unauthorized("Invalid token");
+            }
+
+            using var connection = new NpgsqlConnection(connectionString);
+            var query =
+                "SELECT * " +
+                "FROM studentnotification " +
+                "WHERE student_id = @student_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+            var result = connection.Query<ClassRoomNotification>(query, parameters);
+
+            return Ok(result);
+        }
+
         // 수정 된 LectureMaterial 객체를 DB에 UPDATE 합니다.
         // 실제 요청 url 예시 : 'api/classroom/modify/lecturematerial'
         [HttpPut("modify/lecturematerial")]
@@ -186,33 +206,6 @@ namespace ClassHub.Server.Controllers {
 			parameters.Add("material_id", material_id);
 			connection.Execute(query, parameters);
 		}
-
-        // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)
-        // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
-        [HttpGet("notification/all/{student_id}")]
-        public IEnumerable<ClassRoomNotification> GetAllNotifications(int student_id) {
-            _logger.LogInformation($"GetAllNotifications?student_id={student_id}");
-            using var connection = new NpgsqlConnection(connectionString);
-            var query =
-                "SELECT * " +
-                "FROM studentnotification " +
-                "WHERE student_id = @student_id;";
-            var parameters = new DynamicParameters();
-            parameters.Add("student_id", student_id);
-            var studentNotifications = connection.Query<StudentNotification>(query, parameters);
-
-            List<ClassRoomNotification> result = new List<ClassRoomNotification>();
-            foreach(var item in studentNotifications) {
-                query =
-                    "SELECT * " +
-                    "FROM classroomnotification " +
-                    "WHERE notification_id = @notification_id;";
-                parameters = new DynamicParameters();
-                parameters.Add("notification_id", item.notification_id);
-                result.Add(connection.QuerySingle<ClassRoomNotification>(query, parameters));
-            }
-            return result;
-        }
 
         // 강의실 테이블에 알림을 등록합니다.
         // 아직은 클라이언트에서 직접적으로 알림 INSERT를 요청하는 작업이 없기에 API를 생성하지 않습니다.

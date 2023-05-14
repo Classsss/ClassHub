@@ -54,7 +54,7 @@
     private void Login() {
         // TODO: 통합 로그인 페이지 이동 구현
         //AuthService.IsLoggedIn = true;
-        NavigationManager.NavigateTo($"https://classhubsso.azurewebsites.net/login?client_id=classhub&redirect_uri={NavigationManager.BaseUri + "/login"}");
+        NavigationManager.NavigateTo($"https://classhubsso.azurewebsites.net/login?client_id=classhub&redirect_uri={NavigationManager.BaseUri + "login"}");
     }
 
     protected async override void OnInitialized()
@@ -63,7 +63,7 @@
         if ((QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var id)) && (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code)))
         {
             AuthService.IsLoggedIn = true;
-            exchangeToken(id, code);
+            await exchangeToken(id, code);
         }
 
         // 로컬 스토리지에서 AccessToken이 있는지 확인
@@ -87,16 +87,13 @@
         var request = new HttpRequestMessage(HttpMethod.Post, "TokenExchange/submit-code");
         Console.WriteLine(id + " " + code);
         request.Content = new StringContent(JsonSerializer.Serialize(new AccessTokenRequest { UserId = id, AuthorizationCode = code }), Encoding.UTF8, "application/json");
-        try
-        {
+        try {
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
             authProvider.StateChanged();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine("Error during request: " + ex.Message);
         }
     }
