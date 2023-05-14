@@ -1,6 +1,10 @@
+@using ClassHub.Shared;
+@using System.Text.RegularExpressions;
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
+@inject Blazored.Modal.Services.IModalService ModalService
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject SSOAuthenticationStateProvider authProvider
 @inject NavMenuTitleService NavMenuTitleService
@@ -18,11 +22,11 @@
             @if (NavigationManager.Uri != NavigationManager.BaseUri)
             {
                 <div style="float : left; text-align: left; margin-right : auto;">
-                    <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToMainPage">@NavMenuTitleService.Title </span>
+                    <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToRoomPage">@NavMenuTitleService.Title </span>
                 </div>
             }
             <a class="oi oi-envelope-closed" aria-hidden="true"></a>
-            <a class="oi oi-bell" aria-hidden="true"></a>
+            <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
         </div>
         <article class="content px-4">
@@ -39,11 +43,17 @@
 
     private async void Logout()
     {
-        // 토큰을 제거하여 다음 로그인 시에도 로그인을 요구하도록 한다.
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "accessToken");
-        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
-        AuthService.IsLoggedIn = false;
-        authProvider.StateChanged();
+        NavigationManager.NavigateTo("/logout");
+    }
+
+    private async void OpenNotificationList() {
+        var parameters = new ModalParameters();
+        int student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"));
+        parameters.Add("StudentId", student_id);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Medium };
+        var modalReference = ModalService.Show<NotificationModal>("알림 목록", parameters, modalOptions);
+
+        var result = await modalReference.Result;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
@@ -54,7 +64,20 @@
         }
     }
 
-    private void GoToMainPage() {
+    protected override async Task OnParametersSetAsync() {
+        base.OnParametersSet();
+        string uri = NavigationManager.Uri;
+        if(new Regex("/classroom/[0-9]+").IsMatch(uri)) {
+            int start = uri.IndexOf("classroom");
+            ClassRoom? classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{uri.Substring(start).Split('/')[1]}");
+            if(classRoom == null) NavMenuTitleService.Title = "";
+            else NavMenuTitleService.Title = classRoom.title + $" ({classRoom.section_id.ToString("D4")})";
+        } else {
+            NavMenuTitleService.Title = "";
+        }
+    }
+
+    private void GoToRoomPage() {
         string uri = NavigationManager.Uri;
         int start = uri.IndexOf("classroom");
         NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);

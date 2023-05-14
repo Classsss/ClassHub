@@ -76,7 +76,7 @@ else
 
 @code {
     private List<Section>? Sections;
-    private List<ClassRoomNotification>? Notifications;
+    private List<DisplayStudentNotification>? Notifications;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -85,51 +85,73 @@ else
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
         NavMenuTitleService.Title = "ClassHub"; 
-        await getCourses(); //시간표 받아오기
-        await getNotifications(); //알림 받아오기
+
+        Console.WriteLine(await UserInfo.GetUserIdAsync(JSRuntime)); //이런식으로 활용하면 된단다 진호야
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            await getCourses(); //시간표 받아오기
+            await getNotifications(); //알림 받아오기
+        }
     }
 
     protected async Task getCourses()
     {
-        //앱 서버로 수강과목 출력을 요청
-        var client = new HttpClient();
-        client.BaseAddress = new Uri(NavigationManager.BaseUri);
-        var request = new HttpRequestMessage(HttpMethod.Post, "/Section");
-        var response = await client.SendAsync(request);
-        var content = await response.Content.ReadAsStringAsync();
+        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
-        Console.WriteLine(content);
-        Sections = JsonSerializer.Deserialize<List<Section>>(content);
+        if (accessToken != null) {
+            var id = await UserInfo.GetUserIdAsync(JSRuntime);
 
-        // 색상 부여
-        if(Sections != null) {
-            int colorIndex = 0;
-            for(int i = 0; i < Sections.Count; i++) {
-                var section1 = Sections[i];
-                if(section1.Color == -1) {
-                    section1.Color = colorIndex++;
-                    for(int j = i + 1; j < Sections.Count; j++) {
-                        var section2 = Sections[j % 8];
-                        if(section1.SectionId == section2.SectionId) section2.Color = section1.Color;
+            //앱 서버로 수강과목 출력을 요청
+            try {
+                Sections = await Http.GetFromJsonAsync<List<Section>>($"/Section?userId={id}&accessToken={accessToken}");
+                // 색상 부여
+                if (Sections != null) {
+                    int colorIndex = 0;
+                    for (int i = 0; i < Sections.Count; i++) {
+                        var section1 = Sections[i];
+                        if (section1.Color == -1) {
+                            section1.Color = colorIndex++;
+                            for (int j = i + 1; j < Sections.Count; j++) {
+                                var section2 = Sections[j % 8];
+                                if (section1.SectionId == section2.SectionId)
+                                    section2.Color = section1.Color;
+                            }
+                        } else
+                            continue;
                     }
-                } else continue;
+                }
+            } catch(Exception e) {
+                Console.WriteLine(e);
             }
         }
-
         // 화면을 다시 그립니다.
         StateHasChanged(); 
     }
 
     protected async Task getNotifications() {
-        var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
-        Console.WriteLine($"{id} 학번으로 온 모든 강의실 알림을 불러옵니다.");
-        Notifications = await Http.GetFromJsonAsync<List<ClassRoomNotification>>($"api/classroom/notification/all/{id}");
+        // 로컬 스토리지에서 AccessToken 받아오기
+        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
-        if(Notifications != null) {
-            foreach(ClassRoomNotification notification in Notifications) {
-                Console.WriteLine(notification.message);
+        if (accessToken != null)
+        {
+            var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
+            Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
+
+            try {
+                Notifications = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
+                if (Notifications != null) {
+                    foreach(DisplayStudentNotification notification in Notifications) {
+                        Console.WriteLine(notification.message);
+                    }
+                }
+            } catch (Exception e) {
+                Console.WriteLine(e);
             }
         }
+
+        // 화면을 다시 그립니다.
         StateHasChanged();
     }
 }

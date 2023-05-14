@@ -5,6 +5,8 @@
 @layout MainLayout
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using Blazored.TextEditor
 @using ClassHub.Client.Models
 @using ClassHub.Shared
 @using System.Text.RegularExpressions;
@@ -14,21 +16,77 @@
 @if(type == 0) {
     
 } else {
-    <div class="form-group">
-        <label for="post-title" style="font-weight: bold;">제목</label>
-        <input type="text" class="form-control" id="post-title" placeholder="제목을 입력하세요" @bind="@title">
-    </div>
-    <br />
+   <style>
+       .ql-editor{
+           min-height:200px;
+       }
+   </style>
+
+   <div class="col-md-12">
+       <BackButton Msg="저장하지 않고 나가기" />
+       <div class="card mb-4">
+           <div class="card-header">
+               <input type="text" @bind="title" class="form-control mb-3" placeholder="제목을 입력해주세요.">
+               <ul class="nav nav-tabs card-header-tabs">
+                   <li class="nav-item">
+                        <a class="nav-link @(isWriteTabSelected ? "active" : "")" @onclick="SelectWriteTab" data-toggle="tab" data-target="#editor-tab" style="cursor: pointer;">Write</a>
+                   </li>
+                   <li class="nav-item">
+                        <a class="nav-link @(isWriteTabSelected ? "" : "active")" @onclick="SelectPreviewTab" data-toggle="tab" data-target="#preview-tab" style="cursor: pointer;">Preview</a>
+                   </li>
+               </ul>
+           </div>
+           <div class="card-body d-flex flex-column align-items-stretch">
+               <BlazoredTextEditor DebugLevel="warn" @ref="@QuillHtml" Placeholder="내용을 입력해주세요.">
+                   <ToolbarContent>
+                       <select class="ql-header">
+                           <option selected=""></option>
+                           <option value="1"></option>
+                           <option value="2"></option>
+                           <option value="3"></option>
+                           <option value="4"></option>
+                           <option value="5"></option>
+                       </select>
+                       <span class="ql-formats">
+                           <button class="ql-bold"></button>
+                           <button class="ql-italic"></button>
+                           <button class="ql-underline"></button>
+                           <button class="ql-strike"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <select class="ql-color"></select>
+                           <select class="ql-background"></select>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-list" value="ordered"></button>
+                           <button class="ql-list" value="bullet"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-link"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-align" value=""></button>
+                           <button class="ql-align" value="center"></button>
+                           <button class="ql-align" value="right"></button>
+                           <button class="ql-align" value="justify"></button>
+                       </span>
+                   </ToolbarContent>
+                   <EditorContent>
+                       @if (type == 1 || type == 3)
+                       {
+                           QuillHtml.LoadHTMLContent(contents);
+                       }
+              </EditorContent>
+           </BlazoredTextEditor>
+           </div>
+        </div>
+   </div>
 
     if(type == 1 || type == 2) {
         <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
         <br />
     }
 
-    <div class="form-group">
-        <label for="post-content" style="font-weight: bold;">내용</label>
-        <textarea class="form-control" id="post-content" rows="10" placeholder="내용을 입력하세요" @bind="@contents"></textarea>
-    </div>
 
     if(type == 1 || type == 2) {
         <DragDropUpload />        
@@ -48,12 +106,15 @@
     public int ContentId { get; set; }
 
     /// <summary>
-    /// 1 - 강의자료 수정, 2 - 공지사항 수정, 3 - 강의자료 게시, 4 - 공지사항 게시
+    /// 1 - 강의자료 수정, 2 - 강의자료 게시, 3 - 공지사항 수정, 4 - 공지사항 게시
     /// </summary>
     private int type = 0;
     private BoardContent? targetBoardContent;
     private string title;
     private string contents;
+    BlazoredTextEditor QuillHtml;
+    //기본 설정은 WriteTab
+    private bool isWriteTabSelected = true;
 
     public List<int> selectedWeek = new List<int>() { 1, };
     private List<BoardContent> loadedContents = new List<BoardContent>();
@@ -122,8 +183,12 @@
         }
     }
 
-    private void OpenDetail() {
-        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    private async void OpenDetail() {
+        bool result = await JSRuntime.InvokeAsync<bool>("showConfirm", "사이트에서 나가시겠습니까?", "변경사항이 저장되지 않을 수 있습니다.", "나가기");
+        if (result)
+        {
+            NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+        }
     }
 
     private void OpenList() {
@@ -133,6 +198,7 @@
     private async void RegisterContent() {
         string jsonString = "";
         string requestUri = "";
+        contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
             jsonString = JsonSerializer.Serialize(new LectureMaterial {
@@ -199,5 +265,15 @@
         selectedWeek = week;
         Console.WriteLine(selectedWeek[0]);
         await Task.CompletedTask;
+    }
+
+    private void SelectWriteTab() {
+        isWriteTabSelected = true;
+        StateHasChanged();
+    }
+
+    private void SelectPreviewTab() {
+        isWriteTabSelected = false;
+        StateHasChanged();
     }
 }
