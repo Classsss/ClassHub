@@ -1,7 +1,10 @@
+@using ClassHub.Shared;
+@using System.Text.RegularExpressions;
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
 @inject Blazored.Modal.Services.IModalService ModalService
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject SSOAuthenticationStateProvider authProvider
 @inject NavMenuTitleService NavMenuTitleService
@@ -19,7 +22,7 @@
             @if (NavigationManager.Uri != NavigationManager.BaseUri)
             {
                 <div style="float : left; text-align: left; margin-right : auto;">
-                    <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToMainPage">@NavMenuTitleService.Title </span>
+                    <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToRoomPage">@NavMenuTitleService.Title </span>
                 </div>
             }
             <a class="oi oi-envelope-closed" aria-hidden="true"></a>
@@ -61,7 +64,20 @@
         }
     }
 
-    private void GoToMainPage() {
+    protected override async Task OnParametersSetAsync() {
+        base.OnParametersSet();
+        string uri = NavigationManager.Uri;
+        if(new Regex("/classroom/[0-9]+").IsMatch(uri)) {
+            int start = uri.IndexOf("classroom");
+            ClassRoom? classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{uri.Substring(start).Split('/')[1]}");
+            if(classRoom == null) NavMenuTitleService.Title = "";
+            else NavMenuTitleService.Title = classRoom.title + $" ({classRoom.section_id.ToString("D4")})";
+        } else {
+            NavMenuTitleService.Title = "";
+        }
+    }
+
+    private void GoToRoomPage() {
         string uri = NavigationManager.Uri;
         int start = uri.IndexOf("classroom");
         NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);
