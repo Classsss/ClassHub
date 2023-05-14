@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using System.Transactions;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -144,11 +145,30 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/register/notice'
         [HttpPost("register/notice")]
         public void PostNotice([FromBody] Notice notice) {
-            using(var connection = new NpgsqlConnection(connectionString)) {
-                string query =
-                    "INSERT INTO notice (room_id, title, author, contents, publish_date, up_date, view_count) " +
-                    "VALUES (@room_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
-                connection.Execute(query, notice);
+            using var connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            // notice_id 시퀀스를 가져오던 중 다른 사용자가 INSERT 작업을 수행하면 곤란하기 때문에 하나의 트랜잭션으로 묶음
+            using(var transaction = connection.BeginTransaction()) {
+                try {
+                    string query1 = // 다음 notice_id 시퀀스를 가져옴. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 실제 DB내 시퀀스는 2로 바뀜)
+                    "SELECT nextval('notice_notice_id_seq');";
+                    notice.notice_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
+
+                    _logger.LogInformation($"PostNotice?room_id={notice.room_id}&notice_id={notice.notice_id}");
+
+                    string query2 =
+                        "INSERT INTO notice (room_id, notice_id, title, author, contents, publish_date, up_date, view_count) " +
+                        "VALUES (@room_id, @notice_id, @title, @author, @contents, @publish_date, @up_date, @view_count);";
+                    connection.Execute(query2, notice);
+
+                    transaction.Commit();
+                } catch (Exception ex) {
+                    _logger.LogError("공지사항 게시 중 문제가 발생하여 RollBack 합니다.");
+                    _logger.LogError($"msg :\n{ex.Message}");
+                    transaction.Rollback();
+                    return;
+                }
             }
 
             InsertNotificationWithStudent(new ClassRoomNotification {
@@ -190,8 +210,8 @@ namespace ClassHub.Server.Controllers {
         // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
         [HttpGet("notification/all/{student_id}")]
-        public IEnumerable<ClassRoomNotification> GetAllNotifications(int student_id) {
-            _logger.LogInformation($"GetAllNotifications?student_id={student_id}");
+        public IEnumerable<DisplayStudentNotification> GetStudentNotifications(int student_id) {
+            _logger.LogInformation($"GetStudentNotifications?student_id={student_id}");
             using var connection = new NpgsqlConnection(connectionString);
             var query =
                 "SELECT * " +
@@ -201,7 +221,8 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("student_id", student_id);
             var studentNotifications = connection.Query<StudentNotification>(query, parameters);
 
-            List<ClassRoomNotification> result = new List<ClassRoomNotification>();
+            List<DisplayStudentNotification> result = new List<DisplayStudentNotification>();
+
             foreach(var item in studentNotifications) {
                 query =
                     "SELECT * " +
@@ -209,7 +230,31 @@ namespace ClassHub.Server.Controllers {
                     "WHERE notification_id = @notification_id;";
                 parameters = new DynamicParameters();
                 parameters.Add("notification_id", item.notification_id);
-                result.Add(connection.QuerySingle<ClassRoomNotification>(query, parameters));
+                var roomNotification = connection.QuerySingle<ClassRoomNotification>(query, parameters);
+                result.Add(new DisplayStudentNotification {
+                    room_id = item.room_id,
+                    student_id = item.student_id,
+                    notification_id = item.notification_id,
+                    message = roomNotification.message,
+                    uri = roomNotification.uri,
+                    notify_date = roomNotification.notify_date,
+                    is_read = item.is_read
+                });
+            }
+
+            // DB 중복 참조를 막기 위해 강의실번호 순으로 나열 뒤 이미 구한 Title을 재사용
+            result.Sort((a, b) => a.room_id.CompareTo(b.room_id));
+            for(int i = 0; i < result.Count; i++) {
+                if(i != 0 && result[i-1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
+                else {
+                    query =
+                        "SELECT title " +
+                        "FROM classroom " +
+                        "WHERE room_id = @room_id;";
+                    parameters = new DynamicParameters();
+                    parameters.Add("room_id", result[i].room_id);
+                    result[i].title = connection.QuerySingle<string>(query, parameters);
+                }
             }
             return result;
         }
@@ -268,6 +313,21 @@ namespace ClassHub.Server.Controllers {
                     transaction.Rollback();
                 }
             }
+        }
+
+        // 실제 요청 url 예시 : 'api/classroom/notification/read?room_id=1&student_id=60182147&notification_id=1'
+        [HttpPut("notification/read")]
+        public void ReadStudentNotification([FromQuery] int room_id, [FromQuery] int student_id, [FromQuery] int notification_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query =
+                $"UPDATE studentnotification " +
+                $"SET is_read = true " +
+                $"WHERE room_id = @room_id AND student_id = @student_id AND notification_id = @notification_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("student_id", student_id);
+            parameters.Add("notification_id", notification_id);
+            connection.Execute(query, parameters);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿@using Blazored.Modal
 @using Blazored.Modal.Services
 @using ClassHub.Shared
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 
 <style>
@@ -18,42 +19,48 @@
     }
 </style>
 
-<div class="container">
-    <ul class="list-group">
-        @foreach(var notification in notifications) {
-            <li class="list-group-item" @onclick="@(() => GoTo(notification.uri))">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h5 class="mb-1">캡스톤디자인</h5>
-                        <p class="mb-1">@notification.message</p>
-                        <small>@notification.notify_date</small>
+@if(notifications == null) {
+    <LoadingBar />
+} else if(notifications.Count == 0) {
+    <div class="alert alert-info mt-3" role="alert">알림이 없습니다.</div>
+} else {
+    <div class="container">
+        <ul class="list-group">
+            @foreach(var notification in notifications) {
+                <li class="list-group-item" @onclick="@(() => GoTo(notification))">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">@notification.title</h5>
+                            <p class="mb-1">@notification.message</p>
+                            <small>@notification.notify_date</small>
+                        </div>
+                        <div>
+                            @if (notification.is_read)
+                            {
+                                <span class="badge badge-pill badge-read">읽음</span>
+                            } else {
+                                <span class="badge badge-pill badge-unread">안읽음</span>
+                            }
+                        </div>
                     </div>
-                    <div>
-                        @if(Random.Shared.Next(2) % 2 == 0) {
-                            <span class="badge badge-pill badge-read">읽음</span>
-                        } else {
-                            <span class="badge badge-pill badge-unread">안읽음</span>
-                        }
-                    </div>
-                </div>
-            </li>
-        }
-    </ul>
-</div>
+                </li>
+            }
+        </ul>
+    </div>
+}
 
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public int StudentId { get; set; }
 
-    private List<ClassRoomNotification> notifications = new List<ClassRoomNotification>();
+    private List<DisplayStudentNotification>? notifications { get; set; }
 
-    protected override void OnInitialized() {
-        notifications.Add(new ClassRoomNotification { message = "공지사항1이 등록되었습니다.", uri = "classroom/1/notice/11", notify_date = DateTime.Now });
-        notifications.Add(new ClassRoomNotification { message = "공지사항2이 등록되었습니다.", uri = "classroom/1/notice/11", notify_date = DateTime.Now });
-        notifications.Add(new ClassRoomNotification { message = "공지사항3이 등록되었습니다.", uri = "classroom/1/notice/11", notify_date = DateTime.Now });
-        notifications.Add(new ClassRoomNotification { message = "공지사항4이 등록되었습니다.", uri = "classroom/1/notice/11", notify_date = DateTime.Now });
+    protected override async Task OnInitializedAsync() {
+        notifications = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all/{StudentId}");
     }
 
-    private void GoTo(string uri) {
-        NavigationManager.NavigateTo(uri);
+    private async void GoTo(DisplayStudentNotification notification) {
+        await Http.PutAsJsonAsync($"api/classroom/notification/read?room_id={notification.room_id}&student_id={notification.student_id}&notification_id={notification.notification_id}", new { });
+        NavigationManager.NavigateTo(notification.uri);
     }
 }
