@@ -70,7 +70,9 @@
         </div>
         <div class="col-md-4" style="height: 100%; width: 55%;">
             <MonacoEditor @ref="MonacoEditorReference" />
-            <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+            @if (role == "student"){
+                <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+            }
             <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
         </div>
     </div>
@@ -87,20 +89,20 @@
     public int RoomId { get; set; }
     [Parameter]
     public int PracticeId { get; set; }
-
+    private string role;
     private Practice practice = new Practice();
 
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
 
-
+    // 초기화 할때 실습 데이터를 받아온다.
     protected override async Task OnInitializedAsync(){
-        // 실습 데이터를 받아온다.
+        role = await UserInfo.GetRoleAsync(JSRuntime);
         practice = await Http.GetFromJsonAsync<Practice>($"api/practice/room_id/{RoomId}/practice_id/{PracticeId}");
-
         StateHasChanged();
     }
 
+    
     private async Task CheckSubmitHistory(){
         Console.WriteLine($"{practice.Id}번 과제의 제출내역을 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + "/submitresult");
@@ -109,15 +111,15 @@
     // 채점 서버로 요청을 보냄
     private async Task SubmitCode()
     {
-
         //모나코에디터로부터 현재 설정된 언어를 가져오기 위한 코드
         var model = await MonacoEditorReference.editor.GetModel();
         var language = await model.GetLanguageId();
 
-
+        // 제출 언어와 다르면 제출을 할 수 없게 처리
         if (language != practice.Language) {
             await JSRuntime.InvokeVoidAsync("alert", "제출 언어와 다릅니다."); return;
         }
+
         // 채점 요청을 전송하기 위한 객체 생성
         JudgeRequest requestJudge = new JudgeRequest
             {
@@ -139,23 +141,21 @@
                 submit_date = DateTime.Now,
                 status = JudgeResult.JResult.Pending.ToString(),
                 submit_id = 1,
-                student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID")),
+                student_id = await UserInfo.GetUserIdAsync(JSRuntime),
                 exec_time = 0,
                 mem_usage = 0,
                 code = await MonacoEditorReference.editor.GetValue(),
                 message = " ",
                 language = language
             };
-        
+
         //하나로 묶어준다.
         Tuple<JudgeRequest, CodeSubmit> requestTuple = new Tuple<JudgeRequest, CodeSubmit>(requestJudge,requestSubmit);
         // 직렬화
         var content = new StringContent(JsonSerializer.Serialize(requestTuple), Encoding.UTF8, "application/json");
-
         // 제출 내역 창으로 이동한다.
         CheckSubmitHistory();
-
-        // 중아서버로 채점 정보를 전송
+        // 서버에 채점을 요청한다.
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
 
     }

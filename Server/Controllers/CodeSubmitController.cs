@@ -16,7 +16,7 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        // 채점요청이 오면 일단 실습 db를 insert한다.
+        // 초기의 실습 db를 insert한다.
         [HttpPost("insert")]
         public int InsertSubmit([FromBody] CodeSubmit codeSubmit)
         {
@@ -42,8 +42,8 @@ namespace ClassHub.Server.Controllers {
             return submitId;
         }
 
-        //해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
-        [HttpGet("room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
+        // 학생이 해당 강의실의 실습번호, 학생 번호에 해당하는 제출리스트들을 불러온다.
+        [HttpGet("student/room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
         public List<CodeSubmit> GetSubmit(int room_id, int practice_id, int student_id){
             using var connection = new NpgsqlConnection(connectionString);
             string query;
@@ -59,7 +59,23 @@ namespace ClassHub.Server.Controllers {
             return submitList;
         }
 
-        // 채점 결과로 업데이트한다.
+        // 교수가 해당 강의실의 실습번호에 해당하는 제출리스트들을 불러온다.
+        [HttpGet("professor/room_id/{room_id}/practice_id/{practice_id}")]
+        public List<CodeSubmit> GetSubmit(int room_id, int practice_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query;
+
+            query = "SELECT * FROM codesubmit WHERE room_id = @room_id AND assignment_id = @practice_id;";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("practice_id", practice_id);
+            List<CodeSubmit> submitList = connection.Query<CodeSubmit>(query, parameters).ToList();
+
+            return submitList;
+        }
+
+        // 채점 결과를 업데이트한다.
         [HttpPut("update")]
         public void UpdateSubmit([FromBody] Tuple<JudgeResult, int> result){
             var judgeData = result.Item1;
@@ -69,7 +85,6 @@ namespace ClassHub.Server.Controllers {
 
             string query;
 
-            //채점 결과를 업데이트 합니다.
             query = "UPDATE codesubmit SET  status = @status,  exec_time = exec_time, mem_usage = @mem_usage WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
             parameters.Add("status", judgeData.Result.ToString());
@@ -78,6 +93,22 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("submit_id", submit_id);
             connection.Execute(query,parameters);
         }
+
+        // 채점 결과를 실패로 처리한다.
+        [HttpPut("fail")]
+        public void JudgeFail([FromBody]int submit_id) {    
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query;
+
+            query = "UPDATE codesubmit SET status = @status WHERE submit_id = @submit_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("status", JudgeResult.JResult.JudgementFailed.ToString());
+            parameters.Add("submit_id", submit_id);
+           
+            connection.Execute(query, parameters);
+        }
+
     }
 
     //코드 제출 내역을 위한 Hub
@@ -96,7 +127,6 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
             isDatabaseWatcherRunning[connectionId] = true;
             while (isDatabaseWatcherRunning[connectionId]) {
-                    Console.WriteLine(connectionId+"와 연결 중 DB");
                     List<CodeSubmit> submitList = connection.Query<CodeSubmit>(query).ToList();
 
                     await Clients.Client(connectionId).SendAsync("ReceiveList", submitList);
@@ -108,7 +138,6 @@ namespace ClassHub.Server.Controllers {
         // 채점서버로부터 진행 현황을 제공받아 제출한 코드의 status를 업데이트한다.
         public async Task PercentageWatcher(double percent, int submit_id){
             string connectionId = Context.ConnectionId;
-            Console.WriteLine(connectionId + "와 연결 중 Percent");
             using var connection = new NpgsqlConnection(connectionString);
             string query = "UPDATE codesubmit SET status = '채점중(' || @percent || ')%' WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();

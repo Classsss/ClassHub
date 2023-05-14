@@ -49,9 +49,16 @@
                 <td class="align-middle text-center @((state == 0) ? "" : (state == 1) ? "bg-plan" : "bg-inProgress" )">
                     @((state == 0) ? "종료" : (state == 1) ? "예정" : "진행 중")
                 </td>
-                <td class="align-middle text-center">
-                    <span class="oi oi-@(submission.IsSubmitted ? "check" : "x")" style="color: @(submission.IsSubmitted ? "#27ae60" : "#e74c3c");"></span>
-                </td>
+                @if (Role == "student") {
+                    <td class="align-middle text-center">
+                        <span class="oi oi-@(submission.IsSubmitted ? "check" : "x")" style="color: @(submission.IsSubmitted ? "#27ae60" : "#e74c3c");"></span>
+                    </td>
+                } else {
+                    <td class="align-middle text-center">
+                        <span>제출 인원 : @submission.TotalSubmitters</span>
+                    </td>
+                }
+               
                 <td class="align-middle text-start">
                     시작 : @submission.StartDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US"))<br />
                     종료 : @submission.EndDate.ToString("yyyy.MM.dd tt hh:mm", new System.Globalization.CultureInfo("en-US"))
@@ -76,8 +83,10 @@
     [Parameter]
     public string Title { get; set; }
     [Parameter]
+    public string Role { get; set; }
+    [Parameter]
     public List<Submission> Submissions { get; set; }
-
+    
     protected override void OnParametersSet(){
         Submissions = Submissions.OrderByDescending(a => a.Id).ToList();
     }
