@@ -3,6 +3,8 @@
 @inject AuthenticationService AuthService
 @inject NavigationManager NavigationManager
 @inject SSOAuthenticationStateProvider authProvider
+@inject NavMenuTitleService NavMenuTitleService
+
 
 <div class="page">
     @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri) {
@@ -11,7 +13,14 @@
         </div>
     }
     <main>
+        
         <div class="top-row px-4">
+            @if (NavigationManager.Uri != NavigationManager.BaseUri)
+            {
+                <div style="float : left; text-align: left; margin-right : auto;">
+                    <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToMainPage">@NavMenuTitleService.Title </span>
+                </div>
+            }
             <a class="oi oi-envelope-closed" aria-hidden="true"></a>
             <a class="oi oi-bell" aria-hidden="true"></a>
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
@@ -39,5 +48,11 @@
             await JSRuntime.InvokeVoidAsync("updateEditorContainerWidth");
             await JSRuntime.InvokeVoidAsync("addResizeEventListener");
         }
+    }
+
+    private void GoToMainPage() {
+        string uri = NavigationManager.Uri;
+        int start = uri.IndexOf("classroom");
+        NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);
     }
 }

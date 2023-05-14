@@ -51,44 +51,68 @@
     /// 1 - 강의자료 수정, 2 - 공지사항 수정, 3 - 강의자료 게시, 4 - 공지사항 게시
     /// </summary>
     private int type = 0;
-    private BoardContent targetBoardContent;
+    private BoardContent? targetBoardContent;
     private string title;
     private string contents;
 
     public List<int> selectedWeek = new List<int>() { 1, };
+    private List<BoardContent> loadedContents = new List<BoardContent>();
 
-    private List<LectureMaterialContent> lec_mat = new List<LectureMaterialContent> {
-        new LectureMaterialContent {content_id = 1, week = 1, title = "강의자료1", contents = "이것은 내용 1" , author = "조민경", publish_date = new DateTime(2023, 03, 03, 09, 02, 0), view_count = 54 },
-        new LectureMaterialContent {content_id = 2, week = 2, title = "강의자료2", contents = "이것은 내용 2" , author = "조민경", publish_date = new DateTime(2023, 03, 05, 09, 02, 0), view_count = 31 },
-        new LectureMaterialContent {content_id = 3, week = 3, title = "강의자료3", contents = "이것은 내용 3" , author = "조민경", publish_date = new DateTime(2023, 03, 10, 09, 02, 0), view_count = 43 },
-        new LectureMaterialContent {content_id = 4, week = 3, title = "강의자료4", contents = "이것은 내용 4" , author = "조민경", publish_date = new DateTime(2023, 03, 12, 09, 02, 0), view_count = 81 },
-        new LectureMaterialContent {content_id = 5, week = 4, title = "강의자료5", contents = "이것은 내용 5" , author = "조민경", publish_date = new DateTime(2023, 03, 17, 09, 02, 0), view_count = 17 },
-    };
-
-    protected override void OnParametersSet() // OninitializedAsync()를 대체함
+    protected override async Task OnParametersSetAsync() // OninitializedAsync()를 대체함
     {
         string uri = NavigationManager.Uri;
         if (new Regex("/classroom/[0-9]+/lecturematerial/[0-9]+/edit").IsMatch(uri)) {
             Console.WriteLine("강의자료 수정");
             type = 1;
-            // TODO: 수정 해야 하는 강의자료의 정보를 불러옵니다
-
-            // 우선 임시로 함
-            targetBoardContent = lec_mat[ContentId - 1];
-            title = targetBoardContent.title;
-            contents = targetBoardContent.contents;
+            // 수정 해야 하는 강의자료의 정보를 불러옵니다
+            var result = await Http.GetFromJsonAsync<List<LectureMaterial>>($"api/classroom/{RoomId}/lecturematerial/all");
+            if(result != null) {
+                foreach(var item in result) {
+                    loadedContents.Add(new LectureMaterialContent {
+                        room_id = item.room_id,
+                        content_id = item.material_id,
+                        week = item.week,
+                        title = item.title,
+                        author = item.author,
+                        contents = item.contents,
+                        publish_date = item.publish_date,
+                        up_date = item.up_date,
+                        view_count = item.view_count
+                    });
+                }
+            }
+            targetBoardContent = loadedContents.Where(x => x.content_id == ContentId).FirstOrDefault();
+            if(targetBoardContent != null) {
+                title = targetBoardContent.title;
+                contents = targetBoardContent.contents;
+            }
         } else if (new Regex("/classroom/[0-9]+/lecturematerial/edit").IsMatch(uri)) {
             Console.WriteLine("강의자료 게시");
             type = 2;
         } else if (new Regex("/classroom/[0-9]+/notice/[0-9]+/edit").IsMatch(uri)) {
             Console.WriteLine("공지사항 수정");
             type = 3;
-            // TODO: 수정 해야 하는 공지사항의 정보를 불러옵니다
-
-            // 우선 임시로 함
-            targetBoardContent = lec_mat[ContentId - 1];
-            title = targetBoardContent.title;
-            contents = targetBoardContent.contents;
+            // 수정 해야 하는 공지사항의 정보를 불러옵니다
+            var result = await Http.GetFromJsonAsync<List<Notice>>($"api/classroom/{RoomId}/notice/all");
+            if(result != null) {
+                foreach(var item in result) {
+                    loadedContents.Add(new NoticeContent {
+                            room_id = item.room_id,
+                            content_id = item.notice_id,
+                            title = item.title,
+                            author = item.author,
+                            contents = item.contents,
+                            publish_date = item.publish_date,
+                            up_date = item.up_date,
+                            view_count = item.view_count
+                        });
+                }
+            }
+            targetBoardContent = loadedContents.Where(x => x.content_id == ContentId).FirstOrDefault();
+            if(targetBoardContent != null) {
+                title = targetBoardContent.title;
+                contents = targetBoardContent.contents;
+            }
         } else if (new Regex("/classroom/[0-9]+/notice/edit").IsMatch(uri)) {
             type = 4;
             Console.WriteLine("공지사항 게시");
