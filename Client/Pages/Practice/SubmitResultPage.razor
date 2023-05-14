@@ -125,6 +125,8 @@
     [Parameter]
     public EventCallback<string> OnSortOptionChanged { get; set; }
 
+      private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
+
     private List<CodeSubmit> submitList = new List<CodeSubmit>();
     private string role;
     private int student_id;
@@ -182,7 +184,7 @@
             await base.OnAfterRenderAsync(firstRender);
 
             connection = new HubConnectionBuilder()
-             .WithUrl("https://localhost:7182/realtimesubmithub")
+             .WithUrl(CLASSHUB_CODESUBMIT_REALTIME)
              .Build();
 
             await connection.StartAsync();
