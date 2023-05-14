@@ -65,6 +65,62 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
+        // Param으로 받은 학번을 가진 학생에게 온 모든 알림을 불러옴 (모든 수강 강의)
+        // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
+        [HttpGet("notification/all")]
+        public async Task<IActionResult> GetStudentNotificationsAsync([FromQuery] int student_id, [FromQuery] string accessToken) {
+            if (!await AuthService.isValidToken(student_id, accessToken)) {
+                return Unauthorized("Invalid token");
+            }
+
+            _logger.LogInformation($"GetStudentNotifications?student_id={student_id}");
+            using var connection = new NpgsqlConnection(connectionString);
+            var query =
+                "SELECT * " +
+                "FROM studentnotification " +
+                "WHERE student_id = @student_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+            var studentNotifications = connection.Query<StudentNotification>(query, parameters);
+
+            List<DisplayStudentNotification> result = new List<DisplayStudentNotification>();
+
+            foreach(var item in studentNotifications) {
+                query =
+                    "SELECT * " +
+                    "FROM classroomnotification " +
+                    "WHERE notification_id = @notification_id;";
+                parameters = new DynamicParameters();
+                parameters.Add("notification_id", item.notification_id);
+                var roomNotification = connection.QuerySingle<ClassRoomNotification>(query, parameters);
+                result.Add(new DisplayStudentNotification {
+                    room_id = item.room_id,
+                    student_id = item.student_id,
+                    notification_id = item.notification_id,
+                    message = roomNotification.message,
+                    uri = roomNotification.uri,
+                    notify_date = roomNotification.notify_date,
+                    is_read = item.is_read
+                });
+            }
+
+            // DB 중복 참조를 막기 위해 강의실번호 순으로 나열 뒤 이미 구한 Title을 재사용
+            result.Sort((a, b) => a.room_id.CompareTo(b.room_id));
+            for(int i = 0; i < result.Count; i++) {
+                if(i != 0 && result[i - 1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
+                else {
+                    query =
+                        "SELECT title " +
+                        "FROM classroom " +
+                        "WHERE room_id = @room_id;";
+                    parameters = new DynamicParameters();
+                    parameters.Add("room_id", result[i].room_id);
+                    result[i].title = connection.QuerySingle<string>(query, parameters);
+                }
+            }
+            return Ok(result);
+        }
+
         // 수정 된 LectureMaterial 객체를 DB에 UPDATE 합니다.
         // 실제 요청 url 예시 : 'api/classroom/modify/lecturematerial'
         [HttpPut("modify/lecturematerial")]
@@ -245,7 +301,7 @@ namespace ClassHub.Server.Controllers {
             // DB 중복 참조를 막기 위해 강의실번호 순으로 나열 뒤 이미 구한 Title을 재사용
             result.Sort((a, b) => a.room_id.CompareTo(b.room_id));
             for(int i = 0; i < result.Count; i++) {
-                if(i != 0 && result[i-1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
+                if(i != 0 && result[i - 1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
                 else {
                     query =
                         "SELECT title " +
