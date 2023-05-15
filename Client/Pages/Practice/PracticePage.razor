@@ -138,7 +138,7 @@
                 room_id = RoomId,
                 assignment_id = PracticeId,
                 week = 1,
-                submit_date = DateTime.Now,
+                submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
                 status = JudgeResult.JResult.Pending.ToString(),
                 submit_id = 1,
                 student_id = await UserInfo.GetUserIdAsync(JSRuntime),
