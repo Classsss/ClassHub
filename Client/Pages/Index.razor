@@ -15,18 +15,6 @@
 @using System.Text;
 @using System.Text.Json
 
-<!--Role 테스트용 AuthView-->
-<AuthorizeView Roles="student">
-    <Authorized>
-        <h1>어서와 학생</h1>
-    </Authorized>
-</AuthorizeView>
-<AuthorizeView Roles="professor">
-    <Authorized>
-        <h1>교수님 어서오세요</h1>
-    </Authorized>
-</AuthorizeView>
-
 @if (Sections == null)
 {
     <div class="d-flex justify-content-center mt-5">
@@ -72,7 +60,6 @@ else
         </div>
     </div>
 }
-
 
 @code {
     private List<Section>? Sections;
