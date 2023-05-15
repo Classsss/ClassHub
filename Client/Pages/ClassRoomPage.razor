@@ -5,6 +5,12 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
+<style>
+    li.list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+</style>
+
 @if(classRoom == null) {
     <p><em>강의실 정보를 로딩 중입니다...</em></p>
 } else {

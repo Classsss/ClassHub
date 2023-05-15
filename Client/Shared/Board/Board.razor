@@ -41,14 +41,14 @@
     <tbody>
         @foreach (var content in pagedContents)
         {
-            <tr class="notice-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
+            <tr class="board-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
                 <td style="text-indent : 7px;">@content.content_id</td>
                 @if (Title == "강의자료")
                 {
                     var lectureMaterial = content as LectureMaterialContent;
                     <td style="text-indent : 7px;">@lectureMaterial.week</td>
                 }
-                <td class="notice-title">@content.title</td>
+                <td class="board-title">@content.title</td>
                 <td>@content.author</td>
                 <td>@content.publish_date.ToString("yyyy.MM.dd")</td>
                 <td style="text-indent : 7px;">@content.view_count</td>
