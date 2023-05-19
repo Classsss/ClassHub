@@ -12,21 +12,7 @@ namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
     public class BlobController : ControllerBase {
-        // GET: api/<BlobController>
-        [HttpGet]
-        public IEnumerable<string> Get() {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<BlobController>/5
-        [HttpGet("{id}")]
-        public string Get(int id) {
-            return "value";
-        }
-
-        // POST api/<BlobController>
-        [HttpPost]
-        public async void Post() {
+        public async void BlobSampleCode() {
             await Console.Out.WriteLineAsync("Load Secret Key...");
             string keyVaultUrl = "https://azureblobsecret.vault.azure.net/";
             var secretClient = new SecretClient(vaultUri: new Uri(keyVaultUrl), credential: new DefaultAzureCredential());
@@ -121,16 +107,6 @@ namespace ClassHub.Server.Controllers {
             await Console.Out.WriteLineAsync($"\tResponse Status: {response.Status}\n");
 
             await Console.Out.WriteLineAsync("Done");
-        }
-
-        // PUT api/<BlobController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value) {
-        }
-
-        // DELETE api/<BlobController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id) {
         }
     }
 }
