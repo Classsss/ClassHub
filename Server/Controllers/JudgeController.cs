@@ -17,7 +17,7 @@ namespace ClassHub.Server.Controllers
             private const string CLASSHUB_CODESUBMIT_INSERT = "https://classhub.azurewebsites.net/api/CodeSubmit/insert";
             private const string CLASSHUB_CODESUBMIT_UPDATE = "https://classhub.azurewebsites.net/api/CodeSubmit/update";
             private const string CLASSHUB_CODESUBMIT_FAIL = "https://classhub.azurewebsites.net/api/CodeSubmit/fail";
-            private const string JUDGESERVER_ADDRESS = "http://20.196.210.96:5000/Judge";
+            private const string JUDGESERVER_ADDRESS = "http://20.214.137.25:5000/Judge";
        
             [HttpPost]
             public async Task<IActionResult> Post([FromBody] RequestSubmitContainer request){
