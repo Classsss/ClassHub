@@ -12,6 +12,7 @@
 @using System.Text.RegularExpressions;
 @using System.Text.Json;
 @using System.Text;
+@using System.Net.Http.Headers;
 
 @if(type == 0) {
     
@@ -89,7 +90,7 @@
 
 
     if(type == 1 || type == 2) {
-        <DragDropUpload />        
+        <DragDropUpload @bind-droppedFiles="fileList" />
     }
 
     <br />
@@ -116,8 +117,11 @@
     //기본 설정은 WriteTab
     private bool isWriteTabSelected = true;
 
-    public List<int> selectedWeek = new List<int>() { 1, };
     private List<BoardContent> loadedContents = new List<BoardContent>();
+
+    // LectureMaterial Content에 필요한 변수
+    public List<int> selectedWeek = new List<int>() { 1, };
+    private List<IBrowserFile> fileList = new List<IBrowserFile>();
 
     protected override async Task OnParametersSetAsync() // OninitializedAsync()를 대체함
     {
@@ -252,9 +256,33 @@
             });
             requestUri = "/api/classroom/register/notice";
         }
+
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         if(type == 1 || type == 3) await Http.PutAsync(requestUri, httpContent);
-        else await Http.PostAsync(requestUri, httpContent);
+        else {
+            var response = await Http.PostAsync(requestUri, httpContent);
+            if (!response.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
+            else {
+                if(type == 2) {
+                    string json = await response.Content.ReadAsStringAsync();
+                    ContentId = JsonSerializer.Deserialize<int>(json);
+                }
+            }
+        }
+
+        // 강의자료 게시 또는 수정일 경우 첨부 파일을 먼저 서버에 업로드 합니다.
+        if(type == 1 || type == 2) {
+            var content = new MultipartFormDataContent();
+
+            foreach(var file in fileList) {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream().ReadAsync(buffer);
+                content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{ContentId}/{file.Name}");
+            }
+
+            var response = await Http.PostAsync($"api/classroom/{RoomId}/upload/lecturematerial/{ContentId}", content);
+            if(!response.IsSuccessStatusCode) Console.WriteLine($"Error uploading file: {response.StatusCode}");
+        }
 
         // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
