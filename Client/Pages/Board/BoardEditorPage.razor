@@ -89,7 +89,7 @@
 
 
     if(type == 1 || type == 2) {
-        <DragDropUpload />        
+        <DragDropUpload @bind-droppedFiles="fileList" />
     }
 
     <br />
@@ -116,8 +116,11 @@
     //기본 설정은 WriteTab
     private bool isWriteTabSelected = true;
 
-    public List<int> selectedWeek = new List<int>() { 1, };
     private List<BoardContent> loadedContents = new List<BoardContent>();
+
+    // LectureMaterial Content에 필요한 변수
+    public List<int> selectedWeek = new List<int>() { 1, };
+    private List<IBrowserFile> fileList = new List<IBrowserFile>();
 
     protected override async Task OnParametersSetAsync() // OninitializedAsync()를 대체함
     {
