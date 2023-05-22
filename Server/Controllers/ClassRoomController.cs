@@ -1,8 +1,9 @@
-﻿using ClassHub.Shared;
+﻿using Azure.Identity;
+using Azure.Storage.Blobs;
+using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
-using System.Transactions;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -13,6 +14,8 @@ namespace ClassHub.Server.Controllers {
         const string passwd = "Mju12345!#";
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
+
+        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
 
 		private readonly ILogger<ClassRoomController> _logger;
 
@@ -140,10 +143,10 @@ namespace ClassHub.Server.Controllers {
             });
         }
 
-        // LectureMaterial 객체를 DB에 INSERT 합니다.
+        // LectureMaterial 객체를 DB에 INSERT 합니다. material_id 값이 함께 반환됩니다.
         // 실제 요청 url 예시 : 'api/classroom/register/lecturematerial'
         [HttpPost("register/lecturematerial")]
-        public void PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
+        public ActionResult PostLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
             using var connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
@@ -166,7 +169,7 @@ namespace ClassHub.Server.Controllers {
                     _logger.LogError("강의자료 게시 중 문제가 발생하여 RollBack 합니다.");
                     _logger.LogError($"msg :\n{ex.Message}");
                     transaction.Rollback();
-                    return;
+                    return BadRequest();
                 }
             }
 
@@ -176,6 +179,37 @@ namespace ClassHub.Server.Controllers {
                 uri = $"classroom/{lectureMaterial.room_id}/lecturematerial/{lectureMaterial.material_id}",
                 notify_date = DateTime.Now
             });
+
+            return new ObjectResult(lectureMaterial.material_id);
+        }
+
+        // 강의자료 첨부파일들을 Blob Storage에 업로드 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/upload/lecturematerial'
+        [HttpPost("{room_id}/upload/lecturematerial/{material_id}")]
+        public async Task<IActionResult> UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
+            var blobServiceClient = new BlobServiceClient(
+                new Uri(blobStorageUri),
+                new DefaultAzureCredential()
+            );
+
+            // 컨테이너 객체를 받음
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
+
+            await Console.Out.WriteLineAsync($"files count: {files.Count}");
+            foreach(var file in files) {
+                using(var memoryStream = new MemoryStream()) {
+                    await file.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0;
+
+                    var blobClient = containerClient.GetBlobClient(file.FileName);
+                    await Console.Out.WriteLineAsync($"Blob Name: {blobClient.Name}");
+                    var response = await blobClient.UploadAsync(memoryStream, overwrite: true);
+                    await Console.Out.WriteLineAsync(response.ToString());
+                }
+            }
+
+            await Console.Out.WriteLineAsync("Blob Upload Success!");
+            return Ok();
         }
 
         // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
