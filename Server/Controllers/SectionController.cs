@@ -22,8 +22,7 @@ namespace ClassHub.Server.Controllers {
                 Console.WriteLine("¼º°ø");
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://academicinfo.azurewebsites.net/");
-                //client.BaseAddress = new Uri("https://localhost:7239/");
-                var request = new HttpRequestMessage(HttpMethod.Post, "Section");
+                var request = new HttpRequestMessage(HttpMethod.Post, $"Section?student_id={userId}");
                 var response = await client.SendAsync(request);
                 var content = await response.Content.ReadAsStringAsync();
 
