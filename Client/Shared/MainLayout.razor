@@ -28,12 +28,12 @@
             <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
             <AuthorizeView Roles="student">
                 <Authorized>
-                    <a>학생</a>
+                    <a>@(userName) 학생</a>
                 </Authorized>
             </AuthorizeView>
             <AuthorizeView Roles="professor">
                 <Authorized>
-                    <a>교수</a>
+                    <a>@(userName) 교수</a>
                 </Authorized>
             </AuthorizeView>
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
@@ -47,6 +47,8 @@
 @code {
     [Parameter]
     public bool IncludeSideBar { get; set; } = true;
+
+    public string userName;
 
     private async void Logout()
     {
@@ -74,6 +76,9 @@
     protected override async Task OnParametersSetAsync() {
         base.OnParametersSet();
         string uri = NavigationManager.Uri;
+
+        userName = await UserInfo.GetUserNameAsync(JSRuntime);
+
         if(new Regex("/classroom/[0-9]+").IsMatch(uri)) {
             int start = uri.IndexOf("classroom");
             ClassRoom? classRoom = await Http.GetFromJsonAsync<ClassRoom>($"api/classroom/{uri.Substring(start).Split('/')[1]}");
