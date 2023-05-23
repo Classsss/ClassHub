@@ -24,6 +24,10 @@
                     <span style="font-weight: bold; font-size :20px; cursor : pointer;" @onclick="GoToRoomPage">@NavMenuTitleService.Title </span>
                 </div>
             }
+            <div style="float : left; text-align: center; margin-right : 10px;">
+                <p class="fw-bold" style="margin: auto; color:#0071C1">로그인 남은 시간</p>
+                <p style="margin: auto;">@TimeLeft</p>
+            </div>
             <a class="oi oi-envelope-closed" aria-hidden="true"></a>
             <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
             <AuthorizeView Roles="student">
@@ -49,6 +53,7 @@
     public bool IncludeSideBar { get; set; } = true;
 
     public string userName;
+    public string TimeLeft { get; set; } = "10:00";
 
     private async void Logout()
     {
@@ -70,6 +75,8 @@
             // Monaco Editor가 있으면 크기를 알맞게 조절하는 함수 호출
             await JSRuntime.InvokeVoidAsync("updateEditorContainerWidth");
             await JSRuntime.InvokeVoidAsync("addResizeEventListener");
+
+            await UpdateTimeLeft();
         }
     }
 
@@ -87,11 +94,28 @@
         } else {
             NavMenuTitleService.Title = "";
         }
+
+        await UpdateTimeLeft();
     }
 
     private void GoToRoomPage() {
         string uri = NavigationManager.Uri;
         int start = uri.IndexOf("classroom");
         NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);
+    }
+
+    private async Task UpdateTimeLeft() {
+        var endTime = await JSRuntime.InvokeAsync<DateTime>("sessionStorage.getItem", "tokenExpireTime");
+
+        while (DateTime.Now < endTime) {
+            var timeRemaining = endTime - DateTime.Now;
+            TimeLeft = $"{timeRemaining:mm\\:ss}"; // 시간을 mm:ss 형식으로 변환
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(1000); // 1초마다 업데이트
+        }
+
+        // 시간이 만료된 경우
+        TimeLeft = "00:00"; 
+        await InvokeAsync(StateHasChanged);
     }
 }
