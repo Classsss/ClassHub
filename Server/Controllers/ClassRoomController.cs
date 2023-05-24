@@ -38,6 +38,58 @@ namespace ClassHub.Server.Controllers {
             return result;
         }
 
+        // 학생이 수강 중인 강의의 강의실 리스트를 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/takes'
+        [HttpGet("takes")]
+        public async Task<IActionResult> GetClassRoomList([FromQuery] int student_id, [FromQuery] string accessToken) {
+            _logger.LogInformation($"GetClassRoomList?student_id={student_id}");
+            // TODO: 년도, 학기별 구분이 필요함
+            // 학생이 수강 중인 모든 강의실의 room_id를 불러온다
+            using var connection = new NpgsqlConnection(connectionString);
+            var query =
+                "SELECT room_id " +
+                "FROM student " +
+                "WHERE student_id = @student_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+            var roomIdList = connection.Query<int>(query, parameters);
+
+            // 각 room_id에 대해 강의실 정보를 불러온다
+            List<ClassRoom> classRoomList = new List<ClassRoom>();
+            foreach(var roomId in roomIdList) {
+                query =
+                    "SELECT * " +
+                    "FROM classroom " +
+                    "WHERE room_id = @room_id;";
+                parameters = new DynamicParameters();
+                parameters.Add("room_id", roomId);
+                var classRoom = connection.QuerySingle<ClassRoom>(query, parameters);
+                classRoomList.Add(classRoom);
+            }
+
+            // 학사정보DB로부터 시간표 정보를 가져온다
+            List<ClassRoomDetail> classRoomDetailList = new List<ClassRoomDetail>();
+            foreach(var classRoom in classRoomList) {
+                var academicClient = new HttpClient{
+                    BaseAddress = new Uri("https://academicinfo.azurewebsites.net/")
+                };
+                try {
+                    var classRoomDetail = await academicClient.GetFromJsonAsync<ClassRoomDetail>(
+                    $"ClassRoomDetail?" +
+                    $"course_id={classRoom.course_id}" +
+                    $"&section_id={classRoom.section_id}" +
+                    $"&semester={classRoom.semester}" +
+                    $"&year={classRoom.year}" +
+                    $"&accessToken={accessToken}");
+                    classRoomDetailList.Add(classRoomDetail);
+                } catch(Exception ex) {
+                    _logger.LogError($"학사정보DB에서 강의실 세부정보를 불러오는데 실패");
+                }
+            }
+
+            return Ok(classRoomDetailList);
+        }
+
         // Param으로 받은 ID를 가진 강의실의 모든 강의자료를 불러옴
         // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all'
         [HttpGet("{room_id}/lecturematerial/all")]
