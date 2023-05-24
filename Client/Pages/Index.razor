@@ -89,22 +89,18 @@ else
 
             //앱 서버로 수강과목 출력을 요청
             try {
-                classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
-                // 색상 부여
-                if (classRoomList != null) {
-                    Console.WriteLine("강좌 출력");
-                    foreach(var crl in classRoomList) {
-                        foreach(var slot in crl.timeSlots) {
-                            Console.WriteLine(slot.day_of_week);
-                        }
-                    }
+                string role = await UserInfo.GetRoleAsync(JSRuntime);
+                Console.WriteLine($"role: {role}");
+                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches?instructor_id={id}&accessToken={accessToken}");
+                else classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
 
-                    int colorIndex = 0;
-                    for (int i = 0; i < classRoomList.Count; i++) {
-                        var classRoom = classRoomList[i];
-                        if (classRoom.color == -1) {
-                            classRoom.color = colorIndex++;
-                        }
+                Console.WriteLine($"classRoomListCount: {classRoomList.Count}");
+
+                int colorIndex = 0;
+                for (int i = 0; i < classRoomList.Count; i++) {
+                    var classRoom = classRoomList[i];
+                    if (classRoom.color == -1) {
+                        classRoom.color = colorIndex++;
                     }
                 }
             } catch(Exception e) {
