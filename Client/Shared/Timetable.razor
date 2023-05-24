@@ -17,7 +17,7 @@
     }
 </style>
 
-@if(Sections == null) {
+@if(ClassRoomList == null) {
     <p><em>Loading...</em></p>
 } else {
     <table class="table table-bordered timetable">
@@ -35,23 +35,26 @@
                     <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
                     @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
                         bool flag = true;
-                        @foreach(var course in Sections.Where(c => c.Day == dayOfWeek && c.StartTime <= hour && hour < c.EndTime)) {
-                            if(course.StartTime != hour) {
+                        @foreach(var classRoom in ClassRoomList) {
+                            @foreach(var timeSlot in classRoom.TimeSlots.Where(t => t.day == dayOfWeek && t.start_time <= hour && hour < t.end_time)) {
+                                if(timeSlot.start_time != hour) {
+                                    flag = false;
+                                    break;
+                                }
+
+                                int span = timeSlot.end_time - timeSlot.start_time;
+                                <td rowspan=@span>
+                                    <button class="btn btn-@colors[classRoom.Color] btn-sm w-100 h-100" @onclick="() => RoomSelected(classRoom)">
+                                        @classRoom.title
+                                        <br />
+                                        @classRoom.Instructor
+                                        <br />
+                                        @classRoom.BuildingId
+                                    </button>
+                                </td>
                                 flag = false;
                                 break;
                             }
-                            int span = course.EndTime - course.StartTime;
-                            <td rowspan=@span>
-                                <button class="btn btn-@colors[course.Color] btn-sm w-100 h-100" @onclick="() => CourseSelected(course)">
-                                    @course.Name
-                                    <br />
-                                    @course.Instructor
-                                    <br />
-                                    @course.BuildingId
-                                </button>
-                            </td>
-                            flag = false;
-                            break;
                         }
                         if(flag) {
                             <td />
@@ -65,7 +68,7 @@
 
 @code {
     [Parameter]
-    public List<Section> Sections { get; set; }
+    public List<ClassRoomDetail> ClassRoomList { get; set; }
 
     private string[] colors = { "primary", "secondary", "success", "danger", "warning", "info", "light", "dark" };
 
@@ -73,12 +76,10 @@
     private int StartHour => 9;
     private int EndHour => 19;
 
-    private void CourseSelected(Section section) {
+    private void RoomSelected(ClassRoomDetail classRoom) {
         // 해당 강의를 선택했을 때 수행할 작업을 정의하세요.
-        Console.WriteLine($"Selected course: {section.Name}");
-        //NavigationManager.NavigateTo($"/classroom/{course.Id}");
-        //NavMenuTitleService.Title = $"{section.Name}({section.SectionId.ToString("D4")})";
-        NavigationManager.NavigateTo($"/classroom/1");
+        Console.WriteLine($"Selected course: {classRoom.title}");
+        NavigationManager.NavigateTo($"/classroom/{classRoom.room_id}");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
