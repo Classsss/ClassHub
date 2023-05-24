@@ -1,5 +1,8 @@
 ﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Storage;
 using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +19,7 @@ namespace ClassHub.Server.Controllers {
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
         const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
+        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
         const string academicServerUri = "https://academicinfo.azurewebsites.net/";
 
 		private readonly ILogger<ClassRoomController> _logger;
@@ -328,9 +332,71 @@ namespace ClassHub.Server.Controllers {
             return Ok();
         }
 
-        // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
-        // 실제 요청 url 예시 : 'api/classroom/modify/notice'
-        [HttpPut("modify/notice")]
+		// 강의자료 첨부파일 목록을 불러옵니다.
+		// 실제 요청 url 예시 : 'api/classroom/attachments/lecturematerial'
+		[HttpGet("attachments/lecturematerial")]
+        public List<Attachment> GetLectureMaterialAttachments([FromQuery] int room_id, [FromQuery] int material_id) {
+            var blobServiceClient = new BlobServiceClient(
+                new Uri(blobStorageUri),
+                new DefaultAzureCredential()
+            );
+
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
+            string folderPath = $"{room_id}/{material_id}";
+            List<BlobClient> blobClients = containerClient.GetBlobs(prefix: folderPath)
+                .Select(blobItem => containerClient.GetBlobClient(blobItem.Name))
+                .ToList();
+
+            List<Attachment> attachments = blobClients.Select(blobClient => new Attachment {
+                FileName = Path.GetFileName(blobClient.Name),
+                UpDate = blobClient.GetProperties().Value.LastModified.ToString("yyyy-MM-dd HH:mm:ss"),
+                FileSize = (int)(blobClient.GetProperties().Value.ContentLength / 1024) // KB 단위로 변환
+            }).ToList();
+
+            return attachments;
+        }
+
+        // BlobStorage에 저장된 Blob을 다운로드 하는 Url을 생성합니다.
+        // 실제 요청 url 예시 : 'api/classroom/download'
+        [HttpGet("download")]
+        public string GetAttachmentDownloadUrl ([FromQuery] string container_name, [FromQuery] string blob_name) {
+			var secretClient = new SecretClient(
+                vaultUri: new Uri(vaultStorageUri), 
+                credential: new DefaultAzureCredential()
+            );
+			string secretName = "StorageAccountKey";
+			KeyVaultSecret secret = secretClient.GetSecret(secretName);
+			var storageAccountKey = secret.Value;
+
+			var blobServiceClient = new BlobServiceClient(
+				new Uri(blobStorageUri),
+				new DefaultAzureCredential()
+			);
+
+			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(container_name);
+			BlobClient blobClient = containerClient.GetBlobClient(blob_name);
+
+			BlobSasBuilder sasBuilder = new BlobSasBuilder() {
+				BlobContainerName = containerClient.Name,
+				BlobName = blobClient.Name,
+				Resource = "b",
+				StartsOn = DateTime.UtcNow,
+				ExpiresOn = DateTime.UtcNow.AddHours(1)
+			};
+			sasBuilder.SetPermissions(BlobSasPermissions.Read);
+			string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(containerClient.AccountName, storageAccountKey)).ToString();
+
+			UriBuilder sasUri = new UriBuilder(blobClient.Uri) {
+				Query = sasToken
+			};
+			string downloadUrl = sasUri.ToString();
+
+			return downloadUrl;
+		}
+
+		// 수정 된 Notice 객체를 DB에 UPDATE 합니다.
+		// 실제 요청 url 예시 : 'api/classroom/modify/notice'
+		[HttpPut("modify/notice")]
         public void PutNotice([FromBody] Notice notice) {
             using(var connection = new NpgsqlConnection(connectionString)) {
                 string query =
