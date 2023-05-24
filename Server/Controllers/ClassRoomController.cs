@@ -1,6 +1,8 @@
 ﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +19,7 @@ namespace ClassHub.Server.Controllers {
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
         const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
+        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
 
 		private readonly ILogger<ClassRoomController> _logger;
 
@@ -236,6 +239,44 @@ namespace ClassHub.Server.Controllers {
 
             return attachments;
         }
+
+        // BlobStorage에 저장된 Blob을 다운로드 하는 Url을 생성합니다.
+        // 실제 요청 url 예시 : 'api/classroom/download'
+        [HttpGet("download")]
+        public string GetAttachmentDownloadUrl ([FromQuery] string container_name, [FromQuery] string blob_name) {
+			var secretClient = new SecretClient(
+                vaultUri: new Uri(vaultStorageUri), 
+                credential: new DefaultAzureCredential()
+            );
+			string secretName = "StorageAccountKey";
+			KeyVaultSecret secret = secretClient.GetSecret(secretName);
+			var storageAccountKey = secret.Value;
+
+			var blobServiceClient = new BlobServiceClient(
+				new Uri(blobStorageUri),
+				new DefaultAzureCredential()
+			);
+
+			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(container_name);
+			BlobClient blobClient = containerClient.GetBlobClient(blob_name);
+
+			BlobSasBuilder sasBuilder = new BlobSasBuilder() {
+				BlobContainerName = containerClient.Name,
+				BlobName = blobClient.Name,
+				Resource = "b",
+				StartsOn = DateTime.UtcNow,
+				ExpiresOn = DateTime.UtcNow.AddHours(1)
+			};
+			sasBuilder.SetPermissions(BlobSasPermissions.Read);
+			string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(containerClient.AccountName, storageAccountKey)).ToString();
+
+			UriBuilder sasUri = new UriBuilder(blobClient.Uri) {
+				Query = sasToken
+			};
+			string downloadUrl = sasUri.ToString();
+
+			return downloadUrl;
+		}
 
 		// 수정 된 Notice 객체를 DB에 UPDATE 합니다.
 		// 실제 요청 url 예시 : 'api/classroom/modify/notice'
