@@ -1,4 +1,5 @@
 ﻿using Azure.Identity;
+using Azure.Storage;
 using Azure.Storage.Blobs;
 using ClassHub.Shared;
 using Dapper;
@@ -212,9 +213,33 @@ namespace ClassHub.Server.Controllers {
             return Ok();
         }
 
-        // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
-        // 실제 요청 url 예시 : 'api/classroom/modify/notice'
-        [HttpPut("modify/notice")]
+		// 강의자료 첨부파일 목록을 불러옵니다.
+		// 실제 요청 url 예시 : 'api/classroom/attachments/lecturematerial'
+		[HttpGet("attachments/lecturematerial")]
+        public List<Attachment> GetLectureMaterialAttachments([FromQuery] int room_id, [FromQuery] int material_id) {
+            var blobServiceClient = new BlobServiceClient(
+                new Uri(blobStorageUri),
+                new DefaultAzureCredential()
+            );
+
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
+            string folderPath = $"{room_id}/{material_id}";
+            List<BlobClient> blobClients = containerClient.GetBlobs(prefix: folderPath)
+                .Select(blobItem => containerClient.GetBlobClient(blobItem.Name))
+                .ToList();
+
+            List<Attachment> attachments = blobClients.Select(blobClient => new Attachment {
+                FileName = Path.GetFileName(blobClient.Name),
+                UpDate = blobClient.GetProperties().Value.LastModified.ToString("yyyy-MM-dd HH:mm:ss"),
+                FileSize = (int)(blobClient.GetProperties().Value.ContentLength / 1024) // KB 단위로 변환
+            }).ToList();
+
+            return attachments;
+        }
+
+		// 수정 된 Notice 객체를 DB에 UPDATE 합니다.
+		// 실제 요청 url 예시 : 'api/classroom/modify/notice'
+		[HttpPut("modify/notice")]
         public void PutNotice([FromBody] Notice notice) {
             using(var connection = new NpgsqlConnection(connectionString)) {
                 string query =
