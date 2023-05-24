@@ -92,11 +92,18 @@ else
                 classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
                 // 색상 부여
                 if (classRoomList != null) {
+                    Console.WriteLine("강좌 출력");
+                    foreach(var crl in classRoomList) {
+                        foreach(var slot in crl.timeSlots) {
+                            Console.WriteLine(slot.day_of_week);
+                        }
+                    }
+
                     int colorIndex = 0;
                     for (int i = 0; i < classRoomList.Count; i++) {
                         var classRoom = classRoomList[i];
-                        if (classRoom.Color == -1) {
-                            classRoom.Color = colorIndex++;
+                        if (classRoom.color == -1) {
+                            classRoom.color = colorIndex++;
                         }
                     }
                 }

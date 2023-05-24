@@ -36,7 +36,7 @@
                     @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
                         bool flag = true;
                         @foreach(var classRoom in ClassRoomList) {
-                            @foreach(var timeSlot in classRoom.TimeSlots.Where(t => t.day == dayOfWeek && t.start_time <= hour && hour < t.end_time)) {
+                            @foreach(var timeSlot in classRoom.timeSlots.Where(t => t.day_of_week == dayOfWeek && t.start_time <= hour && hour < t.end_time)) {
                                 if(timeSlot.start_time != hour) {
                                     flag = false;
                                     break;
@@ -44,12 +44,12 @@
 
                                 int span = timeSlot.end_time - timeSlot.start_time;
                                 <td rowspan=@span>
-                                    <button class="btn btn-@colors[classRoom.Color] btn-sm w-100 h-100" @onclick="() => RoomSelected(classRoom)">
+                                    <button class="btn btn-@colors[classRoom.color] btn-sm w-100 h-100" @onclick="() => RoomSelected(classRoom)">
                                         @classRoom.title
                                         <br />
-                                        @classRoom.Instructor
+                                        @classRoom.instructor
                                         <br />
-                                        @classRoom.BuildingId
+                                        @classRoom.buildingId
                                     </button>
                                 </td>
                                 flag = false;

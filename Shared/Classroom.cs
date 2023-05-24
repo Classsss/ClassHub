@@ -9,16 +9,15 @@
     }
 
     public class TimeSlot {
-        public DayOfWeek day { get; set; }
+        public DayOfWeek day_of_week { get; set; }
         public int start_time { get; set; }
         public int end_time { get; set; }
     }
 
     public class ClassRoomDetail : ClassRoom {
-        public List<TimeSlot> TimeSlots { get; set; }
-        public string Instructor { get; set; }
-        public string BuildingId { get; set; }
-
-        public int Color { get; set; } = -1;
+        public List<TimeSlot> timeSlots { get; set; }
+        public string instructor { get; set; }
+        public string buildingId { get; set; }
+        public int color { get; set; } = -1;
     }
 }

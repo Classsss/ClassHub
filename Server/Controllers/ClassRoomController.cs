@@ -74,6 +74,10 @@ namespace ClassHub.Server.Controllers {
                     BaseAddress = new Uri("https://academicinfo.azurewebsites.net/")
                 };
                 try {
+                    Console.WriteLine(classRoom.course_id);
+                    Console.WriteLine(classRoom.section_id);
+                    Console.WriteLine(classRoom.semester);
+                    Console.WriteLine(classRoom.year);
                     var classRoomDetail = await academicClient.GetFromJsonAsync<ClassRoomDetail>(
                     $"ClassRoomDetail?" +
                     $"course_id={classRoom.course_id}" +
@@ -81,9 +85,18 @@ namespace ClassHub.Server.Controllers {
                     $"&semester={classRoom.semester}" +
                     $"&year={classRoom.year}" +
                     $"&accessToken={accessToken}");
+
+                    classRoomDetail.room_id = classRoom.room_id;
+                    classRoomDetail.course_id = classRoom.course_id;
+                    classRoomDetail.section_id = classRoom.section_id;
+                    classRoomDetail.semester = classRoom.semester;
+                    classRoomDetail.year = classRoom.year;
+                    classRoomDetail.title = classRoom.title;
+
                     classRoomDetailList.Add(classRoomDetail);
                 } catch(Exception ex) {
                     _logger.LogError($"학사정보DB에서 강의실 세부정보를 불러오는데 실패");
+                    _logger.LogError(ex.Message);
                 }
             }
 
