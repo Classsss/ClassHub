@@ -1,5 +1,7 @@
+using BlazorMonaco;
 using ClassHub.Shared;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -20,7 +22,7 @@ namespace ClassHub.Server.Controllers
         public async Task<IActionResult> ExchangeToken([FromBody] AccessTokenRequest request)
         {
             var client = new HttpClient();
-            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://classhubsso.azurewebsites.net/token");
+            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7119/token");
 
             var id = request.UserId;
             var authCode = request.AuthorizationCode;
@@ -30,6 +32,15 @@ namespace ClassHub.Server.Controllers
             var content = await response.Content.ReadAsStringAsync();
 
             return Ok(content);
+        }
+
+        [HttpGet("verify")]
+        public async Task<bool> VerifyToken([FromQuery] int id, string accessToken) {
+            var client = new HttpClient();
+            var url = $"https://localhost:7119/api/token/verify?user_id={id}&accessToken={accessToken}";
+            var response = await client.GetAsync(url);
+
+            return bool.Parse(await response.Content.ReadAsStringAsync());
         }
     }
 }
