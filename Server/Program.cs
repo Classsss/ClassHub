@@ -1,6 +1,4 @@
 using ClassHub.Server.Controllers;
-using ClassHub.Server.Controllers.ClassHub.Server.Controllers;
-using Microsoft.AspNetCore.ResponseCompression;
 
 namespace ClassHub {
     public class Program {
@@ -39,6 +37,7 @@ namespace ClassHub {
             app.MapControllers();
             app.MapFallbackToFile("index.html");
             app.MapHub<RealTimeSubmitHubController>("/realtimesubmithub");
+            app.MapHub<LectureHubController>("/lecturehub");
             app.Run();
         }
     }
