@@ -3,6 +3,7 @@
 @using ClassHub.Shared
 @using ClassHub.Client.Models
 @inject HttpClient Http
+@inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
 <style>
@@ -74,10 +75,24 @@
             }
             contents = contents.OrderByDescending(a => a.content_id).ToList();
             StateHasChanged();
+
+            await PrintToDoList();
         }
     }
 
     private void ShowContents(BoardContent boardContent) {
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{boardContent.content_id}");
+    }
+
+    private async Task PrintToDoList() {
+        Console.WriteLine("ToDoList: ");
+        List<ToDo>? toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist?room_id={classRoom.room_id}&student_id={await UserInfo.GetUserIdAsync(JSRuntime)}");
+        if (toDoList != null) {
+            foreach (var toDo in toDoList) {
+                Console.WriteLine($"\ttitle: {toDo.GetTitle()}");
+                Console.WriteLine($"\tD-Day: {toDo.GetDDay}");
+                Console.WriteLine($"\tUri: {toDo.Uri}\n");
+            }
+        }
     }
 }
