@@ -1,8 +1,8 @@
 ﻿@page "/classroom/{roomid:int}/practice/{practiceid:int}/submitresult"
 @using Blazored.Modal
 @using Blazored.Modal.Services
-@using ClassHub.Shared
 @using System.Collections.ObjectModel
+@using ClassHub.Shared
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Collections.Specialized
 @using Microsoft.Extensions.Primitives
@@ -12,8 +12,11 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
 <BackButton />
-<div style="background-color: whitesmoke; padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
+
+<div class="text-bg-light p-3" style="padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
     <div style="display: flex; align-items: center;">
           @if (role == "professor") {
         <select class="form-select" aria-label="Default select example" @bind="sortKey" style="display: inline-block; width: auto;">
@@ -23,7 +26,7 @@
         </select>
          }
         <h3 style="margin: 0 auto;">
-            @PracticeId 번 실습 제출 내역
+            @(PracticeId)번 실습 제출 내역
         </h3>
         @if (role == "professor") {
         <SortDropdown SelectedSortKey="@sortKey" OnSortOptionChanged="@((string value) => sortKey = value)" />
@@ -36,15 +39,15 @@
             @if (role == "professor") {
                 <th style="border: 1px solid darkgray;">학번</th>
             }
-            <th style="border: 1px solid darkgray;">제출 번호</th>
-            <th style="border: 1px solid darkgray;">결과</th>
-            <th style="border: 1px solid darkgray;">메모리</th>
-            <th style="border: 1px solid darkgray;">시간</th>
-            <th style="border: 1px solid darkgray;">언어</th>
-            <th style="border: 1px solid darkgray;">제출 시간</th>
-            <th style="border: 1px solid darkgray;">코드 확인</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />제출 번호</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-check-circle"></i>결과</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-memory"></i>메모리</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-hourglass-bottom"></i>시간</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-filetype-css"></i>언어</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-clock-history"></i>제출 시간</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-code"></i>코드 확인</th>
             @if (role == "student") {
-                <th style="border: 1px solid darkgray;">GPT조언</th>
+                <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>GPT조언</th>
             }
         </tr>
     </thead>
@@ -54,10 +57,10 @@
             @foreach (CodeSubmit submit in submitList) {
                 <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
                     @if (role == "professor") {
-                    <td style="border: 1px solid darkgray;">@submit.student_id</td>
+                        <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
                     }
-                    <td style="border: 1px solid darkgray;">@submit.submit_id</td>
-                    <td style="border: 1px solid darkgray;">
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_id</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
                         @if (submit.status == "Accepted") {
                         <td style="color: green;">맞았습니다.</td>
                         } else if (submit.status == "Pending") {
@@ -96,18 +99,17 @@
                                 }
                         </td>
                         }
-
-
                     </td>
-                    <td style="border: 1px solid darkgray;">@submit.mem_usage kb</td>
-                    <td style="border: 1px solid darkgray;">@submit.exec_time ms</td>
-                    <td style="border: 1px solid darkgray;">@submit.language</td>
-                    <td style="border: 1px solid darkgray;">@submit.submit_date</td>
-                    <td style="border: 1px solid darkgray;"><button @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
-                     @if (role == "student") {
-                    <td><button @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.mem_usage kb</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.exec_time ms</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.language</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
+                    @if (role == "student") {
+                        <td style="vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
                     }
                 </tr>
+
             }
         } else {
             <tr>
@@ -116,6 +118,10 @@
         }
     </tbody>
 </table>
+
+
+
+
 @code {
 
     [Parameter]
@@ -125,7 +131,8 @@
     [Parameter]
     public EventCallback<string> OnSortOptionChanged { get; set; }
 
-      private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
+    //private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
+    private const string CLASSHUB_CODESUBMIT_REALTIME = "https://localhost:7182/realtimesubmithub";
 
     private List<CodeSubmit> submitList = new List<CodeSubmit>();
     private string role;
