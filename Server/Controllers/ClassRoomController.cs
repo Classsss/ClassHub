@@ -621,5 +621,67 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("notification_id", notification_id);
             connection.Execute(query, parameters);
         }
+
+        [HttpGet("todolist")]
+        public IEnumerable<ToDo> GetToDoList([FromQuery] int room_id, int student_id) {
+            List<ToDo> toDoList = new List<ToDo>();
+            // CodeAssignment 중 현재 진행 중이며, CodeSubmit에 나의 제출내역이 없는 모든 CodeAssighment의 assignment_id, room_id를 가져오자
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query1 = "SELECT title FROM classroom WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            string roomTitle = connection.QuerySingle<string>(query1, parameters);
+            Console.WriteLine($"RoomTitle: {roomTitle}");
+
+            string query2 =
+                "SELECT assignment_id " +
+                "FROM codeassignment " +
+                "WHERE room_id = @room_id;";
+            //"WHERE room_id = @room_id AND start_date <= CURRENT_TIMESTAMP AND end_date >= CURRENT_TIMESTAMP";
+            parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            List<int> assignment_id_list = connection.Query<int>(query2, parameters).ToList();
+            Console.WriteLine($"RoomTitle: {roomTitle}");
+
+            string query3 =
+                "SELECT COUNT(*) " +
+                "FROM codesubmit " +
+                "WHERE room_id = @room_id AND student_id = @student_id AND assignment_id = @assignment_id;";
+            foreach(var assignment_id in assignment_id_list) {
+                parameters = new DynamicParameters();
+                parameters.Add("room_id", room_id);
+                parameters.Add("student_id", student_id);
+                parameters.Add("assignment_id", assignment_id);
+                int count = connection.QuerySingle<int>(query3, parameters);
+                if(count == 0) {
+                    string query4 =
+                        "SELECT * " +
+                        "FROM codeassignment " +
+                        "WHERE room_id = @room_id AND assignment_id = @assignment_id;";
+                    parameters = new DynamicParameters();
+                    parameters.Add("room_id", room_id);
+                    parameters.Add("assignment_id", assignment_id);
+                    CodeAssignment codeAssignment = connection.QuerySingle<CodeAssignment>(query4, parameters);
+                    string query5 = $"SELECT title FROM codeproblem WHERE problem_id = {codeAssignment.problem_id}";
+                    string problemTitle = connection.QuerySingle<string>(query5);
+
+                    toDoList.Add(new ToDo {
+                        RoomTitle = roomTitle,
+                        Title = problemTitle,
+                        Kind = Kind.실습,
+                        EndTime = codeAssignment.end_date,
+                        Uri = $"classroom/{room_id}/practice/{codeAssignment.assignment_id}"
+                    });
+                }
+            }
+
+            return toDoList;
+        }
+
+        [HttpGet("todolist/all")]
+        public void GetToDoListAll() {
+
+        }
     }
 }
