@@ -63,7 +63,6 @@ else
 
 @code {
     private List<ClassRoomDetail>? classRoomList;
-    private List<DisplayStudentNotification>? notificationList;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -77,7 +76,6 @@ else
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
             await GetTakesClassRoom(); //시간표 받아오기
-            await getNotifications(); //알림 받아오기
         }
     }
 
@@ -110,30 +108,5 @@ else
         }
         // 화면을 다시 그립니다.
         StateHasChanged(); 
-    }
-
-    protected async Task getNotifications() {
-        // 로컬 스토리지에서 AccessToken 받아오기
-        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
-
-        if (accessToken != null)
-        {
-            var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
-            Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
-
-            try {
-                notificationList = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
-                if (notificationList != null) {
-                    foreach(DisplayStudentNotification notification in notificationList) {
-                        Console.WriteLine(notification.message);
-                    }
-                }
-            } catch (Exception e) {
-                Console.WriteLine(e);
-            }
-        }
-
-        // 화면을 다시 그립니다.
-        StateHasChanged();
     }
 }
