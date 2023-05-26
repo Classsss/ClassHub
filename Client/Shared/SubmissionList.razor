@@ -39,7 +39,7 @@
         @foreach(var submission in Submissions) {
             int state = (submission.EndDate < DateTime.Now) ? 0 : (DateTime.Now < submission.StartDate) ? 1 : 2; // 0 종료, 1 예정, 2 진행 중
             <tr class="exam-row" @onclick="@(() => Attend(submission))">
-                <td class="align-middle text-center">@submission.Id</td>
+                <td class="align-middle text-center">@(Submissions.Count-Submissions.IndexOf(submission))</td>
 
                 <td class="align-middle text-start">
                     @submission.Title<br />
@@ -97,6 +97,6 @@
 
     private void Attend(Submission submission) {
         Console.WriteLine($"{submission.Id}번 항목을 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{submission.Id}");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{Submissions.Count - Submissions.IndexOf(submission)}");
     }
 }
