@@ -1,0 +1,80 @@
+﻿@using System
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
+@using System.Text.Json
+@using System.Text
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<Modal>
+    <ModalBody>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="col-2" style="border: 1px solid darkgray;">학번</th>
+                    <th class="col-2" style="border: 1px solid darkgray;">수강 시간</th>
+                    <th class="col-1" style="border: 1px solid darkgray;">수강 상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (lectureProgressList != null) {
+                    @foreach (LectureProgress progress in lectureProgressList) {
+                        <tr>
+                            <td class="col-2" style="border: 1px solid darkgray;">@progress.student_id</td>
+                            <td class="col-2" style="border: 1px solid darkgray;">@progress.elapsed_time 분</td>
+                            <td class="@(progress.is_enroll ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
+                                <i class="@((progress.is_enroll) ? "oi oi-circle-check" : "oi oi-x")"></i>
+                                @(progress.is_enroll ? "수강" : "미수강")
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </ModalBody>
+    <ModalFooter>
+        <div style="margin-top: 10px;">
+            <button class="btn btn-success" @onclick="HandleClose">닫기</button>
+        </div>
+    </ModalFooter>
+</Modal>
+
+<style>
+    .enrolled {
+        border: 1px solid darkgray;
+        background-color: #E7F0FD !important;
+        color: #1659EA !important;
+    }
+
+    .not-enrolled {
+        border: 1px solid darkgray;
+        background-color: #FCFFE5 !important;
+        color: #C2B20C !important;
+    }
+</style>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public Models.Lecture lecture { get; set; }
+
+    public List<LectureProgress> lectureProgressList;
+    protected override async Task OnInitializedAsync() {
+        var result = await Http.GetAsync($"api/lecture/progress/{lecture.LectureId}");
+        lectureProgressList = JsonSerializer.Deserialize<List<LectureProgress>>(await result.Content.ReadAsStringAsync());
+        lectureProgressList = lectureProgressList.OrderByDescending(a => a.is_enroll == true).ThenBy(a => a.is_enroll).ToList();
+      
+
+    }
+
+    // 동영상 강의 등록창을 종료한다.
+    private async Task HandleClose(){
+        await ModalInstance.CloseAsync();
+    }
+
+}
+
+
+ 

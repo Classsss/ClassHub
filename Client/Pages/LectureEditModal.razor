@@ -1,0 +1,93 @@
+﻿@using System
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using ClassHub.Client.Models;
+@using Newtonsoft.Json
+@inject IJSRuntime JSRuntime
+<Modal>
+    <ModalBody>
+        <div class="form-group">
+            <label for="weekPicker">주차 선택</label>
+            <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="title">강의 제목:</label>
+            <input type="text" class="form-control" id="title" name="title" required @bind="lecture.Title" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="contents">강의 설명:</label>
+            <textarea class="form-control" id="contents" name="contents" rows="5" required @bind="lecture.Description"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="startTime">시작 일:</label>
+            <input type="time" class="form-control" id="startTime" @bind="@lecture.StartDate" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="endTime">종료 일:</label>
+            <input type="time" class="form-control" id="endTime" @bind="@lecture.EndDate" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="enroll">아래 영상등록 수정 추가</label>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <div style="margin-top: 10px;">
+            <button class="btn btn-success" @onclick="HandleEnroll">등록</button>
+            <button class="btn btn-danger" @onclick="HandleDelete">삭제</button>
+            <button class="btn btn-success" @onclick="HandleClose">닫기</button>
+        </div>
+    </ModalFooter>
+</Modal>
+
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public Lecture lecture { get; set; }
+
+    public List<int> selectedWeek = new List<int> {};
+
+    protected override async Task OnInitializedAsync() {
+        selectedWeek.Add(lecture.Week);    
+    }
+
+    // 주차 고르기
+    private async Task OnWeekChanged(List<int> week) {
+        selectedWeek = week;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    
+    // 동영상 강의를 등록한다.
+    private async Task HandleEnroll() {
+        // 서버와 통신해 lecture를 db에 등록하는 로직 추가 이때 서버에서는 blob에 파일도 저장함
+
+        await JSRuntime.InvokeVoidAsync("alert", "등록 완료하였습니다!"); 
+        await ModalInstance.CloseAsync();
+    }
+
+    // 동영상 강의를 삭제한다.
+    private async Task HandleDelete() {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "정말로 삭제하시겠습니까?");
+
+        if (confirmed) {
+            // 서버와 연결해서 삭제 작업 수행
+            await JSRuntime.InvokeVoidAsync("alert", "삭제 완료하였습니다!");
+            await ModalInstance.CloseAsync();
+        } 
+    }
+
+    // 동영상 강의 등록창을 종료한다.
+    private async Task HandleClose(){
+        await ModalInstance.CloseAsync();
+    }
+
+}
+
+
+ 
