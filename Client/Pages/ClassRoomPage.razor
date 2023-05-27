@@ -37,7 +37,7 @@
                     <div class="col-12 border" style="overflow: auto; max-height: 260px;">
                         <ul class="list-group">
                             @foreach(var toDo in toDoList) {
-                                <li class="list-group-item" style="cursor:pointer;">@toDo.GetTitle()</li>
+                                <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">@toDo.GetTitle()</li>
                             }
                         </ul>
                     </div>
@@ -75,7 +75,7 @@
                 });
             }
             contents = contents.OrderByDescending(a => a.content_id).ToList();
-            
+
             await LoadToDoList();
             StateHasChanged();
         }
@@ -83,6 +83,10 @@
 
     private void ShowContents(BoardContent boardContent) {
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{boardContent.content_id}");
+    }
+
+    private void GoTo(string uri) {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + uri);
     }
 
     private async Task LoadToDoList() {
