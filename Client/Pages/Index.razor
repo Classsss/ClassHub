@@ -37,11 +37,11 @@ else
             </div>
             <div class="col-lg-3 col-12">
                 <div class="row">
-                    <h3 class="text-center col-12">ToDo List</h3>
-                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
+                    <h3 class="text-center col-12">할 일 목록</h3>
+                    <div class="col-12 border" style="overflow: auto; max-height: 300px;">
                         <ul class="list-group">
-                            @for(int i = 1; i <= 20; i++) {
-                                <li class="list-group-item">Task @i</li>
+                            @foreach(var toDo in toDoList) {
+                                <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">@toDo.GetTitle()</li>
                             }
                         </ul>
                     </div>
@@ -63,6 +63,7 @@ else
 
 @code {
     private List<ClassRoomDetail>? classRoomList;
+    private List<ToDo>? toDoList;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -75,11 +76,16 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
-            await GetTakesClassRoom(); //시간표 받아오기
+            Task task1 = LoadTakesClassRoomList(); // 시간표 받아오기
+            Task task2 = GetToDoList(); // 할 일 목록 받아오기
+
+            await Task.WhenAll(task1, task2);
+
+            StateHasChanged();
         }
     }
 
-    protected async Task GetTakesClassRoom() {
+    protected async Task LoadTakesClassRoomList() {
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
         if (accessToken != null) {
@@ -106,7 +112,14 @@ else
                 classRoomList = new List<ClassRoomDetail>();
             }
         }
-        // 화면을 다시 그립니다.
-        StateHasChanged(); 
+    }
+
+    protected async Task GetToDoList() {
+        var student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+        toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist/all?student_id={student_id}");
+    }
+
+    private void GoTo(string uri) {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + uri);
     }
 }
