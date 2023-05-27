@@ -679,8 +679,46 @@ namespace ClassHub.Server.Controllers {
         }
 
         [HttpGet("todolist/all")]
-        public void GetToDoListAll() {
+        public IEnumerable<ToDo> GetToDoListAll([FromQuery] int student_id) {
+            List<ToDo> toDoList = new List<ToDo>();
 
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = @"
+                -- 미제출 실습 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    CP.title as Title, 
+                    '실습' as Kind, 
+                    CA.end_date as EndTime, 
+                    CONCAT('classroom/', CA.room_id, '/practice/', CA.assignment_id) as Uri
+                FROM CodeAssignment CA
+                LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
+                LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = CA.room_id AND CS.student_id = @student_id
+                INNER JOIN ClassRoom CR ON CA.room_id = CR.room_id
+                INNER JOIN Student S ON CA.room_id = S.room_id AND S.student_id = @student_id
+                WHERE CS.submit_id IS NULL
+                UNION ALL
+                -- 미완료 강의 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    L.title as Title, 
+                    '강의' as Kind, 
+                    L.end_date as EndTime, 
+                    CONCAT('classroom/', L.room_id, '/lecture/', L.lecture_id) as Uri
+                FROM Lecture L
+                LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = L.room_id AND LP.student_id = @student_id
+                INNER JOIN ClassRoom CR ON L.room_id = CR.room_id
+                INNER JOIN Student S ON L.room_id = S.room_id AND S.student_id = @student_id
+                WHERE LP.is_enroll IS NULL OR LP.is_enroll = FALSE;
+            ";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+
+            toDoList = connection.Query<ToDo>(query, parameters).ToList();
+
+            return toDoList;
         }
     }
 }
