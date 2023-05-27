@@ -617,5 +617,108 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("notification_id", notification_id);
             connection.Execute(query, parameters);
         }
+
+        [HttpGet("todolist")]
+        public IEnumerable<ToDo> GetToDoList([FromQuery] int room_id, int student_id) {
+            List<ToDo> toDoList = new List<ToDo>();
+
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query1 = "SELECT title FROM ClassRoom WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            string roomTitle = connection.QuerySingle<string>(query1, parameters);
+
+            string query2 = @"
+                SELECT CA.*, CP.title as problemTitle
+                FROM CodeAssignment CA
+                LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
+                LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = @room_id AND CS.student_id = @student_id
+                WHERE CA.room_id = @room_id AND CS.submit_id IS NULL;
+            ";
+
+            parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("student_id", student_id);
+
+            var codeAssignments = connection.Query<CodeAssignment, string, (CodeAssignment, string)>(query2,
+                (codeAssignment, problemTitle) => (codeAssignment, problemTitle),
+                parameters,
+                splitOn: "problemTitle");
+
+            foreach(var (codeAssignment, problemTitle) in codeAssignments) {
+                toDoList.Add(new ToDo {
+                    RoomTitle = roomTitle,
+                    Title = problemTitle,
+                    Kind = Kind.실습,
+                    EndTime = codeAssignment.end_date,
+                    Uri = $"classroom/{room_id}/practice/{codeAssignment.assignment_id}"
+                });
+            }
+
+            string query3 = @"
+                SELECT L.*
+                FROM Lecture L
+                LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = @room_id AND LP.student_id = @student_id
+                WHERE L.room_id = @room_id AND (LP.is_enroll IS NULL OR LP.is_enroll = FALSE);
+            ";
+
+            var lectures = connection.Query<Lecture>(query3, parameters);
+
+            foreach(var lecture in lectures) {
+                toDoList.Add(new ToDo {
+                    RoomTitle = roomTitle,
+                    Title = lecture.title,
+                    Kind = Kind.온라인강의,
+                    EndTime = lecture.end_date,
+                    Uri = $"classroom/{room_id}/lecture/{lecture.lecture_id}"
+                });
+            }
+
+            return toDoList;
+        }
+
+        [HttpGet("todolist/all")]
+        public IEnumerable<ToDo> GetToDoListAll([FromQuery] int student_id) {
+            List<ToDo> toDoList = new List<ToDo>();
+
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = @"
+                -- 미제출 실습 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    CP.title as Title, 
+                    '실습' as Kind, 
+                    CA.end_date as EndTime, 
+                    CONCAT('classroom/', CA.room_id, '/practice/', CA.assignment_id) as Uri
+                FROM CodeAssignment CA
+                LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
+                LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = CA.room_id AND CS.student_id = @student_id
+                INNER JOIN ClassRoom CR ON CA.room_id = CR.room_id
+                INNER JOIN Student S ON CA.room_id = S.room_id AND S.student_id = @student_id
+                WHERE CS.submit_id IS NULL
+                UNION ALL
+                -- 미완료 강의 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    L.title as Title, 
+                    '강의' as Kind, 
+                    L.end_date as EndTime, 
+                    CONCAT('classroom/', L.room_id, '/lecture/', L.lecture_id) as Uri
+                FROM Lecture L
+                LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = L.room_id AND LP.student_id = @student_id
+                INNER JOIN ClassRoom CR ON L.room_id = CR.room_id
+                INNER JOIN Student S ON L.room_id = S.room_id AND S.student_id = @student_id
+                WHERE LP.is_enroll IS NULL OR LP.is_enroll = FALSE;
+            ";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+
+            toDoList = connection.Query<ToDo>(query, parameters).ToList();
+
+            return toDoList;
+        }
     }
 }
