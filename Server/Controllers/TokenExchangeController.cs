@@ -22,7 +22,7 @@ namespace ClassHub.Server.Controllers
         public async Task<IActionResult> ExchangeToken([FromBody] AccessTokenRequest request)
         {
             var client = new HttpClient();
-            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7119/token");
+            var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://classhubsso.azurewebsites.net/token");
 
             var id = request.UserId;
             var authCode = request.AuthorizationCode;
@@ -37,7 +37,7 @@ namespace ClassHub.Server.Controllers
         [HttpGet("verify")]
         public async Task<bool> VerifyToken([FromQuery] int id, string accessToken) {
             var client = new HttpClient();
-            var url = $"https://localhost:7119/api/token/verify?user_id={id}&accessToken={accessToken}";
+            var url = $"https://classhubsso.azurewebsites.net/api/token/verify?user_id={id}&accessToken={accessToken}";
             var response = await client.GetAsync(url);
 
             return bool.Parse(await response.Content.ReadAsStringAsync());
