@@ -11,6 +11,7 @@
         public string Uri { get; set; }
 
         public string GetDDay() {
+            if(DateTime.Now > EndTime) return "종료";
             TimeSpan remainPeriod = EndTime - DateTime.Now;
             if(remainPeriod.Days > 0) return $"D-{remainPeriod.Days}";
             else if(remainPeriod.Hours > 0) return $"{remainPeriod.Hours}시간 남음";
