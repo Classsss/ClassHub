@@ -12,7 +12,7 @@
     }
 </style>
 
-@if(classRoom == null) {
+@if(classRoom == null || toDoList == null) {
     <p><em>강의실 정보를 로딩 중입니다...</em></p>
 } else {
     <div class="container-fluid">
@@ -33,11 +33,11 @@
                     </div>
                 </div>
                 <div class="row">
-                    <h3 class="text-center col-12">질의응답</h3>
+                    <h3 class="text-center col-12">할 일 목록</h3>
                     <div class="col-12 border" style="overflow: auto; max-height: 260px;">
                         <ul class="list-group">
-                            @for(int i = 1; i <= 12; i++) {
-                                <li class="list-group-item">질의응답 @i</li>
+                            @foreach(var toDo in toDoList) {
+                                <li class="list-group-item" style="cursor:pointer;">@toDo.GetTitle()</li>
                             }
                         </ul>
                     </div>
@@ -53,6 +53,7 @@
 
     private ClassRoom? classRoom;
     private List<BoardContent>? contents;
+    private List<ToDo>? toDoList;
 
     protected async override void OnInitialized() {
         // RoomId와 매칭되는 강의실의 정보를 가져옵니다.
@@ -74,9 +75,9 @@
                 });
             }
             contents = contents.OrderByDescending(a => a.content_id).ToList();
+            
+            await LoadToDoList();
             StateHasChanged();
-
-            await PrintToDoList();
         }
     }
 
@@ -84,15 +85,7 @@
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/notice/{boardContent.content_id}");
     }
 
-    private async Task PrintToDoList() {
-        Console.WriteLine("ToDoList: ");
-        List<ToDo>? toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist?room_id={classRoom.room_id}&student_id={await UserInfo.GetUserIdAsync(JSRuntime)}");
-        if (toDoList != null) {
-            foreach (var toDo in toDoList) {
-                Console.WriteLine($"\ttitle: {toDo.GetTitle()}");
-                Console.WriteLine($"\tD-Day: {toDo.GetDDay()}");
-                Console.WriteLine($"\tUri: {toDo.Uri}\n");
-            }
-        }
+    private async Task LoadToDoList() {
+        toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist?room_id={classRoom.room_id}&student_id={await UserInfo.GetUserIdAsync(JSRuntime)}");
     }
 }
