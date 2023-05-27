@@ -1,4 +1,5 @@
 using ClassHub.Server.Controllers;
+using ClassHub.Server.Middleware;
 using ClassHub.Server.Controllers.ClassHub.Server.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -15,7 +16,8 @@ namespace ClassHub {
 
             var app = builder.Build();
 
-           
+            // Register middleware
+            app.UseMiddleware<TokenValidationMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment()) {

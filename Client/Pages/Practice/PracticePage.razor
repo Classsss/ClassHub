@@ -78,11 +78,6 @@
     </div>
 </div>
 
-
-
-
-
-
 @code {
 
     [Parameter]
@@ -96,13 +91,12 @@
     private MonacoEditor? MonacoEditorReference;
 
     // 초기화 할때 실습 데이터를 받아온다.
-    protected override async Task OnInitializedAsync(){
+    protected override async Task OnParametersSetAsync(){
         role = await UserInfo.GetRoleAsync(JSRuntime);
         practice = await Http.GetFromJsonAsync<Practice>($"api/practice/room_id/{RoomId}/practice_id/{PracticeId}");
         StateHasChanged();
     }
 
-    
     private async Task CheckSubmitHistory(){
         Console.WriteLine($"{practice.Id}번 과제의 제출내역을 클릭하였습니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri + "/submitresult");
@@ -157,6 +151,5 @@
         CheckSubmitHistory();
         // 서버에 채점을 요청한다.
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
-
     }
 }

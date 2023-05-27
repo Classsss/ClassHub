@@ -15,7 +15,7 @@
 @using System.Text;
 @using System.Text.Json
 
-@if (Sections == null)
+@if (classRoomList == null)
 {
     <div class="d-flex justify-content-center mt-5">
         <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
@@ -33,15 +33,15 @@ else
         </div>
         <div class="row">
             <div class="col-lg-9 col-12">
-                <Timetable Sections="Sections" />
+                <Timetable ClassRoomList="classRoomList" />
             </div>
             <div class="col-lg-3 col-12">
                 <div class="row">
-                    <h3 class="text-center col-12">ToDo List</h3>
-                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
+                    <h3 class="text-center col-12">할 일 목록</h3>
+                    <div class="col-12 border" style="overflow: auto; max-height: 300px;">
                         <ul class="list-group">
-                            @for(int i = 1; i <= 20; i++) {
-                                <li class="list-group-item">Task @i</li>
+                            @foreach(var toDo in toDoList) {
+                                <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">@toDo.GetTitle()</li>
                             }
                         </ul>
                     </div>
@@ -62,8 +62,8 @@ else
 }
 
 @code {
-    private List<Section>? Sections;
-    private List<DisplayStudentNotification>? Notifications;
+    private List<ClassRoomDetail>? classRoomList;
+    private List<ToDo>? toDoList;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -72,19 +72,20 @@ else
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
         NavMenuTitleService.Title = "ClassHub"; 
-
-        Console.WriteLine(await UserInfo.GetUserIdAsync(JSRuntime)); //이런식으로 활용하면 된단다 진호야
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
-            await getCourses(); //시간표 받아오기
-            await getNotifications(); //알림 받아오기
+            Task task1 = LoadTakesClassRoomList(); // 시간표 받아오기
+            Task task2 = GetToDoList(); // 할 일 목록 받아오기
+
+            await Task.WhenAll(task1, task2);
+
+            StateHasChanged();
         }
     }
 
-    protected async Task getCourses()
-    {
+    protected async Task LoadTakesClassRoomList() {
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
         if (accessToken != null) {
@@ -92,53 +93,33 @@ else
 
             //앱 서버로 수강과목 출력을 요청
             try {
-                Sections = await Http.GetFromJsonAsync<List<Section>>($"/Section?userId={id}&accessToken={accessToken}");
-                // 색상 부여
-                if (Sections != null) {
-                    int colorIndex = 0;
-                    for (int i = 0; i < Sections.Count; i++) {
-                        var section1 = Sections[i];
-                        if (section1.Color == -1) {
-                            section1.Color = colorIndex++;
-                            for (int j = i + 1; j < Sections.Count; j++) {
-                                var section2 = Sections[j % 8];
-                                if (section1.SectionId == section2.SectionId)
-                                    section2.Color = section1.Color;
-                            }
-                        } else
-                            continue;
+                string role = await UserInfo.GetRoleAsync(JSRuntime);
+                Console.WriteLine($"role: {role}");
+                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches?instructor_id={id}&accessToken={accessToken}");
+                else classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
+
+                Console.WriteLine($"classRoomListCount: {classRoomList.Count}");
+
+                int colorIndex = 0;
+                for (int i = 0; i < classRoomList.Count; i++) {
+                    var classRoom = classRoomList[i];
+                    if (classRoom.color == -1) {
+                        classRoom.color = colorIndex++;
                     }
                 }
             } catch(Exception e) {
                 Console.WriteLine(e);
+                classRoomList = new List<ClassRoomDetail>();
             }
         }
-        // 화면을 다시 그립니다.
-        StateHasChanged(); 
     }
 
-    protected async Task getNotifications() {
-        // 로컬 스토리지에서 AccessToken 받아오기
-        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+    protected async Task GetToDoList() {
+        var student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+        toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist/all?student_id={student_id}");
+    }
 
-        if (accessToken != null)
-        {
-            var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
-            Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
-
-            try {
-                Notifications = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
-                if (Notifications != null) {
-                    foreach(DisplayStudentNotification notification in Notifications) {
-                        Console.WriteLine(notification.message);
-                    }
-                }
-            } catch (Exception e) {
-                Console.WriteLine(e);
-            }
-        }
-
-        // 화면을 다시 그립니다.
-        StateHasChanged();
+    private void GoTo(string uri) {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + uri);
     }
 }

@@ -223,7 +223,7 @@
                 room_id = RoomId,
                 week = selectedWeek[0],
                 title = title,
-                author = "Issue-155",
+                author = await UserInfo.GetUserNameAsync(JSRuntime),
                 contents = contents,
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
@@ -248,7 +248,7 @@
             jsonString = JsonSerializer.Serialize(new Notice {
                 room_id = RoomId,
                 title = title,
-                author = "Issue-155",
+                author = await UserInfo.GetUserNameAsync(JSRuntime),
                 contents = contents,
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
@@ -270,7 +270,7 @@
             }
         }
 
-        // 강의자료 게시 또는 수정일 경우 첨부 파일을 먼저 서버에 업로드 합니다.
+        // 강의자료 게시 또는 수정일 경우 첨부 파일을 서버로 전송 합니다.
         if(type == 1 || type == 2) {
             var content = new MultipartFormDataContent();
 
