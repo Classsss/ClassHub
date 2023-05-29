@@ -25,7 +25,7 @@ namespace ClassHub.Client.Shared {
 
                 return response;
             } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("오류 내용 : " + ex.Message);
                 return null;
             }
         }
@@ -34,8 +34,6 @@ namespace ClassHub.Client.Shared {
             // 요청 전처리 작업 수행 (헤더 추가, 인증 토큰 설정 등)
             // 필요한 경우 request.Headers.Add(...) 등을 사용하여 헤더 추가 가능
             // 필요한 경우 request.Headers.Authorization 등을 사용하여 인증 토큰 설정 가능
-            //Console.WriteLine("전처리 시작");
-
             var userId = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
             var accessToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
@@ -43,19 +41,16 @@ namespace ClassHub.Client.Shared {
                 request.Headers.Add("UserId", userId);
                 request.Headers.Add("AccessToken", accessToken);
             }
-
-            //Console.WriteLine(request);
         }
 
         public virtual async Task PostProcess(HttpResponseMessage response) {
             // 응답 후처리 작업 수행 (응답 코드 확인, 로그아웃 처리 등)
             // 필요한 경우 response.StatusCode 등을 사용하여 응답 상태 코드 확인 가능
             // 필요한 경우 navigationManager.NavigateTo("/logout") 등을 사용하여 로그아웃 처리 가능
-            //Console.WriteLine("후처리 시작");
-            //Console.WriteLine(response);
             if (response.StatusCode == HttpStatusCode.Unauthorized) {
                 // 로그아웃 처리
                 navigationManager.NavigateTo("/logout");
+                return;
             }
         }
     }
