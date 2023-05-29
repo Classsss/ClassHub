@@ -680,8 +680,6 @@ namespace ClassHub.Server.Controllers {
 
         [HttpGet("todolist/all")]
         public IEnumerable<ToDo> GetToDoListAll([FromQuery] int student_id) {
-            List<ToDo> toDoList = new List<ToDo>();
-
             using var connection = new NpgsqlConnection(connectionString);
 
             string query = @"
@@ -703,7 +701,7 @@ namespace ClassHub.Server.Controllers {
                 SELECT 
                     CR.title as RoomTitle, 
                     L.title as Title, 
-                    '강의' as Kind, 
+                    '온라인강의' as Kind, 
                     L.end_date as EndTime, 
                     CONCAT('classroom/', L.room_id, '/lecture/', L.lecture_id) as Uri
                 FROM Lecture L
@@ -716,7 +714,7 @@ namespace ClassHub.Server.Controllers {
             var parameters = new DynamicParameters();
             parameters.Add("student_id", student_id);
 
-            toDoList = connection.Query<ToDo>(query, parameters).ToList();
+            List<ToDo> toDoList = connection.Query<ToDo>(query, parameters).ToList();
 
             return toDoList;
         }
