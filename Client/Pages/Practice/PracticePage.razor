@@ -72,6 +72,7 @@
             <MonacoEditor @ref="MonacoEditorReference" />
             @if (role == "student"){
                 <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+                <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="MultipleSubmitCode">데모 코드 제출</button>
             }
             <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
         </div>
