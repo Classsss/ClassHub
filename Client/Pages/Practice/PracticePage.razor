@@ -152,6 +152,16 @@
         // 서버에 채점을 요청한다.
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
     }
+
+    // 데모를 위해 여러 유형의 코드를 채점 서버로 제출함
+    private async Task MultipleSubmitCode() {
+        SubmitCodeForDemo(DemoCodeTemplate.Type.CORRECT);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.WRONG);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.COMPILE_ERROR);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.RUNTIME_ERROR);
+        CheckSubmitHistory();
+    }
+
     // 데모를 위해 채점 서버로 코드를 제출함
     private async Task SubmitCodeForDemo(DemoCodeTemplate.Type type) {
         //모나코에디터로부터 현재 설정된 언어를 가져오기 위한 코드
