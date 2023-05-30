@@ -1,6 +1,7 @@
 ﻿@page "/classroom/{roomid:int}/exam/{examid:int}"
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
+@using System.Timers;
 
 @switch(problem) {
     case MultipleChoiceProblem multipleChoiceProblem:
@@ -115,5 +116,27 @@ Console.WriteLine(ans);",
 
     private void FinishExam() {
         Console.WriteLine("응시 완료");
+    }
+
+    /// <summary>
+    /// 타이머에 등록되어 화면에 표시하는 TimeLeft를 업데이트하는 함수
+    /// </summary>
+    private void UpdateTimeLeft(object? sender, ElapsedEventArgs e) {
+        // 남은 시간 계산
+        TimeSpan remainingTime = examInfo.EndDate - DateTime.Now;
+
+        // 시간을 mm:ss 형식으로 변환
+        TimeLeft = $"{remainingTime:hh\\:mm\\:ss}";
+
+        InvokeAsync(StateHasChanged).Wait();
+
+        if (DateTime.Now >= examInfo.EndDate) {
+            // 타이머 중지
+            if (sender != null) {
+                ((Timer)sender).Stop();
+
+                FinishExam();
+            }
+        }
     }
 }
