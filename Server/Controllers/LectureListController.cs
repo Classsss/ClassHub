@@ -25,24 +25,40 @@ namespace ClassHub.Server.Controllers {
             List<Client.Models.Lecture> clientLectureList = new List<Client.Models.Lecture>();
 
             // 강의실 번호가 room_id인 동영상강의들을 찾습니다.
-            query = "SELECT * FROM lecture WHERE room_id = @room_id  ORDER BY week DESC, chapter ASC;";
+            query = "SELECT * FROM lecture WHERE room_id = @room_id  AND video_url != @video_url ORDER BY week DESC";
             var parametersLecture = new DynamicParameters();
             parametersLecture.Add("room_id", room_id);
-            var sharedLectureList = connection.Query<Shared.Lecture>(query,parametersLecture);
+            parametersLecture.Add("video_url", "none");
+            var sharedLectureList = connection.Query<Shared.Lecture>(query,parametersLecture).ToList();
 
-            // 동영상 강의에 대하여 진행률을 찾습니다.
-            foreach (Shared.Lecture sharedLecture in sharedLectureList) {
+            int weekCurs = 1;
+            int chapterCurs = 1;
+            // 동영상 강의에 대하여 진행률을 찾아서 Lecture 모델을 완성시킵니다.
+            for (int i = 0; i<sharedLectureList.Count();i++ ) {
                 query = "SELECT * FROM lectureprogress WHERE lecture_id = @lecture_id AND student_id = @student_id;";
                 var parametersProgress = new DynamicParameters();
-                parametersProgress.Add("lecture_id", sharedLecture.lecture_id);
+                parametersProgress.Add("lecture_id", sharedLectureList[i].lecture_id);
                 parametersProgress.Add("student_id", student_id);
                 var lectureProgress = connection.QuerySingleOrDefault<LectureProgress>(query, parametersProgress);
                 if(lectureProgress !=null) {
-                    clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLecture.lecture_id, Week = sharedLecture.week, Chapter = sharedLecture.chapter, Title = sharedLecture.title, Description = sharedLecture.contents, StartDate = sharedLecture.start_date, EndDate = sharedLecture.end_date, VideoUrl = sharedLecture.video_url, RequireLearningTime = sharedLecture.learning_time, CurrentLearningTime = lectureProgress.elapsed_time, IsEnrolled = lectureProgress.is_enroll });
+                    if (sharedLectureList[i].week == weekCurs) {
+                        clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLectureList[i].lecture_id, Week = sharedLectureList[i].week,Chapter = chapterCurs, Title = sharedLectureList[i].title, Description = sharedLectureList[i].contents, StartDate = sharedLectureList[i].start_date, EndDate = sharedLectureList[i].end_date, VideoUrl = sharedLectureList[i].video_url, RequireLearningTime = sharedLectureList[i].learning_time, CurrentLearningTime = lectureProgress.elapsed_time, IsEnrolled = lectureProgress.is_enroll });
+                    } else {
+                        clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLectureList[i].lecture_id, Week = sharedLectureList[i].week, Chapter = 1, Title = sharedLectureList[i].title, Description = sharedLectureList[i].contents, StartDate = sharedLectureList[i].start_date, EndDate = sharedLectureList[i].end_date, VideoUrl = sharedLectureList[i].video_url, RequireLearningTime = sharedLectureList[i].learning_time, CurrentLearningTime = lectureProgress.elapsed_time, IsEnrolled = lectureProgress.is_enroll });
+                        weekCurs = sharedLectureList[i].week;
+                       chapterCurs = 1;
+                    }
                 } else {
-                    clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLecture.lecture_id, Week = sharedLecture.week, Chapter = sharedLecture.chapter, Title = sharedLecture.title, Description = sharedLecture.contents, StartDate = sharedLecture.start_date, EndDate = sharedLecture.end_date, VideoUrl = sharedLecture.video_url, RequireLearningTime = sharedLecture.learning_time, CurrentLearningTime = 0, IsEnrolled = false });
+                    if (sharedLectureList[i].week == weekCurs) {
+                        clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLectureList[i].lecture_id, Week = sharedLectureList[i].week, Chapter = chapterCurs, Title = sharedLectureList[i].title, Description = sharedLectureList[i].contents, StartDate = sharedLectureList[i].start_date, EndDate = sharedLectureList[i].end_date, VideoUrl = sharedLectureList[i].video_url, RequireLearningTime = sharedLectureList[i].learning_time, CurrentLearningTime = 0, IsEnrolled = false });
+                    } else {
+                        clientLectureList.Add(new Client.Models.Lecture { RoomId = room_id, LectureId = sharedLectureList[i].lecture_id, Week = sharedLectureList[i].week, Chapter = 1, Title = sharedLectureList[i].title, Description = sharedLectureList[i].contents, StartDate = sharedLectureList[i].start_date, EndDate = sharedLectureList[i].end_date, VideoUrl = sharedLectureList[i].video_url, RequireLearningTime = sharedLectureList[i].learning_time, CurrentLearningTime = 0, IsEnrolled = false });
+                        weekCurs = sharedLectureList[i].week;
+                        chapterCurs = 1;
+                    }
+                 
                 }
-               
+                chapterCurs++;
             }
             return clientLectureList;
         }
