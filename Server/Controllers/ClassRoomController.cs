@@ -2,6 +2,7 @@
 using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using ClassHub.Shared;
 using Dapper;
@@ -522,15 +523,36 @@ namespace ClassHub.Server.Controllers {
 		// 강의자료를 삭제합니다
 		// 실제 요청 url 예시 : 'api/classroom/1/delete/lecturematerial/1'
 		[HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
-		public void DeleteLectureMaterial(int room_id, int material_id) {
+		public async Task DeleteLectureMaterial(int room_id, int material_id) {
 			using var connection = new NpgsqlConnection(connectionString);
+
+            // 첨부파일 삭제
 			string query =
-				"DELETE FROM lecturematerial " +
-				"WHERE room_id = @room_id AND material_id = @material_id;";
+				"DELETE FROM lecturematerialattachment " +
+				"WHERE material_id = @material_id;";
 			var parameters = new DynamicParameters();
-			parameters.Add("room_id", room_id);
 			parameters.Add("material_id", material_id);
 			connection.Execute(query, parameters);
+
+            // 강의자료 게시글 삭제
+            query = 
+                "DELETE FROM lecturematerial " +
+				"WHERE room_id = @room_id AND material_id = @material_id;";
+			parameters.Add("room_id", room_id);
+			connection.Execute(query, parameters);
+
+			// Blob 삭제
+			var blobServiceClient = new BlobServiceClient(
+				new Uri(blobStorageUri),
+				new DefaultAzureCredential()
+			);
+
+			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
+			string prefix = $"{room_id}/{material_id}/";
+			await foreach(BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
+				BlobClient blobClient = containerClient.GetBlobClient(blobItem.Name);
+				await blobClient.DeleteIfExistsAsync();
+			}
 		}
 
         // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)

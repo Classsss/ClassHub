@@ -49,8 +49,11 @@
 	}
 </style>
 
-<BackButton />
-@if (boardContent == null) {
+
+@if (boardContent == null || isLoading) {
+	@if(boardContent == null) {
+		<BackButton />
+	}
 	<div class="d-flex justify-content-center mt-5">
 		<div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
 	</div>
@@ -174,6 +177,7 @@
 	private BoardContent boardContent;
 	private List<BoardContent> boardContents;
 	private List<Attachment>? attachmentList;
+	private bool isLoading = false;
 
 	/// <summary>
 	/// 1 - 공지사항, 2 - 강의자료 게시
@@ -287,10 +291,11 @@
 	}
 
 	private async void Delete() {
-
 		bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "게시글을 삭제하시겠습니까?", "삭제 후에는 복구할 수 없습니다.","삭제");
 
 		if (confirmed) {
+			isLoading = true;
+			StateHasChanged();
 			string requestUri = requestUri = $"/api/classroom/{RoomId}/delete/{type.ToString().ToLower()}/{ContentId}";
 			await Http.DeleteAsync(requestUri);
 			NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
