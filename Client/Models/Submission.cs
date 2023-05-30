@@ -35,8 +35,13 @@
     public class Exam : Submission {
         /// <summary>문제 순서 랜덤 여부</summary>
         public bool IsRandomProblem { get; set; } = false;
+
+        /// <summary>보기 순서 랜덤 여부</summary>
+        public bool IsRandomChoice { get; set; } = false;
+
         /// <summary>제한 시간 표시 여부</summary>
         public bool IsShowTimeLimit { get; set; } = false;
+
         /// <summary>이전 문제로 돌아갈 수 있는지 여부</summary>
         public bool IsBackToPreviousProblem { get; set; } = false;
     }
