@@ -17,7 +17,7 @@
 <div class="container">
     <div class="row justify-content-center align-items-center">
         <div class="col text-center">
-            <button class="btn btn-primary @((currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+            <button class="btn btn-primary @(((currentProblemIndex <= 0) || isBackToPreviousProblem == false) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
         </div>
         <div class="col text-center">
             <p>@(currentProblemIndex+1) / @(problems.Count)</p>
@@ -44,6 +44,7 @@
     private ExamProblem problem;
 
     private bool isRandomChoice;
+    private bool isBackToPreviousProblem;
 
     protected override void OnInitialized() {
         examInfo = new Exam {
@@ -53,10 +54,11 @@
             IsRandomProblem = true,
             IsRandomChoice = true,
             IsShowTimeLimit = true,
-            IsBackToPreviousProblem = true
+            IsBackToPreviousProblem = false
         };
 
         isRandomChoice = examInfo.IsRandomChoice;
+        isBackToPreviousProblem = examInfo.IsBackToPreviousProblem;
 
         problems = new List<ExamProblem> {
             new MultipleChoiceProblem {
