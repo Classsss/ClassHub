@@ -85,17 +85,17 @@
 				
 				<hr />
 				<h4>첨부 파일 목록:</h4>
-				@if(attachments != null) {
-					@if(attachments.Count == 0) {
+				@if(attachmentList != null) {
+					@if(attachmentList.Count == 0) {
 						<h6>첨부 파일이 없습니다.</h6>
 					} else {
 						<ul class="attachment-list">
-							@foreach(var attachment in attachments) {
-								<li class="attachment-item" @onclick="() => DownloadFile(attachment.FileName)">
+							@foreach(var attachment in attachmentList) {
+								<li class="attachment-item" @onclick="() => DownloadFile(attachment.download_url)">
 									<span class="attachment-icon oi oi-file" aria-hidden="true"></span>
-									<span>@attachment.FileName</span>
-									<span style="margin-left: 10px;">(@(attachment.FileSize) KB)</span>
-									<span class="attachment-date">@attachment.UpDate</span>
+									<span>@attachment.file_name</span>
+									<span style="margin-left: 10px;">(@(attachment.GetFileSizeString()))</span>
+									<span class="attachment-date">@attachment.up_date</span>
 								</li>
 							}
 						</ul>
@@ -173,7 +173,7 @@
 
 	private BoardContent boardContent;
 	private List<BoardContent> boardContents;
-	private List<Attachment>? attachments;
+	private List<Attachment>? attachmentList;
 
 	/// <summary>
 	/// 1 - 공지사항, 2 - 강의자료 게시
@@ -232,11 +232,7 @@
 		if (boardContent != null) IncreaseViewCount(boardContent);
 
 		// 첨부 파일을 불러옴
-		LoadAttachments();
-	}
-
-	private async void LoadAttachments() {
-		attachments = await Http.GetFromJsonAsync<List<Attachment>>($"api/classroom/attachments/lecturematerial?room_id={RoomId}&material_id={ContentId}");
+		attachmentList = await Http.GetFromJsonAsync<List<Attachment>>($"api/classroom/attachments/lecturematerial?room_id={RoomId}&material_id={ContentId}");
 		StateHasChanged();
 	}
 
@@ -284,7 +280,6 @@
 		}
 
 		boardContents = boardContents.OrderBy(a => a.content_id).ToList(); // ID 기준 내림차순
-		StateHasChanged();
 	}
 
 	private void Modify() {
@@ -314,9 +309,7 @@
 		await Http.PutAsJsonAsync(requestUri, new { });
 	}
 
-	private async void DownloadFile(string fileName) {
-		string requestUri = $"api/classroom/download?container_name=lecturematerial&blob_name={RoomId}/{ContentId}/{fileName}";
-		var downloadUrl = await Http.GetStringAsync(requestUri);
+	private async void DownloadFile(string downloadUrl) {
 		Console.WriteLine($"downloadUrl: {downloadUrl}");
 		await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
 	}

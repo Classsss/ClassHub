@@ -277,8 +277,8 @@
 
             foreach(var file in fileList) {
                 var buffer = new byte[file.Size];
-                await file.OpenReadStream().ReadAsync(buffer);
-                content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{ContentId}/{file.Name}");
+                await file.OpenReadStream(maxAllowedSize: 30L * 1024 * 1024).ReadAsync(buffer); // 30MB까지 허용
+                content.Add(new ByteArrayContent(buffer), "files", file.Name);
             }
 
             isLoading = true;

@@ -303,29 +303,72 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/upload/lecturematerial'
         [HttpPost("{room_id}/upload/lecturematerial/{material_id}")]
         public async Task<IActionResult> UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
+            using var connection = new NpgsqlConnection(connectionString);
+
             var blobServiceClient = new BlobServiceClient(
                 new Uri(blobStorageUri),
                 new DefaultAzureCredential()
             );
-
-            // 컨테이너 객체를 받음
             BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
 
-            await Console.Out.WriteLineAsync($"files count: {files.Count}");
-            foreach(var file in files) {
-                using(var memoryStream = new MemoryStream()) {
-                    await file.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
+            var tasks = new List<Task>();
 
-                    var blobClient = containerClient.GetBlobClient(file.FileName);
-                    await Console.Out.WriteLineAsync($"Blob Name: {blobClient.Name}");
-                    var response = await blobClient.UploadAsync(memoryStream, overwrite: true);
-                    await Console.Out.WriteLineAsync(response.ToString());
-                }
+            foreach(var file in files) {
+                string query = 
+                    "INSERT INTO lecturematerialattachment (material_id, file_name, file_size, up_date, download_url) " +
+                    "VALUES (@material_id, @file_name, @file_size, @up_date, @download_url)";
+
+                var blobClient = containerClient.GetBlobClient($"{room_id}/{material_id}/{file.FileName}");
+
+                // UploadAsync를 직접 await 하지 않고 Task 리스트에 추가합니다.
+                tasks.Add(Task.Run(async () => {
+                    try {
+                        using(var memoryStream = new MemoryStream()) {
+                            await file.CopyToAsync(memoryStream);
+                            memoryStream.Position = 0;
+                            await blobClient.UploadAsync(memoryStream, overwrite: true);
+                        }
+                    } catch (Exception e) {
+                        // 콘솔에 예외 로그를 출력합니다.
+                        Console.WriteLine($"File upload failed: {e.Message}");
+                    }
+                }));
+
+                var parameters = new DynamicParameters();
+                parameters.Add("material_id", material_id);
+                parameters.Add("file_name", file.FileName);
+                parameters.Add("file_size", file.Length);
+                parameters.Add("up_date", DateTime.UtcNow);
+                parameters.Add("download_url", CreateSasUri(blobClient, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)));
+                connection.Query(query, parameters);
             }
 
-            await Console.Out.WriteLineAsync("Blob Upload Success!");
+            // 모든 작업이 완료될 때까지 기다립니다.
+            await Task.WhenAll(tasks);
+
             return Ok();
+        }
+
+        private string CreateSasUri(BlobClient blobClient, DateTimeOffset startsOn, DateTimeOffset expiresOn) {
+            var secretClient = new SecretClient(
+                vaultUri: new Uri(vaultStorageUri),
+                credential: new DefaultAzureCredential()
+            );
+            string secretName = "StorageAccountKey";
+            KeyVaultSecret secret = secretClient.GetSecret(secretName);
+            var storageAccountKey = secret.Value;
+
+            BlobSasBuilder sasBuilder = new BlobSasBuilder() {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                StartsOn = startsOn,
+                ExpiresOn = expiresOn
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+            string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobClient.AccountName, storageAccountKey)).ToString();
+            string sasUri = $"{blobClient.Uri}?{sasToken}";
+            return sasUri;
         }
 
 		// 강의자료 첨부파일 목록을 불러옵니다.
