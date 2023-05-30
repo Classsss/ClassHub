@@ -45,7 +45,7 @@ namespace ClassHub.Server.Controllers {
                 bool is_submit = true;
                 if (connection.QueryFirstOrDefault<int>(query, parametersSubmit) == 0) { is_submit = false; }
 
-                practiceList.Add(new Assignment {Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.contents, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = is_submit, TotalSubmitters=1 });
+                practiceList.Add(new Client.Models.Assignment { Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.contents, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = is_submit, TotalSubmitters=1 });
             }
             return practiceList;
         }
@@ -77,7 +77,7 @@ namespace ClassHub.Server.Controllers {
                 parametersSubmit.Add("room_id", codeAssignment.room_id);
                 parametersSubmit.Add("assignment_id", codeAssignment.assignment_id);
                 int count = connection.QueryFirstOrDefault<int>(query, parametersSubmit);
-                practiceList.Add(new Assignment { Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.contents, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = true, TotalSubmitters=count});
+                practiceList.Add(new Client.Models.Assignment { Id = codeAssignment.assignment_id, Title = codeProblem.title, Description = codeProblem.contents, Author = codeProblem.author, StartDate = codeAssignment.start_date, EndDate = codeAssignment.end_date, IsSubmitted = true, TotalSubmitters=count});
             }
             return practiceList;
         }
