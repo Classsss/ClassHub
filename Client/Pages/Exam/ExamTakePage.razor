@@ -24,7 +24,7 @@
             <p>남은 시간: 10:00</p>
         </div>
         <div class="col text-center">
-            <button class="btn btn-primary" @onclick="NextProblem">
+            <button class="btn btn-primary" @onclick="(currentProblemIndex == problems.Count - 1) ? (Action)FinishExam : (Action)NextProblem">
                 @((currentProblemIndex == problems.Count - 1) ? "응시 완료" : "다음 문제")
             </button>
         </div>
@@ -97,5 +97,9 @@ Console.WriteLine(ans);",
         if(currentProblemIndex > 0) {
             problem = problems[--currentProblemIndex];
         }
+    }
+
+    private void FinishExam() {
+        Console.WriteLine("응시 완료");
     }
 }
