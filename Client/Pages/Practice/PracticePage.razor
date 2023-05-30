@@ -72,6 +72,7 @@
             <MonacoEditor @ref="MonacoEditorReference" />
             @if (role == "student"){
                 <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="SubmitCode">코드 제출</button>
+                <button class="btn-outline-secondary" style="margin-top: 10px;" @onclick="MultipleSubmitCode">데모 코드 제출</button>
             }
             <button class="btn-outline-secondary" style="margin-top: 10px;margin-left: 10px;" @onclick="CheckSubmitHistory">제출 내역 확인</button>
         </div>
@@ -149,6 +150,64 @@
         var content = new StringContent(JsonSerializer.Serialize(requestSubmitContainer), Encoding.UTF8, "application/json");
         // 제출 내역 창으로 이동한다.
         CheckSubmitHistory();
+        // 서버에 채점을 요청한다.
+        HttpResponseMessage response = await Http.PostAsync("Judge", content);
+    }
+
+    // 데모를 위해 여러 유형의 코드를 채점 서버로 제출함
+    private async Task MultipleSubmitCode() {
+        SubmitCodeForDemo(DemoCodeTemplate.Type.CORRECT);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.WRONG);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.COMPILE_ERROR);
+        SubmitCodeForDemo(DemoCodeTemplate.Type.RUNTIME_ERROR);
+        CheckSubmitHistory();
+    }
+
+    // 데모를 위해 채점 서버로 코드를 제출함
+    private async Task SubmitCodeForDemo(DemoCodeTemplate.Type type) {
+        //모나코에디터로부터 현재 설정된 언어를 가져오기 위한 코드
+        var model = await MonacoEditorReference.editor.GetModel();
+        var language = await model.GetLanguageId();
+
+        // 제출 언어와 다르면 제출을 할 수 없게 처리
+        if (language != practice.Language) { 
+            await JSRuntime.InvokeVoidAsync("alert", "제출 언어와 다릅니다."); return;
+        }
+
+        // 채점 요청을 전송하기 위한 객체 생성
+        string typeCode = DemoCodeTemplate.codeTemplates[language][type];
+
+        JudgeRequest requestJudge = new JudgeRequest {
+            CorrectCode = practice.CorrectCode,
+            CorrectCodeLanguage = practice.Language,
+            SubmitCode = typeCode,
+            SubmitCodeLanguage = language,
+            MemoryUsageLimit = 500,
+            ExecutionTimeLimit = 50,
+            InputCases = practice.IntputCases,
+            SubmitId = 1
+        };
+
+        // 제출 결과를 생성하기 위한 객체 생성
+        CodeSubmit requestSubmit = new CodeSubmit {
+                room_id = RoomId,
+                assignment_id = PracticeId,
+                week = 1,
+                submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
+                status = JudgeResult.JResult.Pending.ToString(),
+                submit_id = 1,
+                student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                exec_time = 0,
+                mem_usage = 0,
+                code = typeCode,
+                message = " ",
+                language = language
+            };
+
+        //하나로 묶어준다.
+        RequestSubmitContainer requestSubmitContainer = new RequestSubmitContainer(requestJudge, requestSubmit);
+        // 직렬화
+        var content = new StringContent(JsonSerializer.Serialize(requestSubmitContainer), Encoding.UTF8, "application/json");
         // 서버에 채점을 요청한다.
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
     }
