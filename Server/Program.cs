@@ -1,5 +1,6 @@
 using ClassHub.Server.Controllers;
 
+
 namespace ClassHub {
     public class Program {
         public static void Main(string[] args) {

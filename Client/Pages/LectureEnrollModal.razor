@@ -2,8 +2,13 @@
 @using Blazored.Modal
 @using Blazored.Modal.Services
 @using ClassHub.Client.Models;
-@using Newtonsoft.Json
+@using ClassHub.Shared;
+@using System.Text.Json;
+@using System.Text;
+@using System.Net.Http.Headers;
 @inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
 <Modal>
     <ModalBody>
         <div class="form-group">
@@ -23,16 +28,24 @@
 
         <div class="form-group" style="margin-top: 10px;">
             <label for="startTime">시작 일:</label>
-            <input type="time" class="form-control" id="startTime" @bind="@lecture.StartDate" />
+            <input type="datetime-local"
+                   max="2023-06-21T21:00"
+                   min="2023-05-26T12:30"
+                   @bind="lecture.StartDate"
+                   class="form-control" />
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
             <label for="endTime">종료 일:</label>
-            <input type="time" class="form-control" id="endTime" @bind="@lecture.EndDate" />
+            <input type="datetime-local"
+                   max="2023-06-21T21:00"
+                   min="2023-05-26T12:30"
+                   @bind="lecture.EndDate"
+                   class="form-control" />
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
-            <label for="enroll">아래 영상등록 추가</label>
+            <DragDropUpload @bind-droppedFiles="file" IsMultiple=false/>
         </div>
     </ModalBody>
     <ModalFooter>
@@ -47,29 +60,70 @@
 
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
-   
+    [Parameter] public int RoomId { get; set; }
+
     public List<int> selectedWeek = new List<int> {};
-    private Lecture lecture = new Lecture();
+    private List<IBrowserFile> file = new List<IBrowserFile>();
+    private Models.Lecture lecture = new Models.Lecture();
+
+    protected async override void OnInitialized() {
+        lecture.StartDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+        lecture.EndDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+    }
 
     // 주차 고르기
     private async Task OnWeekChanged(List<int> week) {
         selectedWeek = week;
+        Console.WriteLine(selectedWeek.Count());
         StateHasChanged();
         await Task.CompletedTask;
     }
-    
+
     // 동영상 강의를 등록한다.
     private async Task HandleEnroll() {
-        // 서버와 통신해 lecture를 db에 등록하는 로직 추가 이때 서버에서는 blob에 파일도 저장함
 
-        await JSRuntime.InvokeVoidAsync("alert", "등록 완료하였습니다!"); 
-        await ModalInstance.CloseAsync();
+        if (selectedWeek.Count == 0) {
+            await JSRuntime.InvokeVoidAsync("alert", "주차를 선택해주세요."); return;
+            return;
+        }
+        if (file.Count == 0) {
+            await JSRuntime.InvokeVoidAsync("alert", "동영상파일을 업로드 해주세요."); return;
+            return;
+        }
+
+        // 서버와 통신해 lecture를 db에 등록
+        string jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Lecture{
+                room_id = RoomId,
+                week = selectedWeek[0],
+                lecture_id = 0,
+                title = lecture.Title,
+                contents = lecture.Description,
+                start_date = lecture.StartDate,
+                end_date = lecture.EndDate,
+                video_url = $"{RoomId}/{" "}/{file[0].Name}",
+                learning_time = 0
+        });
+
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        var responsedb = await Http.PostAsync($"api/lecture/{RoomId}/createdb", httpContent);
+
+        string json = await responsedb.Content.ReadAsStringAsync();
+        int lecture_id = JsonSerializer.Deserialize<int>(json);
+
+        // blob 파일도 저장 및 db 업데이트함
+        var content = new MultipartFormDataContent();
+        var buffer = new byte[file[0].Size];
+        await file[0].OpenReadStream().ReadAsync(buffer);
+        content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{lecture_id}/{file[0].Name}");
+        var responsefile = Http.PostAsync($"api/lecture/{RoomId}/upload/{lecture_id}", content);
+        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 10여 초 후에 동영상 강의가 등록됩니다.");
+        await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 
     // 동영상 강의 등록창을 종료한다.
     private async Task HandleClose()
     {
-        await ModalInstance.CloseAsync();
+        await ModalInstance.CloseAsync(ModalResult.Cancel());
     }
 
 }

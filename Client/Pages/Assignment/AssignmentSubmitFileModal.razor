@@ -1,0 +1,89 @@
+﻿@using System
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using ClassHub.Client.Models;
+@using System.Text.Json;
+@using System.Text;
+@using System.Net.Http.Json
+@using ClassHub.Shared;
+
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+<style>
+     .attachment-item:hover span {
+        color: blue;
+        cursor: pointer;
+    }
+</style>
+
+<Modal>
+    <ModalBody>
+         <div class="p-3 border-4 rounded-3" style="background-color: #F7F7F7;">
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="title">제출 자료</label>
+                @foreach (var attachment in submitAttachments) {
+                    <li class="attachment-item">
+                    <span class="attachment-icon oi oi-file" aria-hidden="true"></span>
+                    <span class="attachment-down" @onclick="() => DownloadFile(attachment.file_url)">
+                     @(attachment.file_name.Split('/').Skip(3).FirstOrDefault() ?? attachment.file_name)
+                    </span>
+                    <span style="margin-left: 10px;">(@(attachment.file_size.ToString("0.##")) KB)</span>
+                    <span class="attachment-date">@attachment.update</span>
+                     </li>
+                }
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                 <label for="title">채점</label>
+            <span>
+                <input type="number" @bind="score"/></span>
+                 <span><td style="vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => putScore(score)"></button></td></span>
+            </div>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <div style="margin-top: 2em;">
+            <button class="btn btn-success" @onclick="HandleClose">닫기</button>
+        </div>
+    </ModalFooter>
+</Modal>
+
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] 
+    public AssignmentSubmit assignmentSubmit{ get; set; }
+
+    private List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
+    int score;
+
+    protected override async Task OnInitializedAsync() {
+        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
+        score = assignmentSubmit.score;
+        StateHasChanged();
+    }
+
+    
+    // 파일을 다운받는다
+    private async void DownloadFile(string fileUrl) {
+        var downloadUrl = fileUrl;
+        Console.WriteLine($"downloadUrl: {downloadUrl}");
+        await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
+    }
+
+      // 점수를 넣는다.
+    private async void putScore(int score) {
+        await Http.PutAsync($"api/assignmentsubmit/{assignmentSubmit.submit_id}/score/{score}", null);
+        await JSRuntime.InvokeVoidAsync("alert", "점수 수정완료하였습니다!");
+        await ModalInstance.CloseAsync(ModalResult.Ok());
+    }
+
+    // 파일 다운창을 종료한다.
+    private async Task HandleClose(){
+        await ModalInstance.CloseAsync(ModalResult.Cancel());
+    }
+
+}
+
+
+ 

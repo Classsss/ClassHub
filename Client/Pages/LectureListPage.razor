@@ -143,13 +143,17 @@
         NavigationManager.NavigateTo($"/classroom/{RoomId}/week/{selectedLecture.Week}/chapter/{selectedLecture.Chapter}?lectures={Uri.EscapeDataString(lecturesJson)}");
     }
 
-      // 동영상 강의 등록페이지를 띄운다.
+    // 동영상 강의 등록페이지를 띄운다.
     private async Task ShowEnrollPage() {
+        var parameters = new ModalParameters();
+        parameters.Add("RoomId",RoomId);
         var modalOptions = new ModalOptions {
                 DisableBackgroundCancel = true // 배경 클릭에 의한 모달 종료 비활성화 (선택사항)
             };
-        var modalReference = ModalService.Show<LectureEnrollModal>("동영상 강의 등록",modalOptions);
+        var modalReference = ModalService.Show<LectureEnrollModal>("동영상 강의 등록",parameters,modalOptions);
         var result = await modalReference.Result;
+        if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
+
     }
 
     // 동영상 강의 수정페이지를 띄운다.
@@ -159,9 +163,11 @@
         var modalOptions = new ModalOptions() { DisableBackgroundCancel = true , Size = Blazored.Modal.ModalSize.ExtraLarge };
         var modalReference = ModalService.Show<LectureEditModal>("동영상 강의 수정", parameters, modalOptions);
         var result = await modalReference.Result;
+        Console.WriteLine(result.Confirmed);
+        if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
     }
 
-    // 동영상 강의 수정페이지를 띄운다.
+    // 동영상 강의 시청 현황페이지를 띄운다.
     private async Task ShowProgressPage(Lecture selectedLecture) {
         var parameters = new ModalParameters();
         parameters.Add("lecture", selectedLecture);
