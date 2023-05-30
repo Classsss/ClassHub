@@ -97,6 +97,6 @@
 
     private void Attend(Submission submission) {
         Console.WriteLine($"{submission.Id}번 항목을 클릭하였습니다.");
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{Submissions.Count - Submissions.IndexOf(submission)}");
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/{submission.Id}");
     }
 }
