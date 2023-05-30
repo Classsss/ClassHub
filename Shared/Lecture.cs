@@ -5,7 +5,6 @@
         public int room_id { get; set; }
         public int week { get; set; } 
         public int lecture_id { get; set; }
-        public int chapter { get; set; }
         public string title { get; set; }
         public string contents { get; set; }
         public DateTime start_date { get; set; }
