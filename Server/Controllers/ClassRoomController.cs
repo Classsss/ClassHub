@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
+﻿using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -19,14 +18,16 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
-        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
         const string academicServerUri = "https://academicinfo.azurewebsites.net/";
 
 		private readonly ILogger<ClassRoomController> _logger;
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly SecretClient _secretClient; 
 
-		public ClassRoomController(ILogger<ClassRoomController> logger) {
+        public ClassRoomController(ILogger<ClassRoomController> logger, BlobServiceClient blobServiceClient, SecretClient secretClient) {
 			_logger = logger;
+            _blobServiceClient = blobServiceClient;
+            _secretClient = secretClient;
 		}
 
 		// Param으로 받은 ID를 가진 강의실의 정보를 불러옴
@@ -303,16 +304,10 @@ namespace ClassHub.Server.Controllers {
         // 강의자료 첨부파일들을 Blob Storage에 업로드 합니다.
         // 실제 요청 url 예시 : 'api/classroom/upload/lecturematerial'
         [HttpPost("{room_id}/upload/lecturematerial/{material_id}")]
-        public async Task<IActionResult> UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
+        public IActionResult UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
             using var connection = new NpgsqlConnection(connectionString);
 
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(blobStorageUri),
-                new DefaultAzureCredential()
-            );
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
-
-            var tasks = new List<Task>();
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
 
             foreach(var file in files) {
                 string query = 
@@ -322,7 +317,7 @@ namespace ClassHub.Server.Controllers {
                 var blobClient = containerClient.GetBlobClient($"{room_id}/{material_id}/{file.FileName}");
 
                 // UploadAsync를 직접 await 하지 않고 Task 리스트에 추가합니다.
-                tasks.Add(Task.Run(async () => {
+                var task = Task.Run(async () => {
                     try {
                         using(var memoryStream = new MemoryStream()) {
                             await file.CopyToAsync(memoryStream);
@@ -333,7 +328,7 @@ namespace ClassHub.Server.Controllers {
                         // 콘솔에 예외 로그를 출력합니다.
                         Console.WriteLine($"File upload failed: {e.Message}");
                     }
-                }));
+                });
 
                 var parameters = new DynamicParameters();
                 parameters.Add("material_id", material_id);
@@ -344,19 +339,12 @@ namespace ClassHub.Server.Controllers {
                 connection.Query(query, parameters);
             }
 
-            // 모든 작업이 완료될 때까지 기다립니다.
-            await Task.WhenAll(tasks);
-
             return Ok();
         }
 
         private string CreateSasUri(BlobClient blobClient, DateTimeOffset startsOn, DateTimeOffset expiresOn) {
-            var secretClient = new SecretClient(
-                vaultUri: new Uri(vaultStorageUri),
-                credential: new DefaultAzureCredential()
-            );
             string secretName = "StorageAccountKey";
-            KeyVaultSecret secret = secretClient.GetSecret(secretName);
+            KeyVaultSecret secret = _secretClient.GetSecret(secretName);
             var storageAccountKey = secret.Value;
 
             BlobSasBuilder sasBuilder = new BlobSasBuilder() {
@@ -395,20 +383,11 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/download'
         [HttpGet("download")]
         public string GetAttachmentDownloadUrl ([FromQuery] string container_name, [FromQuery] string blob_name) {
-			var secretClient = new SecretClient(
-                vaultUri: new Uri(vaultStorageUri), 
-                credential: new DefaultAzureCredential()
-            );
 			string secretName = "StorageAccountKey";
-			KeyVaultSecret secret = secretClient.GetSecret(secretName);
+			KeyVaultSecret secret = _secretClient.GetSecret(secretName);
 			var storageAccountKey = secret.Value;
 
-			var blobServiceClient = new BlobServiceClient(
-				new Uri(blobStorageUri),
-				new DefaultAzureCredential()
-			);
-
-			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(container_name);
+			BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(container_name);
 			BlobClient blobClient = containerClient.GetBlobClient(blob_name);
 
 			BlobSasBuilder sasBuilder = new BlobSasBuilder() {
@@ -523,7 +502,7 @@ namespace ClassHub.Server.Controllers {
 		// 강의자료를 삭제합니다
 		// 실제 요청 url 예시 : 'api/classroom/1/delete/lecturematerial/1'
 		[HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
-		public async Task DeleteLectureMaterial(int room_id, int material_id) {
+		public void DeleteLectureMaterial(int room_id, int material_id) {
 			using var connection = new NpgsqlConnection(connectionString);
 
             // 첨부파일 삭제
@@ -541,19 +520,16 @@ namespace ClassHub.Server.Controllers {
 			parameters.Add("room_id", room_id);
 			connection.Execute(query, parameters);
 
-			// Blob 삭제
-			var blobServiceClient = new BlobServiceClient(
-				new Uri(blobStorageUri),
-				new DefaultAzureCredential()
-			);
-
-			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
-			string prefix = $"{room_id}/{material_id}/";
-			await foreach(BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
-				BlobClient blobClient = containerClient.GetBlobClient(blobItem.Name);
-				await blobClient.DeleteIfExistsAsync();
-			}
-		}
+            Task.Run(async () =>
+            {
+                BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
+                string prefix = $"{room_id}/{material_id}/";
+                await foreach(BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
+                    BlobClient blobClient = containerClient.GetBlobClient(blobItem.Name);
+                    await blobClient.DeleteIfExistsAsync();
+                }
+            });
+        }
 
         // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
