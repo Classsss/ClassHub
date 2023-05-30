@@ -17,6 +17,7 @@
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "userID");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "Name");
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "Role");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "tokenExpireTime");
 
             authProvider.StateChanged();
 
