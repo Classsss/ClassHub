@@ -86,6 +86,13 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="ResizeEditor.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    
+    <!--첨부파일 관련-->
+    <script>
+        window.resetInputFile = (inputElement) => {
+            inputElement.value = '';
+        }
+    </script>
 </body>
 
 </html>
