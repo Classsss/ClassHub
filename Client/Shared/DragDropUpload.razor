@@ -20,14 +20,14 @@
     }
 </style>
 
+    
 <div class="drop-area border border-3 rounded p-3 text-center position-relative" @ondragenter="OnDragEnter" @ondragleave="OnDragLeave" @ondragover="OnDragOver">
     <div class="drop-zone position-relative w-100 h-100">
         <div class="text-zone">
             <p class="m-0">파일을 여기로 드래그 앤 드롭하거나 클릭하여 선택하세요.</p>
         </div>
-        <InputFile OnChange="OnDrop" class="position-absolute w-100 h-100" style="opacity: 0; cursor: pointer; top: 0; left: 0;" multiple />
+            <InputFile OnChange="OnDrop" class="position-absolute w-100 h-100" style="opacity: 0; cursor: pointer; top: 0; left: 0;" multiple />
     </div>
-
     <!-- 파일 목록 표시 영역 -->
     @if(DroppedFiles.Count > 0) {
         <div class="p-3">
@@ -41,12 +41,16 @@
     }
 </div>
 
+
 @code {
     [Parameter]
     public List<IBrowserFile> DroppedFiles { get; set; }
 
     [Parameter]
     public EventCallback<List<IBrowserFile>> DroppedFilesChanged { get; set; }
+
+    [Parameter]
+    public bool IsMultiple { get; set; }
 
     private void OnDragEnter(DragEventArgs e) {
         // 드래그 대상이 드롭 대상의 위로 드래그 될 때 발생합니다. 
@@ -74,17 +78,30 @@
         // 드롭된 파일 데이터는 브라우저 메모리에 임시적으로 저장됩니다. 
         // 이 데이터는 서버에 전송되지 않고, 페이지가 새로 고쳐지거나 브라우저가 닫히면 삭제됩니다. 
         // 따라서 이 파일 데이터를 서버에 영구적으로 저장하려면, 추가적인 처리가 필요합니다.
-        foreach(var file in e.GetMultipleFiles()) {
-            // 파일 처리 로직을 여기에 추가하세요.
-            Console.WriteLine($"파일 이름: {file.Name}, 크기: {file.Size}");
+
+        if (IsMultiple == true)
+        {
+            foreach (var file in e.GetMultipleFiles())
+            {
+                // 파일 처리 로직을 여기에 추가하세요.
+                Console.WriteLine($"파일 이름: {file.Name}, 크기: {file.Size}");
+            }
+
+            DroppedFiles.AddRange(e.GetMultipleFiles());
+
+            StateHasChanged();  // UI를 갱신합니다.
+
+            DroppedFilesChanged.InvokeAsync(DroppedFiles);
+
+        } else {
+            DroppedFiles.Clear();
+            if (e.FileCount > 0) {
+                DroppedFiles.Add(e.File);
+                DroppedFilesChanged.InvokeAsync(DroppedFiles);
+            }
         }
-
-        DroppedFiles.AddRange(e.GetMultipleFiles());
-
-        StateHasChanged();  // UI를 갱신합니다.
-
-        DroppedFilesChanged.InvokeAsync(DroppedFiles);
     }
+
 
     private void RemoveFile(IBrowserFile file) {
         DroppedFiles.Remove(file);
