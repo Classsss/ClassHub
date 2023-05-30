@@ -14,8 +14,8 @@
 @using System.Text;
 @using System.Net.Http.Headers;
 
-@if(type == 0) {
-    
+@if(type == 0 || isLoading) {
+    <LoadingBar />
 } else {
    <style>
        .ql-editor{
@@ -116,6 +116,7 @@
     BlazoredTextEditor QuillHtml;
     //기본 설정은 WriteTab
     private bool isWriteTabSelected = true;
+    private bool isLoading = false;
 
     private List<BoardContent> loadedContents = new List<BoardContent>();
 
@@ -279,6 +280,9 @@
                 await file.OpenReadStream().ReadAsync(buffer);
                 content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{ContentId}/{file.Name}");
             }
+
+            isLoading = true;
+            StateHasChanged();
 
             var response = await Http.PostAsync($"api/classroom/{RoomId}/upload/lecturematerial/{ContentId}", content);
             if(!response.IsSuccessStatusCode) Console.WriteLine($"Error uploading file: {response.StatusCode}");
