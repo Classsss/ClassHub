@@ -2,6 +2,7 @@
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
 @using System.Timers;
+@implements IDisposable
 
 @switch(problem) {
     case MultipleChoiceProblem multipleChoiceProblem:
@@ -147,5 +148,10 @@ Console.WriteLine(ans);",
                 FinishExam();
             }
         }
+    }
+
+    public void Dispose() {
+        // 페이지를 빠져나올 때 타이머 제거
+        timeLeftUpdateTimer?.Dispose();
     }
 }
