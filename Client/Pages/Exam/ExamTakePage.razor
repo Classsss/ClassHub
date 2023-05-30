@@ -100,6 +100,15 @@ Console.WriteLine(ans);",
 
         // 시간을 mm:ss 형식으로 변환
         TimeLeft = $"{remainingTime:hh\\:mm\\:ss}";
+
+        // 타이머 생성
+        timeLeftUpdateTimer = new Timer(1000); // 1초마다 이벤트 발생
+
+        // 이벤트 핸들러 등록
+        timeLeftUpdateTimer.Elapsed += UpdateTimeLeft;
+
+        // 타이머 시작
+        timeLeftUpdateTimer.Start();
     }
 
     private void NextProblem() {
