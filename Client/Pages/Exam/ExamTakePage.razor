@@ -4,7 +4,7 @@
 
 @switch(problem) {
     case MultipleChoiceProblem multipleChoiceProblem:
-        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" />
+        <MultipleChoiceDisplay Problem="@multipleChoiceProblem"  IsRandomChoice="@isRandomChoice" />
         break;
     case ShortAnswerProblem shortAnswerProblem:
         <ShortAnswerDisplay Problem="@shortAnswerProblem" />
@@ -43,15 +43,20 @@
     private List<ExamProblem> problems;
     private ExamProblem problem;
 
+    private bool isRandomChoice;
+
     protected override void OnInitialized() {
         examInfo = new Exam {
             Id = 1,
             StartDate = DateTime.Today.AddDays(-1),
             EndDate = DateTime.Today.AddDays(1),
             IsRandomProblem = true,
+            IsRandomChoice = true,
             IsShowTimeLimit = true,
             IsBackToPreviousProblem = true
         };
+
+        isRandomChoice = examInfo.IsRandomChoice;
 
         problems = new List<ExamProblem> {
             new MultipleChoiceProblem {
@@ -72,8 +77,9 @@ Console.WriteLine(ans);",
             }
         };
 
+        // 문제 순서 무작위 셔플
         var rnd = new Random();
-        problems = problems.OrderBy(item => rnd.Next()).ToList(); // 무작위 셔플
+        problems = problems.OrderBy(item => rnd.Next()).ToList();
 
         currentProblemIndex = 0;
         problem = problems[currentProblemIndex];
