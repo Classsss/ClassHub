@@ -1,9 +1,12 @@
 ﻿@page "/classroom/{roomid:int}/exam/editor"
 @layout MainLayout
+@using Blazored.Modal
+@using Blazored.Modal.Services
 @using Blazored.TextEditor
 @using ClassHub.Client.Models
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject Blazored.Modal.Services.IModalService ModalService
 
 <style>
     .ql-editor{
@@ -182,9 +185,19 @@
             Score = 10,
             Answer = "Seoul"
         });
+        problems.Add(new CodeProblem {
+            ProblemId = 3,
+            Description = "What is the capital of South Korea?",
+            Score = 10,
+            Example = "Example",
+            Answer = "Seoul"
+        });
+    }
     }
 
     private void Submit() {
+        Console.WriteLine("시험 등록 버튼 클릭");
+
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }
