@@ -113,11 +113,14 @@
         NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);
     }
 
-    private async Task UpdateTimeLeft() {
-        var endTime = await JSRuntime.InvokeAsync<DateTime>("sessionStorage.getItem", "tokenExpireTime");
+    private async Task UpdateTimeLeft()
+    {
+        var endTimeString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "tokenExpireTime");
 
-        if (endTime != null) {
-            while (DateTime.Now < endTime) {
+        if (!string.IsNullOrEmpty(endTimeString) && DateTime.TryParse(endTimeString, out var endTime))
+        {
+            while (DateTime.Now < endTime)
+            {
                 var timeRemaining = endTime - DateTime.Now;
                 TimeLeft = $"{timeRemaining:mm\\:ss}"; // 시간을 mm:ss 형식으로 변환
                 await InvokeAsync(StateHasChanged);
@@ -126,7 +129,7 @@
         }
 
         // 시간이 만료된 경우
-        TimeLeft = "00:00"; 
+        TimeLeft = "00:00";
         await InvokeAsync(StateHasChanged);
     }
 }

@@ -100,6 +100,35 @@ namespace ClassHub.Client.Shared {
 
             return null;
         }
+
+        public static async Task<DateTime?> GetExpirationTimeAsync(IJSRuntime jsRuntime) {
+            var accessToken = await jsRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+
+            if (accessToken != null) {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.ASCII.GetBytes("ClassHubOnTheBuilding");
+
+                try {
+                    var validationParameters = new TokenValidationParameters {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+
+                    SecurityToken validatedToken;
+                    tokenHandler.ValidateToken(accessToken, validationParameters, out validatedToken);
+
+                    if (validatedToken is JwtSecurityToken jwtToken) {
+                        return jwtToken.ValidTo;
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+            return null;
+        }
     }
 
     public class SSOAuthenticationStateProvider : AuthenticationStateProvider //인증 상태를 제공하는 Provider 클래스
