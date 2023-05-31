@@ -122,7 +122,6 @@
                             <td>
                                 @{
                                     string description = problem.Description;
-                                    int maxDisplayLength = 70; // 최대 표시 길이
                                     if (description.Length > maxDisplayLength) {
                                         description = $"{description.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
                                     }
@@ -184,6 +183,8 @@
     List<ExamProblem> problems;
 
     private BlazoredTextEditor QuillHtml;
+
+    private int maxDisplayLength = 70;
 
     protected override async Task OnInitializedAsync() {
         problems = new List<ExamProblem>();
