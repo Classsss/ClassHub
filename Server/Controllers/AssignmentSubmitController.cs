@@ -55,7 +55,6 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("register")]
         public ActionResult RegisterAssignmentSubmit([FromBody] AssignmentSubmit assignmentSubmit) {
             using var connection = new NpgsqlConnection(connectionString);
-
             connection.Open();
             using (var transaction = connection.BeginTransaction()) {
                 try {
@@ -64,8 +63,8 @@ namespace ClassHub.Server.Controllers {
                     assignmentSubmit.submit_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
 
                     string query2 =
-                        "INSERT INTO assignmentsubmit (submit_id, assignment_id, room_id, student_id, score, submit_date) " +
-                        "VALUES (@submit_id, @assignment_id, @room_id, @student_id, @score, @submit_date);";
+                        "INSERT INTO assignmentsubmit (submit_id, assignment_id, room_id, student_id, score, submit_date, message) " +
+                        "VALUES (@submit_id, @assignment_id, @room_id, @student_id, @score, @submit_date, @message);";
                     connection.Execute(query2, assignmentSubmit);
                     transaction.Commit();
                 } catch (Exception ex) {
@@ -248,15 +247,16 @@ namespace ClassHub.Server.Controllers {
         }
 
 
-        // 제출 과제를 점수를 수정합니다
-        [HttpPut("{SubmitId}/score/{Score}")]
-        public async Task ModifyScore(int SubmitId, int Score) {
+        // 제출 과제의 평가를 수정합니다
+        [HttpPut("{SubmitId}/score/{Score}/message/{Message}")]
+        public async Task ModifyScore(int SubmitId, int Score, string Message) {
 
             using var connection = new NpgsqlConnection(connectionString);
-            var modifyQuery = "Update assignmentsubmit SET score = @score WHERE submit_id = @submit_id";
+            var modifyQuery = "Update assignmentsubmit SET score = @score, message = @message WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
             parameters.Add("submit_id", SubmitId);
             parameters.Add("score", Score);
+            parameters.Add("message", Message);
             connection.Execute(modifyQuery, parameters);
         }
     }
