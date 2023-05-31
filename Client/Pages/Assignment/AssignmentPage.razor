@@ -102,26 +102,39 @@
             @if ((assignment.EndDate < TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) || (assignment.StartDate > TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"))))) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="text-black fw-bold mb-2">제출 기한이 아닙니다.</div>
-                    <div class="text-black mb-3" style="margin-top: 1em;">점수 : @assignmentSubmit.score</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="text-black mb-3" style="margin-top: 1em;">점수 : (@assignmentSubmit.score)</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="text-black mb-3">교수 평가</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <input class="form-control" type="text" placeholder=@assignmentSubmit.message readonly>
+                    </div>
                 </div>
             } else {
                 <DragDropUpload @bind-droppedFiles="uploadFileList" IsMultiple=true />
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1em">
+                    <div class="text-black mb-3">교수 평가</div>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="text-black mb-3" style="margin-top: 1em;">점수 : (@assignmentSubmit.score)</div>
-                    <button class="btn btn-warning" style="margin-top: 1em;" @onclick="@(()=>ModifySubmit())">수정</button>
+                    <textarea class="form-control" placeholder=@assignmentSubmit.message readonly></textarea>
+
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;  margin-top: 1em">
+                    <div class="text-black mb-3">점수 : (@assignmentSubmit.score)</div>
+                    <button class="btn btn-warning" @onclick="@(()=>ModifySubmit())">제출 파일 수정</button>
                 </div>
             }
         </div>
     }
-} else {
-    <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowSubmitPage())">과제 제출 내역</button>
-    <hr />
-}
+} 
 <div class="d-flex align-items-center justify-content-between mb-2" style="margin-top: 1em;">
     <AuthorizeView Roles="professor">
         <div>
             <button class="btn btn-warning" @onclick="Modify">수정</button>
             <button class="btn btn-warning" @onclick="Delete">삭제</button>
+            <button class="btn btn-warning" @onclick="@(()=>ShowSubmitPage())">과제 제출 내역</button>
         </div>
     </AuthorizeView>
     <button class="btn btn-primary" @onclick="GoBack">목록</button>
@@ -216,7 +229,8 @@
                 room_id = RoomId,
                 student_id = await UserInfo.GetUserIdAsync(JSRuntime),
                 submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
-                score = 0
+                score = 0,
+                message = " "
             });
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         // 전송한다
@@ -274,9 +288,9 @@
               await file.OpenReadStream().ReadAsync(buffer);
               content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{assignmentSubmit.submit_id}/{file.Name}");
           }
-          Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
+          await Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 수정 요청 완료하였습니다! 파일의 경우에는 10여초 후에 등록됩니다.");
-        await JSRuntime.InvokeVoidAsync("location.reload"); 
+          await JSRuntime.InvokeVoidAsync("alert", "과제 수정 완료하였습니다!");
+          await JSRuntime.InvokeVoidAsync("location.reload"); 
     }
 }
