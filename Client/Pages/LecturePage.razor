@@ -84,8 +84,6 @@
     HubConnection connection;
     private string role;
 
-    //string encodedUrl = Uri.EscapeUriString(videoUrl);
-
     private bool IsPrevDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter - 1) == null;
     private bool IsNextDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter + 1) == null;
 
