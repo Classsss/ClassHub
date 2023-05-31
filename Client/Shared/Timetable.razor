@@ -25,7 +25,7 @@
             <tr>
                 <th>Time</th>
                 @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
-                    <th>@dayOfWeek.ToString().Substring(0, 3)</th>
+                    <th>@dayOfWeekKor[dayOfWeek]</th>
                 }
             </tr>
         </thead>
@@ -69,6 +69,14 @@
 @code {
     [Parameter]
     public List<ClassRoomDetail> ClassRoomList { get; set; }
+
+    private Dictionary<DayOfWeek, string> dayOfWeekKor = new Dictionary<DayOfWeek, string> {
+        {DayOfWeek.Monday, "월"},
+        {DayOfWeek.Tuesday, "화"},
+        {DayOfWeek.Wednesday, "수"},
+        {DayOfWeek.Thursday, "목"},
+        {DayOfWeek.Friday, "금"},
+    };
 
     private string[] colors = { "primary", "secondary", "success", "danger", "warning", "info", "light", "dark" };
 
