@@ -137,7 +137,7 @@
             </table>
         </div>
         <div class="card-footer d-flex justify-content-end">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" @onclick="AddProblem">
                 <i class="oi oi-plus" />
             </button>
         </div>
@@ -193,6 +193,23 @@
             Answer = "Seoul"
         });
     }
+
+    private async Task AddProblem() {
+        var parameters = new ModalParameters();
+        parameters.Add("Problem", null);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<ExamProblemModal>("문제 추가", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+        if (result.Confirmed && result.Data != null) {
+            ExamProblem problem = (ExamProblem)result.Data;
+            if (problem != null) {
+                problem.ProblemId = problems.Count + 1;
+                problems.Add(problem);
+            }
+        }
+    }
+
     }
 
     private void Submit() {
