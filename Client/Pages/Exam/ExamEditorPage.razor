@@ -117,7 +117,15 @@
                         <tr>
                             <td>@problem.ProblemId</td>
                             <td>@problem.Description</td>
-                            <td>@(problem is MultipleChoiceProblem ? "Multiple Choice" : "Short Answer")</td>
+                            <td>
+                                @if (problem is MultipleChoiceProblem) {
+                                    <span>객관식</span>
+                                } else if (problem is ShortAnswerProblem) {
+                                    <span>단답형</span>
+                                } else if (problem is CodeProblem) {
+                                    <span>코드형</span>
+                                }
+                            </td>
                             <td>@problem.Score</td>
                             <td><i class="oi oi-pencil" /></td>
                         </tr>
