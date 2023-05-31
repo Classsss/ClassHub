@@ -117,9 +117,22 @@
                 </thead>
                 <tbody>
                     @foreach(var problem in problems) {
-                        <tr>
+                        <tr style="vertical-align: middle;">
                             <td>@problem.ProblemId</td>
-                            <td>@problem.Description</td>
+                            <td>
+                                @{
+                                    string description = problem.Description;
+                                    int maxDisplayLength = 70; // 최대 표시 길이
+                                    if (description.Length > maxDisplayLength) {
+                                        description = $"{description.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
+                                    }
+                                }
+                                <span>@description</span>
+                                @if (problem.Description.Length > maxDisplayLength) {
+                                    // 일정 길이 이상일 경우 "더 보기" 버튼 추가
+                                    <button class="btn btn-link" @onclick="() => ShowFullDescription(problem.Description)">더 보기</button>
+                                }
+                            </td>
                             <td>
                                 @if (problem is MultipleChoiceProblem) {
                                     <span>객관식</span>
@@ -194,6 +207,13 @@
             Example = "Example",
             Answer = "Seoul"
         });
+    }
+
+    private void ShowFullDescription(string description) {
+        var parameters = new ModalParameters();
+        parameters.Add("Description", description);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<MoreProblemDescModal>("내용 더보기", parameters, modalOptions);
     }
 
     private async Task AddProblem() {

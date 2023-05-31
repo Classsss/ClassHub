@@ -1,0 +1,20 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+
+<Modal>
+    <ModalContent>
+        <p>@Description</p>
+    </ModalContent>
+    <ModalFooter>
+        <button class="btn btn-secondary" @onclick="CloseModal">닫기</button>
+    </ModalFooter>
+</Modal>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public string Description { get; set; }
+
+    private async Task CloseModal() {
+        await ModalInstance.CloseAsync();
+    }
+}
