@@ -71,21 +71,27 @@
         </div>
         <div class="card-body">
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" id="option1" name="option1">
+                <input class="form-check-input" type="checkbox" id="option1" name="option1" @bind="isRandomProblem">
                 <label class="form-check-label" for="option1">
-                    Option 1
+                    문제 순서 섞기 허용
                 </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" id="option2" name="option2">
+                <input class="form-check-input" type="checkbox" id="option2" name="option2" @bind="isRandomChoice">
                 <label class="form-check-label" for="option2">
-                    Option 2
+                    보기 순서 섞기 허용
                 </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" id="option3" name="option3">
+                <input class="form-check-input" type="checkbox" id="option3" name="option3" @bind="isShowTimeLimit">
                 <label class="form-check-label" for="option3">
-                    Option 3
+                    제한 시간 표시 허용
+                </label>
+            </div>
+            <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" id="option4" name="option3" @bind="isBackToPreviousProblem">
+                <label class="form-check-label" for="option4">
+                    이전 문제로 돌아가기 허용
                 </label>
             </div>
         </div>
@@ -136,6 +142,18 @@
 @code {
     [Parameter]
     public int RoomId { get; set; }
+
+    // 문제 순서 랜덤 여부
+    private bool isRandomProblem = true;
+
+    // 보기 순서 랜덤 여부
+    private bool isRandomChoice = true;
+
+    // 제한 시간 표시 여부
+    private bool isShowTimeLimit = true;
+
+    // 이전 문제로 돌아갈 수 있는지 여부
+    private bool isBackToPreviousProblem = true;
 
     List<ExamProblem> problems;
 
