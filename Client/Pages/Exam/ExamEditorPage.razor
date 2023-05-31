@@ -148,6 +148,9 @@
                                     <i class="oi oi-pencil" style="background-color: transparent; color: black;" />
                                 </button>
                             </td>
+                            <td>
+                                <button class="btn btn-sm" @onclick="() => DeleteProblem(problem)">
+                                    <i class="oi oi-x" style="background-color: transparent; color: red;" />
                                 </button>
                             </td>
                         </tr>
@@ -252,6 +255,24 @@
                     StateHasChanged(); // Notify the UI to update
                 }
             }
+        }
+    }
+
+    private async Task DeleteProblem(ExamProblem selectedProblem) {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "해당 문제가 제거됩니다.");
+        if (confirmed) {
+            if (selectedProblem != null) {
+                var index = problems.IndexOf(selectedProblem);
+                if (index != -1) {
+                    problems.RemoveAt(index);
+
+                    for (int id = index + 1; id <= problems.Count; id++) {
+                        problems[id - 1].ProblemId = id;
+                    }
+                }
+            }
+        } else {
+            return;
         }
     }
 
