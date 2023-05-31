@@ -1,6 +1,7 @@
 ﻿@using Blazored.Modal
 @using Blazored.Modal.Services
 @using ClassHub.Client.Models
+@inject IJSRuntime JSRuntime
 
 <Modal>
     <ModalContent>
@@ -51,6 +52,11 @@
     }
 
     private async Task SaveAndCloseModal() {
+        if (description == string.Empty) {
+            await JSRuntime.InvokeVoidAsync("alert", "내용을 입력하세요.");
+            return;
+        }
+
         ExamProblem problem = null;
 
         switch (type) {
