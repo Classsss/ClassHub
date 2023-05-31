@@ -1,0 +1,79 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+@using ClassHub.Client.Models
+
+<Modal>
+    <ModalContent>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" class="form-control" id="description" @bind="description">
+        </div>
+        <div class="form-group">
+            <label for="type">Type</label>
+            <select class="form-control" id="type" @bind="type">
+                <option value="MultipleChoiceProblem">객관식</option>
+                <option value="ShortAnswerProblem">단답형</option>
+                <option value="CodeProblem">코드형</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="score">점수</label>
+            <input type="number" class="form-control" id="score" @bind="score">
+        </div>
+    </ModalContent>
+    <ModalFooter>
+        <button class="btn btn-secondary" @onclick="SaveAndCloseModal">저장</button>
+        <button class="btn btn-secondary" @onclick="CloseModal">취소</button>
+    </ModalFooter>
+</Modal>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public ExamProblem Problem { get; set; }
+
+    private string description = string.Empty;
+    private string type = "MultipleChoiceProblem";
+    private int score = 0;
+
+    protected override async Task OnInitializedAsync() {
+        if (Problem == null) return;
+
+        description = Problem.Description;
+        type = Problem.GetType().Name;
+        score = Problem.Score;
+        Console.WriteLine("OnInitializedAsync 호출");
+        Console.WriteLine("desc : " + description);
+        Console.WriteLine("type : " + type);
+        Console.WriteLine("score : " + score);
+    }
+
+    private async Task SaveAndCloseModal() {
+        ExamProblem problem = null;
+
+        switch (type) {
+            case "MultipleChoiceProblem":
+                problem = new MultipleChoiceProblem();
+                break;
+            case "ShortAnswerProblem":
+                problem = new ShortAnswerProblem();
+                break;
+            case "CodeProblem":
+                problem = new CodeProblem();
+                break;
+        }
+
+        if (problem != null) {
+            problem.Description = description;
+            problem.Score = score;
+
+            await ModalInstance.CloseAsync(ModalResult.Ok(problem));
+        }
+    }
+
+    private async Task CloseModal() {
+        await ModalInstance.CloseAsync();
+    }
+}
+
+
+ 
