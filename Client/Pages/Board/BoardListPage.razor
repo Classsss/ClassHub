@@ -1,12 +1,13 @@
 ﻿@page "/classroom/{roomid:int}/notice"
 @page "/classroom/{roomid:int}/lecturematerial"
 @layout MainLayout
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.Board
 @using ClassHub.Shared
-@using System.Text.RegularExpressions;
+@using System.Text.RegularExpressions
 
 @if(contents == null) {
     <div class="d-flex justify-content-center mt-5">
@@ -40,6 +41,10 @@
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) {
         UpdateTypeAndContents();
+    }
+
+    public void Dispose() {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     private async void UpdateTypeAndContents() {
