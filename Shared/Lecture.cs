@@ -1,4 +1,4 @@
-﻿namespace ClassHub.Shared
+namespace ClassHub.Shared
 {
     public class Lecture
     {
@@ -12,4 +12,5 @@
         public string video_url { get; set; }
         public int learning_time { get; set; }
     }
+
 }

@@ -17,7 +17,6 @@ using static System.Formats.Asn1.AsnWriter;
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-
     public class AssignmentSubmitController : ControllerBase {
         const string host = "classdb.postgres.database.azure.com";
         const string username = "byungmeo";
@@ -97,20 +96,19 @@ namespace ClassHub.Server.Controllers {
 
         // 제출 과제를 db를 수정합니다
         [HttpPut("{RoomId}/modifydb/{SubmitId}")]
-        public async Task ModifyAssignmentDb(int room_id, int submit_id, AssignmentSubmit assignmentSubmit) {
+        public async Task ModifyAssignmentDb(int RoomId, int SubmitId, AssignmentSubmit assignmentSubmit) {
 
             using var connection = new NpgsqlConnection(connectionString);
             var modifyQuery = "Update assignmentsubmit SET submit_date = @submit_date WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
             parameters.Add("submit_date", assignmentSubmit.submit_date);
-            parameters.Add("submit_id", submit_id);
+            parameters.Add("submit_id", SubmitId);
             connection.Execute(modifyQuery, parameters);
         }
 
         // 과제를 생성할때 자료를 blob에 업로드합니다.
         [HttpPost("{room_id}/upload/{assignment_id}/submitid/{submit_id}")]
         public async Task<IActionResult> UploadLectureMaterialFiles(int room_id, int assignment_id, int submit_id, List<IFormFile> files) {
-
             // url db를 생성하기위함
             using var connection = new NpgsqlConnection(connectionString);
             connection.Open();
@@ -183,7 +181,6 @@ namespace ClassHub.Server.Controllers {
                         parameters.Add("file_url",downloadUrl);
                         parameters.Add("update",lastModifiedKST);
                         parameters.Add("file_size",fileSizeKB);
-
                         connection.Execute(insertQuery, parameters); 
                         transaction.Commit();
                     } catch (Exception ex) {
@@ -251,8 +248,8 @@ namespace ClassHub.Server.Controllers {
         }
 
 
-        // 제출 과제를 db를 수정합니다
-        [HttpPut("{SubmitId]/score/{Score}")]
+        // 제출 과제를 점수를 수정합니다
+        [HttpPut("{SubmitId}/score/{Score}")]
         public async Task ModifyScore(int SubmitId, int Score) {
 
             using var connection = new NpgsqlConnection(connectionString);

@@ -182,10 +182,14 @@
     }
 
     private async void RegisterContent() {
+        if (title == null) {
+            await JSRuntime.InvokeVoidAsync("alert", "제목을 입력해 주세요.");
+            return;
+        }
+
         string jsonString = "";
         string requestUri = "";
         contents = await this.QuillHtml.GetHTML();
-
         jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Assignment {
                 assignment_id = AssignmentId,
                 room_id = RoomId,
@@ -198,6 +202,7 @@
 
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         if (type == 1){ // 게시글 수정
+
             await Http.PutAsync($"api/assignment/{RoomId}/modifydb/{AssignmentId}", httpContent);
             // 원래 첨부파일에서 삭제하는게 있을 때
             if (excludeAttachments.Count >0) {

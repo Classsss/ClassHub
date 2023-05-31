@@ -134,7 +134,7 @@
     //signalR 연결하는 함수
     protected async Task SetSignalRConnection() {
         //교수가 아닌 학생이면서 종료기간이 덜 지났을때만 기록한다.
-        if(role=="student" && TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) < SelectedLecture.EndDate) {
+        if (role == "student" && TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) < SelectedLecture.EndDate && TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) > SelectedLecture.StartDate) {
             connection = new HubConnectionBuilder()
            .WithUrl(CLASSHUB_UPDATE_LECTUREPROGRESS)
            .Build();

@@ -1,7 +1,7 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
+﻿using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using ClassHub.Shared;
 using Dapper;
@@ -18,14 +18,16 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
-        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
         const string academicServerUri = "https://academicinfo.azurewebsites.net/";
 
 		private readonly ILogger<ClassRoomController> _logger;
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly SecretClient _secretClient; 
 
-		public ClassRoomController(ILogger<ClassRoomController> logger) {
+        public ClassRoomController(ILogger<ClassRoomController> logger, BlobServiceClient blobServiceClient, SecretClient secretClient) {
 			_logger = logger;
+            _blobServiceClient = blobServiceClient;
+            _secretClient = secretClient;
 		}
 
 		// Param으로 받은 ID를 가진 강의실의 정보를 불러옴
@@ -192,10 +194,6 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
         [HttpGet("notification/all")]
         public async Task<IActionResult> GetStudentNotificationsAsync([FromQuery] int student_id, [FromQuery] string accessToken) {
-            if (!await AuthService.isValidToken(student_id, accessToken)) {
-                return Unauthorized("Invalid token");
-            }
-
             _logger.LogInformation($"GetStudentNotifications?student_id={student_id}");
             using var connection = new NpgsqlConnection(connectionString);
             var query =
@@ -306,52 +304,77 @@ namespace ClassHub.Server.Controllers {
         // 강의자료 첨부파일들을 Blob Storage에 업로드 합니다.
         // 실제 요청 url 예시 : 'api/classroom/upload/lecturematerial'
         [HttpPost("{room_id}/upload/lecturematerial/{material_id}")]
-        public async Task<IActionResult> UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(blobStorageUri),
-                new DefaultAzureCredential()
-            );
+        public IActionResult UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
+            using var connection = new NpgsqlConnection(connectionString);
 
-            // 컨테이너 객체를 받음
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
 
-            await Console.Out.WriteLineAsync($"files count: {files.Count}");
             foreach(var file in files) {
-                using(var memoryStream = new MemoryStream()) {
-                    await file.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
+                string query = 
+                    "INSERT INTO lecturematerialattachment (material_id, file_name, file_size, up_date, download_url) " +
+                    "VALUES (@material_id, @file_name, @file_size, @up_date, @download_url)";
 
-                    var blobClient = containerClient.GetBlobClient(file.FileName);
-                    await Console.Out.WriteLineAsync($"Blob Name: {blobClient.Name}");
-                    var response = await blobClient.UploadAsync(memoryStream, overwrite: true);
-                    await Console.Out.WriteLineAsync(response.ToString());
-                }
+                var blobClient = containerClient.GetBlobClient($"{room_id}/{material_id}/{file.FileName}");
+
+                // UploadAsync를 직접 await 하지 않고 Task 리스트에 추가합니다.
+                var task = Task.Run(async () => {
+                    try {
+                        using(var memoryStream = new MemoryStream()) {
+                            await file.CopyToAsync(memoryStream);
+                            memoryStream.Position = 0;
+                            await blobClient.UploadAsync(memoryStream, overwrite: true);
+                        }
+                    } catch (Exception e) {
+                        // 콘솔에 예외 로그를 출력합니다.
+                        Console.WriteLine($"File upload failed: {e.Message}");
+                    }
+                });
+
+                var parameters = new DynamicParameters();
+                parameters.Add("material_id", material_id);
+                parameters.Add("file_name", file.FileName);
+                parameters.Add("file_size", file.Length);
+                parameters.Add("up_date", DateTime.UtcNow);
+                parameters.Add("download_url", CreateSasUri(blobClient, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)));
+                connection.Query(query, parameters);
             }
 
-            await Console.Out.WriteLineAsync("Blob Upload Success!");
             return Ok();
+        }
+
+        private string CreateSasUri(BlobClient blobClient, DateTimeOffset startsOn, DateTimeOffset expiresOn) {
+            string secretName = "StorageAccountKey";
+            KeyVaultSecret secret = _secretClient.GetSecret(secretName);
+            var storageAccountKey = secret.Value;
+
+            BlobSasBuilder sasBuilder = new BlobSasBuilder() {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                StartsOn = startsOn,
+                ExpiresOn = expiresOn
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+            string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(blobClient.AccountName, storageAccountKey)).ToString();
+            string sasUri = $"{blobClient.Uri}?{sasToken}";
+            return sasUri;
         }
 
 		// 강의자료 첨부파일 목록을 불러옵니다.
 		// 실제 요청 url 예시 : 'api/classroom/attachments/lecturematerial'
 		[HttpGet("attachments/lecturematerial")]
         public List<Attachment> GetLectureMaterialAttachments([FromQuery] int room_id, [FromQuery] int material_id) {
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(blobStorageUri),
-                new DefaultAzureCredential()
-            );
+			using var connection = new NpgsqlConnection(connectionString);
+            string query =
+                "SELECT a.* " +
+                "FROM lecturematerial m " +
+				"INNER JOIN lecturematerialattachment a ON m.material_id = a.material_id " +
+                "WHERE m.room_id = @room_id AND m.material_id = @material_id;";
 
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecturematerial");
-            string folderPath = $"{room_id}/{material_id}";
-            List<BlobClient> blobClients = containerClient.GetBlobs(prefix: folderPath)
-                .Select(blobItem => containerClient.GetBlobClient(blobItem.Name))
-                .ToList();
-
-            List<Attachment> attachments = blobClients.Select(blobClient => new Attachment {
-                FileName = Path.GetFileName(blobClient.Name),
-                UpDate = blobClient.GetProperties().Value.LastModified.ToString("yyyy-MM-dd HH:mm:ss"),
-                FileSize = (int)(blobClient.GetProperties().Value.ContentLength / 1024) // KB 단위로 변환
-            }).ToList();
+            var parameters = new DynamicParameters();
+			parameters.Add("room_id", room_id);
+			parameters.Add("material_id", material_id);
+			List<Attachment> attachments = connection.Query<Attachment>(query, parameters).ToList();
 
             return attachments;
         }
@@ -360,20 +383,11 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/download'
         [HttpGet("download")]
         public string GetAttachmentDownloadUrl ([FromQuery] string container_name, [FromQuery] string blob_name) {
-			var secretClient = new SecretClient(
-                vaultUri: new Uri(vaultStorageUri), 
-                credential: new DefaultAzureCredential()
-            );
 			string secretName = "StorageAccountKey";
-			KeyVaultSecret secret = secretClient.GetSecret(secretName);
+			KeyVaultSecret secret = _secretClient.GetSecret(secretName);
 			var storageAccountKey = secret.Value;
 
-			var blobServiceClient = new BlobServiceClient(
-				new Uri(blobStorageUri),
-				new DefaultAzureCredential()
-			);
-
-			BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(container_name);
+			BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(container_name);
 			BlobClient blobClient = containerClient.GetBlobClient(blob_name);
 
 			BlobSasBuilder sasBuilder = new BlobSasBuilder() {
@@ -490,14 +504,32 @@ namespace ClassHub.Server.Controllers {
 		[HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
 		public void DeleteLectureMaterial(int room_id, int material_id) {
 			using var connection = new NpgsqlConnection(connectionString);
+
+            // 첨부파일 삭제
 			string query =
-				"DELETE FROM lecturematerial " +
-				"WHERE room_id = @room_id AND material_id = @material_id;";
+				"DELETE FROM lecturematerialattachment " +
+				"WHERE material_id = @material_id;";
 			var parameters = new DynamicParameters();
-			parameters.Add("room_id", room_id);
 			parameters.Add("material_id", material_id);
 			connection.Execute(query, parameters);
-		}
+
+            // 강의자료 게시글 삭제
+            query = 
+                "DELETE FROM lecturematerial " +
+				"WHERE room_id = @room_id AND material_id = @material_id;";
+			parameters.Add("room_id", room_id);
+			connection.Execute(query, parameters);
+
+            Task.Run(async () =>
+            {
+                BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
+                string prefix = $"{room_id}/{material_id}/";
+                await foreach(BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
+                    BlobClient blobClient = containerClient.GetBlobClient(blobItem.Name);
+                    await blobClient.DeleteIfExistsAsync();
+                }
+            });
+        }
 
         // Param으로 받은 학번을 가진 학생에게 온 모든 강의실 알림을 불러옴 (모든 수강 강의)
         // 실제 요청 url 예시 : 'api/classroom/notification/all/60182147'
@@ -620,6 +652,107 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("student_id", student_id);
             parameters.Add("notification_id", notification_id);
             connection.Execute(query, parameters);
+        }
+
+        [HttpGet("todolist")]
+        public IEnumerable<ToDo> GetToDoList([FromQuery] int room_id, int student_id) {
+            List<ToDo> toDoList = new List<ToDo>();
+
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query1 = "SELECT title FROM ClassRoom WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            string roomTitle = connection.QuerySingle<string>(query1, parameters);
+
+            string query2 = @"
+                SELECT CA.*, CP.title as problemTitle
+                FROM CodeAssignment CA
+                LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
+                LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = @room_id AND CS.student_id = @student_id
+                WHERE CA.room_id = @room_id AND CS.submit_id IS NULL;
+            ";
+
+            parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("student_id", student_id);
+
+            var codeAssignments = connection.Query<CodeAssignment, string, (CodeAssignment, string)>(query2,
+                (codeAssignment, problemTitle) => (codeAssignment, problemTitle),
+                parameters,
+                splitOn: "problemTitle");
+
+            foreach(var (codeAssignment, problemTitle) in codeAssignments) {
+                toDoList.Add(new ToDo {
+                    RoomTitle = roomTitle,
+                    Title = problemTitle,
+                    Kind = Kind.실습,
+                    EndTime = codeAssignment.end_date,
+                    Uri = $"classroom/{room_id}/practice/{codeAssignment.assignment_id}"
+                });
+            }
+
+            string query3 = @"
+                SELECT L.*
+                FROM Lecture L
+                LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = @room_id AND LP.student_id = @student_id
+                WHERE L.room_id = @room_id AND (LP.is_enroll IS NULL OR LP.is_enroll = FALSE);
+            ";
+
+            var lectures = connection.Query<Lecture>(query3, parameters);
+
+            foreach(var lecture in lectures) {
+                toDoList.Add(new ToDo {
+                    RoomTitle = roomTitle,
+                    Title = lecture.title,
+                    Kind = Kind.온라인강의,
+                    EndTime = lecture.end_date,
+                    Uri = $"classroom/{room_id}/lecture/{lecture.lecture_id}"
+                });
+            }
+
+            return toDoList;
+        }
+
+        [HttpGet("todolist/all")]
+        public IEnumerable<ToDo> GetToDoListAll([FromQuery] int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = @"
+                -- 미제출 실습 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    CP.title as Title, 
+                    '실습' as Kind, 
+                    CA.end_date as EndTime, 
+                    CONCAT('classroom/', CA.room_id, '/practice/', CA.assignment_id) as Uri
+                FROM CodeAssignment CA
+                LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
+                LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = CA.room_id AND CS.student_id = @student_id
+                INNER JOIN ClassRoom CR ON CA.room_id = CR.room_id
+                INNER JOIN Student S ON CA.room_id = S.room_id AND S.student_id = @student_id
+                WHERE CS.submit_id IS NULL
+                UNION ALL
+                -- 미완료 강의 조회
+                SELECT 
+                    CR.title as RoomTitle, 
+                    L.title as Title, 
+                    '온라인강의' as Kind, 
+                    L.end_date as EndTime, 
+                    CONCAT('classroom/', L.room_id, '/lecture/', L.lecture_id) as Uri
+                FROM Lecture L
+                LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = L.room_id AND LP.student_id = @student_id
+                INNER JOIN ClassRoom CR ON L.room_id = CR.room_id
+                INNER JOIN Student S ON L.room_id = S.room_id AND S.student_id = @student_id
+                WHERE LP.is_enroll IS NULL OR LP.is_enroll = FALSE;
+            ";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("student_id", student_id);
+
+            List<ToDo> toDoList = connection.Query<ToDo>(query, parameters).ToList();
+
+            return toDoList;
         }
     }
 }

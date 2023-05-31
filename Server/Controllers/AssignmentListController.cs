@@ -14,7 +14,6 @@ using Npgsql;
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-
     public class AssignmentListController : ControllerBase {
         const string host = "classdb.postgres.database.azure.com";
         const string username = "byungmeo";

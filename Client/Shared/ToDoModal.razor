@@ -1,0 +1,57 @@
+﻿@using ClassHub.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<style>
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .badge-unread {
+        background-color: #dc3545;
+    }
+
+    .badge-read {
+        background-color: #28a745;
+    }
+</style>
+
+@if(toDoList == null) {
+    <LoadingBar />
+} else if(toDoList.Count == 0) {
+    <div class="alert alert-info mt-3" role="alert">할 일이 없습니다.</div>
+} else {
+    <div class="container">
+        <ul class="list-group">
+            @foreach(var toDo in toDoList) {
+                <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))">
+                    <div>
+                        <h5 class="mb-1">@toDo.GetTitle()</h5>
+                        <p class="mb-1">@toDo.RoomTitle</p>
+                        <div class="d-flex justify-content-between">
+                            <small>@toDo.GetDDay()</small>
+                            <small>@toDo.EndTime</small>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public int StudentId { get; set; }
+
+    private List<ToDo>? toDoList { get; set; }
+
+    protected override async Task OnInitializedAsync() {
+        toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist/all?student_id={StudentId}");
+    }
+
+    private async void GoTo(string uri) {
+        Console.WriteLine($"어디로감?: {NavigationManager.BaseUri + uri}");
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + uri, replace: true);
+    }
+}

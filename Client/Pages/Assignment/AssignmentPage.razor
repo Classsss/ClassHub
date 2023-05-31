@@ -68,9 +68,9 @@
     @if(assignmentSubmit.submit_id==0) {
         <div class="p-3 border-4 rounded-3" style="background-color: #F7F7F7;">
             <div class="text-black fw-bold mb-2">미제출</div>
-            @if(assignment.EndDate <TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"))) {
+            @if ((assignment.EndDate < TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) || (assignment.StartDate > TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"))))) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="text-black fw-bold mb-2">제출 기한이 지났습니다.</div>
+                    <div class="text-black fw-bold mb-2">제출 기한이 아닙니다.</div>
                     <div class="text-black mb-3" style="margin-top: 1em;">점수 : @assignmentSubmit.score</div>
                 </div>
             } else {
@@ -99,9 +99,9 @@
                     </li>
                 }
             </ul>
-            @if (assignment.EndDate < TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"))) {
+            @if ((assignment.EndDate < TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")) || (assignment.StartDate > TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"))))) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="text-black fw-bold mb-2">제출 기한이 지났습니다.</div>
+                    <div class="text-black fw-bold mb-2">제출 기한이 아닙니다.</div>
                     <div class="text-black mb-3" style="margin-top: 1em;">점수 : @assignmentSubmit.score</div>
                 </div>
             } else {
@@ -151,7 +151,7 @@
         LoadAttachments();
     }
 
-    
+
     // 과제 제출 내역 페이지를 을 띄운다.
     private async Task ShowSubmitPage() {
         NavigationManager.NavigateTo(NavigationManager.Uri + "/submit");
@@ -219,69 +219,64 @@
                 score = 0
             });
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-
         // 전송한다
         var responsePost = await Http.PostAsync("/api/assignmentsubmit/register", httpContent);
         if (!responsePost.IsSuccessStatusCode) Console.WriteLine("과제 등록 실패");
         string json = await responsePost.Content.ReadAsStringAsync();
         int SubmitId = JsonSerializer.Deserialize<int>(json);
 
-        // 첨부 파일을 서버로 전송 합니다.
+        // 첨부 파일을 서버로 전송 합니다
         var content = new MultipartFormDataContent();
         foreach (var file in uploadFileList) {
             var buffer = new byte[file.Size];
             await file.OpenReadStream().ReadAsync(buffer);
             content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{SubmitId}/{file.Name}");
-        }
-        Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{SubmitId}", content);     
+        } 
+        await Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{SubmitId}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 요청 완료하였습니다! 파일의 경우에는 10여초 후에 수정됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 완료하였습니다!");
         await JSRuntime.InvokeVoidAsync("location.reload");
+
     }
 
     // 과제 제출을 수정한다.(학생용)
     private async Task ModifySubmit() {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "수정하시겠습니까?", "수정 사항은 되돌릴 수 없습니다.", "수정");
-        if (!confirmed) {
-            return;
-        }
+          if (!confirmed) {
+              return;
+          }
+          if (uploadFileList.Count == 0 && submitAttachments.Count == 0) {
+              await JSRuntime.InvokeVoidAsync("alert", "파일이 없습니다."); return;
+          }
+          // 수정할 객체를 생성한다.
+          var jsonString = JsonSerializer.Serialize(new AssignmentSubmit {
+                  assignment_id = assignmentSubmit.submit_id,
+                  room_id = RoomId,
+                  student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                  submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
+                  score = 0
+              });
+          HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+          // 전송한다
+          await Http.PutAsync($"/api/assignmentsubmit/{RoomId}/modifydb/{assignmentSubmit.submit_id}", httpContent);
+          // 원래 첨부파일에서 삭제하는게 있을 때
+          if (excludeAttachments.Count > 0) {
+              foreach (AssignmentSubmitUrl excludeAttachment in excludeAttachments) {
+                  Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removeblob/{AssignmentId}/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
+                  Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
+              }
+          }
 
-        if (uploadFileList.Count == 0 && submitAttachments.Count == 0) {
-            await JSRuntime.InvokeVoidAsync("alert", "파일이 없습니다."); return;
-        }
-        // 수정할 객체를 생성한다.
-        var jsonString = JsonSerializer.Serialize(new AssignmentSubmit {
-                assignment_id = assignmentSubmit.submit_id,
-                room_id = RoomId,
-                student_id = await UserInfo.GetUserIdAsync(JSRuntime),
-                submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
-                score = 0
-            });
-        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-
-        // 전송한다
-        Http.PutAsync($"/api/assignmentsubmit/{RoomId}/modifydb/{assignmentSubmit.submit_id}", httpContent);
-        
-        // 원래 첨부파일에서 삭제하는게 있을 때
-        if (excludeAttachments.Count > 0) {
-            foreach (AssignmentSubmitUrl excludeAttachment in excludeAttachments) {
-                Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removeblob/{AssignmentId}/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
-                Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
-            }
-        }
-
-        // 첨부 파일을 서버로 전송 합니다.
-        var content = new MultipartFormDataContent();
-        foreach (var file in uploadFileList) {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream().ReadAsync(buffer);
-            content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{assignmentSubmit.submit_id}/{file.Name}");
-        }
-        Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
+          // 첨부 파일을 서버로 전송 합니다.
+          var content = new MultipartFormDataContent();
+          foreach (var file in uploadFileList) {
+              var buffer = new byte[file.Size];
+              await file.OpenReadStream().ReadAsync(buffer);
+              content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{assignmentSubmit.submit_id}/{file.Name}");
+          }
+          Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
 
         await JSRuntime.InvokeVoidAsync("alert", "과제 수정 요청 완료하였습니다! 파일의 경우에는 10여초 후에 등록됩니다.");
-        await JSRuntime.InvokeVoidAsync("location.reload");
+        await JSRuntime.InvokeVoidAsync("location.reload"); 
     }
-
-
 }

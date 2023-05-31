@@ -15,18 +15,15 @@
 @using System.Text;
 @using System.Text.Json
 
-@if (classRoomList == null)
-{
+@if (classRoomList == null || notificationList == null || toDoList == null) {
     <div class="d-flex justify-content-center mt-5">
         <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
     </div>  
-}
-else
-{
+} else {
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="alert alert-info" role="alert">
+                <div class="alert alert-primary" role="alert">
                     <strong>Notice:</strong> 시간표 내의 강의 영역을 클릭하면 강의실로 이동합니다.
                 </div>
             </div>
@@ -37,24 +34,37 @@ else
             </div>
             <div class="col-lg-3 col-12">
                 <div class="row">
-                    <h3 class="text-center col-12">ToDo List</h3>
-                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
-                        <ul class="list-group">
-                            @for(int i = 1; i <= 20; i++) {
-                                <li class="list-group-item">Task @i</li>
-                            }
-                        </ul>
-                    </div>
+                    <h3 class="text-center col-12">알림 목록</h3>
+                    @if(notificationList.Count == 0) {
+                        <div class="alert alert-secondary" role="alert">
+                            알림이 없습니다.
+                        </div>
+                    } else {
+                        <div class="col-12 border" style="overflow: auto; max-height: 300px;">
+                            <ul class="list-group">
+                                @foreach(var notification in notificationList) {
+                                    <li class="list-group-item" @onclick="@(() => GoTo(notification.uri))" style="cursor:pointer;">@notification.title</li>
+                                }
+                            </ul>
+                        </div>
+                    }
                 </div>
+                <br />
                 <div class="row">
-                    <h3 class="text-center col-12">New Notifications</h3>
-                    <div class="col-12 border" style="overflow: auto; max-height: 260px;">
-                        <ul class="list-group">
-                            @for(int i = 1; i <= 12; i++) {
-                                <li class="list-group-item">Notification @i</li>
-                            }
-                        </ul>
-                    </div>
+                    <h3 class="text-center col-12">할 일 목록</h3>
+                    @if(toDoList.Count == 0) {
+                        <div class="alert alert-secondary" role="alert">
+                            할 일이 없습니다.
+                        </div>
+                    } else {
+                        <div class="col-12 border" style="overflow: auto; max-height: 300px;">
+                            <ul class="list-group">
+                                @foreach(var toDo in toDoList) {
+                                    <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">@toDo.GetTitle()</li>
+                                }
+                            </ul>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -64,6 +74,7 @@ else
 @code {
     private List<ClassRoomDetail>? classRoomList;
     private List<DisplayStudentNotification>? notificationList;
+    private List<ToDo>? toDoList;
 
     protected async override void OnInitialized() {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -76,12 +87,17 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
-            await GetTakesClassRoom(); //시간표 받아오기
-            await getNotifications(); //알림 받아오기
+            Task task1 = LoadTakesClassRoomList(); // 시간표 받아오기
+            Task task2 = LoadNotificationList();
+            Task task3 = GetToDoList(); // 할 일 목록 받아오기
+
+            await Task.WhenAll(task1, task2, task3);
+
+            StateHasChanged();
         }
     }
 
-    protected async Task GetTakesClassRoom() {
+    protected async Task LoadTakesClassRoomList() {
         var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
 
         if (accessToken != null) {
@@ -108,32 +124,19 @@ else
                 classRoomList = new List<ClassRoomDetail>();
             }
         }
-        // 화면을 다시 그립니다.
-        StateHasChanged(); 
     }
 
-    protected async Task getNotifications() {
-        // 로컬 스토리지에서 AccessToken 받아오기
-        var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+    protected async Task LoadNotificationList() {
+        var student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+        notificationList = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all/{student_id}");
+    }
 
-        if (accessToken != null)
-        {
-            var id = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID");
-            Console.WriteLine($"{id} 학번으로 온 모든 알림을 불러옵니다.");
+    protected async Task GetToDoList() {
+        var student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+        toDoList = await Http.GetFromJsonAsync<List<ToDo>>($"api/classroom/todolist/all?student_id={student_id}");
+    }
 
-            try {
-                notificationList = await Http.GetFromJsonAsync<List<DisplayStudentNotification>>($"api/classroom/notification/all?student_id={id}&accessToken={accessToken}");
-                if (notificationList != null) {
-                    foreach(DisplayStudentNotification notification in notificationList) {
-                        Console.WriteLine(notification.message);
-                    }
-                }
-            } catch (Exception e) {
-                Console.WriteLine(e);
-            }
-        }
-
-        // 화면을 다시 그립니다.
-        StateHasChanged();
+    private void GoTo(string uri) {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + uri);
     }
 }

@@ -15,7 +15,6 @@ using Npgsql;
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-
     public class AssignmentController : ControllerBase {
         const string host = "classdb.postgres.database.azure.com";
         const string username = "byungmeo";
@@ -108,7 +107,7 @@ namespace ClassHub.Server.Controllers {
 
         }
 
-        // 동영상 강의 db를 수정합니다
+        // 과제 db를 수정합니다
         [HttpPut("{RoomId}/modifydb/{AssignmentId}")]
         public async Task ModifyAssignmentDb(int RoomId, int AssignmentId, Shared.Assignment assignment) {
             using var connection = new NpgsqlConnection(connectionString);

@@ -17,21 +17,24 @@
     <NotAuthorized>
         @if (!AuthService.IsLoggedIn)
         {
-            <div class="container-fluid" style="height:220px; background-color:#1B2F4A; ">
+            <div class="container-fluid" style=" padding : 5px; background-color:#1B2F4A; ">
                 <br>
                 <img src="images/logo.png" class="rounded mx-auto d-block" style="width: 120px; height: 120px;">
                 <br>
-                <p class="text-center fs-4 fw-lighter" style="color:white;">명지대학교 ClassHub에 오신 것을 환영합니다</p>
+                <p class="text-center  fw-lighter font-size-responsive" style="color:white;">명지대학교 ClassHub에 오신 것을 환영합니다</p>
             </div>
             <hr />
-            <div class="container" style="">
+            <div class="container" style="max-width: 500px;">
                 <div class="row">
-                    <div class="col text-center" style="border: 1px solid gray; border-radius: 5px; padding: 10px; margin-right:10px; height: 150px;">
-                        <h5 class="text-center col-12"><span class="oi oi-account-login" />@(" ")ClassHub 로그인</h5>
+                    <div class="col text-center" style="display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid gray; border-radius: 5px; padding: 10px; margin-right: 10px; margin-left: 10px; height: 150px;">
+                        <h5 class="text-center col-12 font-size-responsive">
+                            <span class="oi oi-account-login" />@(" ")ClassHub 로그인
+                        </h5>
                         <br>
-                        <button class="btn btn-outline-primary" style="width:150px;" @onclick="Login">SSO로그인</button>
+                        <button class="btn btn-outline-primary" style="width: 150px;" @onclick="Login">SSO로그인</button>
                     </div>
-                    <div class="col text-center" style="border: 1px solid gray; border-radius: 5px; padding: 10px; height: 550px;">
+
+                    @*<div class="col text-center" style="border: 1px solid gray; border-radius: 5px; padding: 10px; margin-right: 10px; height: 550px;">
                         <h5 class="text-center col-12"><span class="oi oi-bell" />@(" ")ClassHub 공지사항</h5>
                         <div class="col-12 border mb-3" style="overflow: auto; max-height: 460px;">
                             <ul class="list-group">
@@ -41,7 +44,7 @@
                                 }
                             </ul>
                         </div>
-                    </div>
+                    </div>*@
                 </div>
             </div>
         }
@@ -92,7 +95,7 @@
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
-            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "tokenExpireTime", DateTime.Now.AddMinutes(1));
+            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "tokenExpireTime", DateTime.Now.AddMinutes(15));
 
             authProvider.StateChanged();
         } catch (Exception ex) {
