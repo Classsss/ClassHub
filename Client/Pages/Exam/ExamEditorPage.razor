@@ -130,7 +130,11 @@
                                 }
                             </td>
                             <td>@problem.Score</td>
-                            <td><i class="oi oi-pencil" /></td>
+                            <td>
+                                <button class="btn btn-primary" @onclick="() => ModifyProblem(problem)">
+                                    <i class="oi oi-pencil" />
+                                </button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -147,8 +151,6 @@
         <button class="btn btn-success" @onclick="Submit">시험 등록</button>
     </div>
 </div>
-
-
 
 @code {
     [Parameter]
@@ -210,6 +212,23 @@
         }
     }
 
+    private async Task ModifyProblem(ExamProblem selectedProblem) {
+        var parameters = new ModalParameters();
+        parameters.Add("Problem", selectedProblem);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<ExamProblemModal>("문제 수정", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+        if (result.Confirmed && result.Data != null) {
+            ExamProblem problem = (ExamProblem)result.Data;
+            if (problem != null) {
+                var index = problems.IndexOf(selectedProblem);
+                if (index != -1) {
+                    problems[index] = problem;
+                    StateHasChanged(); // Notify the UI to update
+                }
+            }
+        }
     }
 
     private void Submit() {
