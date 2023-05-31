@@ -8,6 +8,7 @@
         public int student_id { get; set; }
         public int score { get; set; }
         public DateTime submit_date { get; set; }
+        public string message { get; set; }
 
     }
 }
