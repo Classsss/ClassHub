@@ -66,9 +66,32 @@
                     </div>
                 </div>
             } else if (type == "ShortAnswerProblem") {
-                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        정답 입력
+                    </div>
+                    <div class="card-body d-flex flex-column align-items-stretch">
+                        <input type="text" class="form-control mb-3" @bind="shortAnswer">
+                    </div>
+                </div>
             } else if (type == "CodeProblem") {
-                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        예시 코드 입력
+                    </div>
+                    <div class="card-body d-flex flex-column align-items-stretch">
+                        <MonacoEditor @ref="ExampleCodeEditor" EditorID="exampleEditor" EnableThemeChange="false" InitCode="@exampleCode" />
+                    </div>
+                </div>
+                <p></p>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        정답 코드 입력
+                    </div>
+                    <div class="card-body d-flex flex-column align-items-stretch">
+                        <MonacoEditor @ref="AnswerCodeEditor" EditorID="AnswerEditor" EnableThemeChange="false" InitCode="@answerCode" />
+                    </div>
+                </div>
             }
         </div>
         <p></p>
