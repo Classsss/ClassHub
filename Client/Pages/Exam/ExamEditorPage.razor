@@ -19,6 +19,23 @@
         </div>
     </div>
 
+    <div class="form-group" style="margin-top: 2em;">
+        <label for="startTime">시작 일:</label>
+        <input type="datetime-local"
+               max="2023-06-21T21:00"
+               min="2023-05-26T12:30"
+               @bind="startDate"
+               class="form-control" />
+    </div>
+    <div class="form-group" style="margin-top: 1em; margin-bottom: 1em">
+        <label for="endTime">종료 일:</label>
+        <input type="datetime-local"
+               max="2023-06-21T21:00"
+               min="2023-05-26T12:30"
+               @bind="endDate"
+               class="form-control" />
+    </div>
+
     <div class="card mb-4" style="vertical-align: middle;">
         <div class="card-header">
             시험 방식
@@ -130,6 +147,9 @@
 
     Exam exam;
 
+    private DateTime startDate;
+    private DateTime endDate;
+
     // 문제 순서 랜덤 여부
     private bool isRandomProblem = true;
 
@@ -148,6 +168,9 @@
 
     protected override async Task OnInitializedAsync() {
         exam = new Exam();
+
+        startDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+        endDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
 
         problems = new List<ExamProblem>();
         problems.Add(new MultipleChoiceProblem {
@@ -232,8 +255,21 @@
         }
     }
 
-    private void Submit() {
+    private async Task Submit() {
         Console.WriteLine("시험 등록 버튼 클릭");
+
+        exam.Problems = problems;
+
+        exam.Author = await UserInfo.GetUserNameAsync(JSRuntime);
+
+        exam.StartDate = startDate;
+        exam.EndDate = endDate;
+
+        Console.WriteLine("title : " + exam.Title);
+        Console.WriteLine("Problems.Count : " + exam.Problems.Count);
+        Console.WriteLine("Author : " + exam.Author);
+        Console.WriteLine("StartDate : " + exam.StartDate);
+        Console.WriteLine("EndDate : " + exam.EndDate);
 
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
