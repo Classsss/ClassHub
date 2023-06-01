@@ -2,6 +2,7 @@
 @using Blazored.Modal.Services
 @using ClassHub.Client.Models
 @inject IJSRuntime JSRuntime
+@inject Blazored.Modal.Services.IModalService ModalService
 
 <Modal>
     <ModalContent>
@@ -82,22 +83,53 @@
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
     [Parameter] public ExamProblem Problem { get; set; }
 
+    // MonacoEditor 컴포넌트 참조 변수
+    private MonacoEditor? ExampleCodeEditor;
+    private MonacoEditor? AnswerCodeEditor;
+
     private string description = string.Empty;
     private string type = "MultipleChoiceProblem";
     private int score = 0;
 
     private List<string> multipleChoiceQuestions = new List<string>();
     private int multipleChoiceAnswer;
+
+    private string shortAnswer = string.Empty;
+
+    private string? exampleCode = null;
+    private string? answerCode = null;
+
     protected override async Task OnInitializedAsync() {
         if (Problem == null) return;
 
         description = Problem.Description;
         type = Problem.GetType().Name;
         score = Problem.Score;
-        Console.WriteLine("OnInitializedAsync 호출");
-        Console.WriteLine("desc : " + description);
-        Console.WriteLine("type : " + type);
-        Console.WriteLine("score : " + score);
+
+        switch (type) {
+            case "MultipleChoiceProblem":
+                MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)Problem;
+                if (multipleChoiceProblem != null) {
+                    multipleChoiceQuestions = multipleChoiceProblem.Questions.ToList();
+                    multipleChoiceAnswer = multipleChoiceProblem.Answer;
+                }
+                break;
+            case "ShortAnswerProblem":
+                ShortAnswerProblem shortAnswerProblem = (ShortAnswerProblem)Problem;
+                if (shortAnswerProblem != null) {
+                    shortAnswer = shortAnswerProblem.Answer;
+                }
+                break;
+            case "CodeProblem":
+                CodeProblem codeProblem = (CodeProblem)Problem;
+                if (codeProblem != null) {
+                    exampleCode = codeProblem.Example;
+                    answerCode = codeProblem.Answer;
+                }
+                break;
+        }
+    }
+
     private async Task AddQuestion() {
         var parameters = new ModalParameters();
         parameters.Add("Question", string.Empty);
