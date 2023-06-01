@@ -7,7 +7,7 @@
         public string Description { get; set; } = string.Empty;
 
         // 문제 점수
-        public int? Score { get; set; } = -1;
+        public int Score { get; set; } = -1;
     }
 
     // 객관식
