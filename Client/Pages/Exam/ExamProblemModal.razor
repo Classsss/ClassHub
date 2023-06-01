@@ -177,7 +177,15 @@
         if (result.Confirmed && result.Data != null) {
             string? question = result.Data.ToString();
             if (question != null) {
-                multipleChoiceQuestions.Add(question);
+                // 추가하려는 보기와 동일한 보기가 이미 존재할 경우 반려
+                if (multipleChoiceQuestions.Contains(question)) {
+                    await JSRuntime.InvokeVoidAsync("alert", "이미 존재하는 보기입니다.");
+                } 
+                // 보기 추가 가능
+                else {
+                    multipleChoiceQuestions.Add(question);
+                }
+
             }
         }
     }
