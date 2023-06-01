@@ -5,7 +5,7 @@
     <ModalContent>
         <div class="card mb-4">
             <div class="card-body d-flex flex-column align-items-stretch">
-                <p>@Description</p>
+                <p>@Content</p>
             </div>
         </div>
     </ModalContent>
@@ -16,7 +16,7 @@
 
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
-    [Parameter] public string Description { get; set; }
+    [Parameter] public string Content { get; set; }
 
     private async Task CloseModal() {
         await ModalInstance.CloseAsync();

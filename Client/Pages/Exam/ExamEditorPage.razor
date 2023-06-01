@@ -130,7 +130,7 @@
                                 <span>@description</span>
                                 @if (problem.Value.Description.Length > maxDisplayLength) {
                                     // 일정 길이 이상일 경우 "더 보기" 버튼 추가
-                                    <button class="btn btn-link" @onclick="() => ShowFullDescription(problem.Value.Description)">더 보기</button>
+                                    <button class="btn btn-link" @onclick="() => ShowFullContent(problem.Value.Description)">더 보기</button>
                                 }
                             </td>
                             <td>
@@ -219,11 +219,11 @@
         });
     }
 
-    private void ShowFullDescription(string description) {
+    private void ShowFullContent(string content) {
         var parameters = new ModalParameters();
-        parameters.Add("Description", description);
+        parameters.Add("Content", content);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
-        var modalReference = ModalService.Show<MoreProblemDescModal>("내용 더보기", parameters, modalOptions);
+        var modalReference = ModalService.Show<ShowMoreContentModal>("내용 더보기", parameters, modalOptions);
     }
 
     private async Task AddProblem() {
