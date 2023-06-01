@@ -15,7 +15,7 @@
             시험 제목 입력
         </div>
         <div class="card-body">
-            <input type="text" class="form-control" placeholder="제목을 입력하세요.">
+            <input type="text" class="form-control" placeholder="제목을 입력하세요." @bind="exam.Title">
         </div>
     </div>
 
@@ -128,6 +128,8 @@
     [Parameter]
     public int RoomId { get; set; }
 
+    Exam exam;
+
     // 문제 순서 랜덤 여부
     private bool isRandomProblem = true;
 
@@ -142,11 +144,11 @@
 
     List<ExamProblem> problems;
 
-    private BlazoredTextEditor QuillHtml;
-
     private int maxDisplayLength = 70;
 
     protected override async Task OnInitializedAsync() {
+        exam = new Exam();
+
         problems = new List<ExamProblem>();
         problems.Add(new MultipleChoiceProblem {
             ProblemId = 1,
