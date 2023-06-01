@@ -24,6 +24,53 @@
             </select>
         </div>
         <p></p>
+        <div>
+            @if (type == "MultipleChoiceProblem") {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        보기 목록
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>보기 내용</th>
+                                    <th>수정</th>
+                                    <th>제거</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var question in multipleChoiceQuestions.Select((value, index) => new { Value = value, Index = index })) {
+                                    <tr style="vertical-align: middle;">
+                                        <td>@question.Value</td>
+                                        <td>
+                                            <button class="btn btn-sm" @onclick="() => ModifyQuestion(question.Index, question.Value)">
+                                                <i class="oi oi-pencil" style="background-color: transparent; color: black;" />
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm" @onclick="() => DeleteQuestion(question.Index, question.Value)">
+                                                <i class="oi oi-x" style="background-color: transparent; color: red;" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end">
+                        <button class="btn btn-primary" @onclick="AddQuestion">
+                            <i class="oi oi-plus" />
+                        </button>
+                    </div>
+                </div>
+            } else if (type == "ShortAnswerProblem") {
+                
+            } else if (type == "CodeProblem") {
+                
+            }
+        </div>
+        <p></p>
     </ModalContent>
     <ModalFooter>
         <button class="btn btn-primary" @onclick="SaveAndCloseModal">저장</button>
@@ -39,6 +86,8 @@
     private string type = "MultipleChoiceProblem";
     private int score = 0;
 
+    private List<string> multipleChoiceQuestions = new List<string>();
+    private int multipleChoiceAnswer;
     protected override async Task OnInitializedAsync() {
         if (Problem == null) return;
 
@@ -49,6 +98,50 @@
         Console.WriteLine("desc : " + description);
         Console.WriteLine("type : " + type);
         Console.WriteLine("score : " + score);
+    private async Task AddQuestion() {
+        var parameters = new ModalParameters();
+        parameters.Add("Question", string.Empty);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
+        var modalReference = ModalService.Show<MultipleChoiceQuestionModal>("보기 추가", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+        if (result.Confirmed && result.Data != null) {
+            string? question = result.Data.ToString();
+            if (question != null) {
+                multipleChoiceQuestions.Add(question);
+            }
+        }
+    }
+
+    private async Task ModifyQuestion(int index, string selectedQuestion) {
+        var parameters = new ModalParameters();
+        parameters.Add("Question", selectedQuestion);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
+        var modalReference = ModalService.Show<MultipleChoiceQuestionModal>("보기 수정", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+        if (result.Confirmed && result.Data != null) {
+            string? question = result.Data.ToString();
+            if (question != null) {
+                if (index != -1) {
+                    multipleChoiceQuestions[index] = question;
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task DeleteQuestion(int index, string selectedQuestion) {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "해당 문제가 제거됩니다.");
+        if (confirmed) {
+            if (selectedQuestion != null) {
+                if (index != -1) {
+                    multipleChoiceQuestions.RemoveAt(index);
+                }
+            }
+        } else {
+            return;
+        }
     }
 
     private async Task SaveAndCloseModal() {
