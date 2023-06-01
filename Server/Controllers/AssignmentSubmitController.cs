@@ -27,6 +27,8 @@ namespace ClassHub.Server.Controllers {
         const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
         const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
 
+        private readonly ILogger<AssignmentSubmitController> _logger;
+
         // 해당 과제의 제출 내역이 있는지 체크합니다. 
         [HttpGet("room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
         public AssignmentSubmit GetAssignmentSubmit(int room_id, int assignment_id, int student_id) {
@@ -58,10 +60,9 @@ namespace ClassHub.Server.Controllers {
             connection.Open();
             using (var transaction = connection.BeginTransaction()) {
                 try {
-                    string query1 = // 다음 material_id 시퀀스를 가져옴.
+                    string query1 = // 다음 submit_id 시퀀스를 가져옴.
                         "SELECT nextval('assignmentsubmit_submit_id_seq');";
                     assignmentSubmit.submit_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
-
                     string query2 =
                         "INSERT INTO assignmentsubmit (submit_id, assignment_id, room_id, student_id, score, submit_date, message) " +
                         "VALUES (@submit_id, @assignment_id, @room_id, @student_id, @score, @submit_date, @message);";
@@ -69,6 +70,7 @@ namespace ClassHub.Server.Controllers {
                     transaction.Commit();
                 } catch (Exception ex) {
                     transaction.Rollback();
+                    _logger.LogError($"msg :\n{ex.Message}");
                     return BadRequest();
                 }
             }
@@ -96,7 +98,7 @@ namespace ClassHub.Server.Controllers {
         // 제출 과제를 db를 수정합니다
         [HttpPut("{RoomId}/modifydb/{SubmitId}")]
         public async Task ModifyAssignmentDb(int RoomId, int SubmitId, AssignmentSubmit assignmentSubmit) {
-
+            Console.WriteLine(assignmentSubmit.submit_date);
             using var connection = new NpgsqlConnection(connectionString);
             var modifyQuery = "Update assignmentsubmit SET submit_date = @submit_date WHERE submit_id = @submit_id";
             var parameters = new DynamicParameters();
@@ -121,17 +123,19 @@ namespace ClassHub.Server.Controllers {
             await Console.Out.WriteLineAsync($"files count: {files.Count}");
 
             foreach (var file in files) {
-                // blob에 업로드
-                using (var memoryStream = new MemoryStream()) {
-                    await file.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-
-                    var blobClient = containerClient.GetBlobClient(file.FileName);
-                    await Console.Out.WriteLineAsync($"Blob Name: {blobClient.Name}");
-                    var response = await blobClient.UploadAsync(memoryStream, overwrite: true);
-                    await Console.Out.WriteLineAsync(response.ToString());
-                }
-
+                var blobClient = containerClient.GetBlobClient(file.FileName);
+                var task = Task.Run(async () => {
+                    try {
+                        using (var memoryStream = new MemoryStream()) {
+                            await file.CopyToAsync(memoryStream);
+                            memoryStream.Position = 0;
+                            await blobClient.UploadAsync(memoryStream, overwrite: true);
+                        }
+                    } catch (Exception e) {
+                        // 콘솔에 예외 로그를 출력합니다.
+                        Console.WriteLine($"File upload failed: {e.Message}");
+                    }
+                });
                 await Console.Out.WriteLineAsync("Blob Upload Success!");
 
                 // 업로드한 blob의 url을 구한다.
