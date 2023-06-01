@@ -271,21 +271,98 @@
     }
 
     private async Task Submit() {
-        Console.WriteLine("시험 등록 버튼 클릭");
+        if (title == null) {
+            await JSRuntime.InvokeVoidAsync("alert", "제목을 입력하세요.");
+            return;
+        }
 
-        exam.Problems = problems;
+        // 컨트롤러에 보낼 데이터 다듬기
+        ClassHub.Shared.ExamContainer examContainer = new ClassHub.Shared.ExamContainer {
+            Exam = new ClassHub.Shared.Exam {
+                exam_id = -1,
+                room_id = RoomId,
+                week = 1,
+                title = title,
+                author = await UserInfo.GetUserNameAsync(JSRuntime),
+                start_date = startDate,
+                end_date = endDate,
+                is_random_problem = isRandomProblem,
+                is_random_choice = isRandomChoice,
+                is_show_time_limit = isShowTimeLimit,
+                is_back_to_previous_problem = isBackToPreviousProblem
+            }
+        };
 
-        exam.Author = await UserInfo.GetUserNameAsync(JSRuntime);
+        foreach (var problem in problems) {
+            // 객관식 문제
+            if (problem is MultipleChoiceProblem) {
+                MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)problem;
+                ClassHub.Shared.MultipleChoiceProblem multipleChoiceProblemForDB = new ClassHub.Shared.MultipleChoiceProblem {
+                    problem_id = multipleChoiceProblem.ProblemId,
+                    description = multipleChoiceProblem.Description,
+                    answer = multipleChoiceProblem.Answer,
+                    score = multipleChoiceProblem.Score
+                };
 
-        exam.StartDate = startDate;
-        exam.EndDate = endDate;
+                List<ClassHub.Shared.MultipleChoice> multipleChoicesForDB = new List<ClassHub.Shared.MultipleChoice>();
+                foreach (var question in multipleChoiceProblem.Questions) {
+                    multipleChoicesForDB.Add(new ClassHub.Shared.MultipleChoice {
+                        problem_id = multipleChoiceProblem.ProblemId,
+                        description = question
+                    });
+                }
 
-        Console.WriteLine("title : " + exam.Title);
-        Console.WriteLine("Problems.Count : " + exam.Problems.Count);
-        Console.WriteLine("Author : " + exam.Author);
-        Console.WriteLine("StartDate : " + exam.StartDate);
-        Console.WriteLine("EndDate : " + exam.EndDate);
+                examContainer.MultipleChoiceProblemContainers.Add(new ClassHub.Shared.MultipleChoiceProblemContainer {
+                        MultipleChoiceProblem = multipleChoiceProblemForDB,
+                        MultipleChoices = multipleChoicesForDB
+                });
+            } 
+            // 단답형 문제
+            else if (problem is ShortAnswerProblem) {
+                ShortAnswerProblem shortAnswerProblem = (ShortAnswerProblem)problem;
+                examContainer.ShortAnswerProblems.Add(new ClassHub.Shared.ShortAnswerProblem {
+                    problem_id = shortAnswerProblem.ProblemId,
+                    description = shortAnswerProblem.Description,
+                    answer = shortAnswerProblem.Answer,
+                    score = shortAnswerProblem.Score
+                });
+            } 
+            // 코드형 문제
+            else if (problem is CodingProblem) {
+                CodingProblem codingProblem = (CodingProblem)problem;
+                examContainer.CodingExamProblems.Add(new ClassHub.Shared.CodingExamProblem {
+                    problem_id = codingProblem.ProblemId,
+                    description = codingProblem.Description,
+                    example_code = codingProblem.Example,
+                    answer_code = codingProblem.Answer,
+                    score = codingProblem.Score
+                });
+            }
+        }
 
+        string jsonString = JsonSerializer.Serialize(examContainer);
+        int type = 2;
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        if (type == 1) { // 게시글 수정
+
+            //await Http.PutAsync($"api/assignment/{RoomId}/modifydb/{AssignmentId}", httpContent);
+            //// 원래 첨부파일에서 삭제하는게 있을 때
+            //if (excludeAttachments.Count > 0) {
+            //    foreach (AssignmentMaterialUrl excludeAttachment in excludeAttachments) {
+            //        Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
+            //        Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
+            //    }
+            //}
+        } else {  //게시글 등록
+            var responsePost = await Http.PostAsync("/api/exam/register", httpContent);
+            if (!responsePost.IsSuccessStatusCode) Console.WriteLine("시험 등록 실패");
+            else {
+                string json = await responsePost.Content.ReadAsStringAsync();
+                int ExamId = JsonSerializer.Deserialize<int>(json);
+            }
+        }
+
+        // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 }
