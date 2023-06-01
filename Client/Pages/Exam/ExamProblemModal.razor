@@ -182,25 +182,39 @@
             return;
         }
 
-        ExamProblem problem = null;
-
         switch (type) {
             case "MultipleChoiceProblem":
-                problem = new MultipleChoiceProblem();
+                MultipleChoiceProblem multipleChoiceProblem = new MultipleChoiceProblem();
+
+                multipleChoiceProblem.Questions = multipleChoiceQuestions.ToArray();
+
+                multipleChoiceProblem.Description = description;
+                multipleChoiceProblem.Score = score;
+
+                await ModalInstance.CloseAsync(ModalResult.Ok(multipleChoiceProblem));
                 break;
+
             case "ShortAnswerProblem":
-                problem = new ShortAnswerProblem();
+                ShortAnswerProblem shortAnswerProblem = new ShortAnswerProblem();
+                shortAnswerProblem.Answer = shortAnswer;
+
+                shortAnswerProblem.Description = description;
+                shortAnswerProblem.Score = score;
+
+                await ModalInstance.CloseAsync(ModalResult.Ok(shortAnswerProblem));
                 break;
+
             case "CodeProblem":
-                problem = new CodeProblem();
+                CodeProblem codeProblem = new CodeProblem();
+
+                codeProblem.Example = await ExampleCodeEditor.editor.GetValue();
+                codeProblem.Answer = await AnswerCodeEditor.editor.GetValue();
+
+                codeProblem.Description = description;
+                codeProblem.Score = score;
+
+                await ModalInstance.CloseAsync(ModalResult.Ok(codeProblem));
                 break;
-        }
-
-        if (problem != null) {
-            problem.Description = description;
-            problem.Score = score;
-
-            await ModalInstance.CloseAsync(ModalResult.Ok(problem));
         }
     }
 
