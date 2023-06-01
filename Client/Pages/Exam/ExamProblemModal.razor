@@ -43,7 +43,19 @@
                             <tbody>
                                 @foreach (var question in multipleChoiceQuestions.Select((value, index) => new { Value = value, Index = index })) {
                                     <tr style="vertical-align: middle;">
-                                        <td>@question.Value</td>
+                                        <td>
+                                            @{
+                                                string modifiedQuestion = question.Value;
+                                                if (modifiedQuestion.Length > maxDisplayLength) {
+                                                    modifiedQuestion = $"{modifiedQuestion.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
+                                                }
+                                            }
+                                            <span>@modifiedQuestion</span>
+                                            @if (question.Value.Length > maxDisplayLength) {
+                                                // 일정 길이 이상일 경우 "더 보기" 버튼 추가
+                                                <button class="btn btn-link" @onclick="() => ShowFullContent(question.Value)">더 보기</button>
+                                            }
+                                        </td>
                                         <td>
                                             <button class="btn btn-sm" @onclick="() => ModifyQuestion(question.Index, question.Value)">
                                                 <i class="oi oi-pencil" style="background-color: transparent; color: black;" />
@@ -113,6 +125,8 @@
     private string description = string.Empty;
     private string type = "MultipleChoiceProblem";
     private int score = 0;
+
+    private int maxDisplayLength = 60;
 
     private List<string> multipleChoiceQuestions = new List<string>();
     private int multipleChoiceAnswer;
@@ -197,6 +211,13 @@
         } else {
             return;
         }
+    }
+
+    private void ShowFullContent(string content) {
+        var parameters = new ModalParameters();
+        parameters.Add("Content", content);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
+        var modalReference = ModalService.Show<ShowMoreContentModal>("내용 더보기", parameters, modalOptions);
     }
 
     private async Task SaveAndCloseModal() {
