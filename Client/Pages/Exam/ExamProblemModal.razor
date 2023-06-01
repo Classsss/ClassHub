@@ -226,6 +226,11 @@
             return;
         }
 
+        if (type == "MultipleChoiceProblem" && multipleChoiceQuestions.Count <= 0) {
+            await JSRuntime.InvokeVoidAsync("alert", "보기를 입력하세요.");
+            return;
+        }
+
         switch (type) {
             case "MultipleChoiceProblem":
                 MultipleChoiceProblem multipleChoiceProblem = new MultipleChoiceProblem();
