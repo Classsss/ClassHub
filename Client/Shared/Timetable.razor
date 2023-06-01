@@ -5,8 +5,16 @@
 @inject NavMenuTitleService NavMenuTitleService
 
 <style>
+    .timetable td:first-child, .timetable th:first-child {
+        width: 10%;
+        height: 50px; /* 원하는 높이로 설정하세요. */
+        text-align: center; /* 가운데 정렬 */
+        vertical-align: middle; /* 수직 가운데 정렬 */
+        white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 설정 */
+    }
+
     .timetable td, .timetable th {
-        width: 14.2857%; /* 100% / 7 (시간 + 5개의 평일 요일) */
+        width: 15%; /* 90% / 5 (5개의 평일 요일) */
         height: 50px; /* 원하는 높이로 설정하세요. */
         text-align: center; /* 가운데 정렬 */
         vertical-align: middle; /* 수직 가운데 정렬 */
