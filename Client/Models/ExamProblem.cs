@@ -16,10 +16,10 @@
         public string[] Questions { get; set; }
 
         // 문제에 대한 답안
-        public int Answer { get; set; } = -1;
+        public string Answer { get; set; } = string.Empty;
 
         // 학생이 제출한 답안
-        public int StudentAnswer { get; set; } = -1;
+        public string StudentAnswer { get; set; } = string.Empty;
     }
 
     // 단답형
