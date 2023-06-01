@@ -222,14 +222,14 @@
     private void ShowFullDescription(string description) {
         var parameters = new ModalParameters();
         parameters.Add("Description", description);
-        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
         var modalReference = ModalService.Show<MoreProblemDescModal>("내용 더보기", parameters, modalOptions);
     }
 
     private async Task AddProblem() {
         var parameters = new ModalParameters();
         parameters.Add("Problem", null);
-        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
         var modalReference = ModalService.Show<ExamProblemModal>("문제 추가", parameters, modalOptions);
 
         var result = await modalReference.Result;
@@ -245,7 +245,7 @@
     private async Task ModifyProblem(ExamProblem selectedProblem) {
         var parameters = new ModalParameters();
         parameters.Add("Problem", selectedProblem);
-        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
         var modalReference = ModalService.Show<ExamProblemModal>("문제 수정", parameters, modalOptions);
 
         var result = await modalReference.Result;
