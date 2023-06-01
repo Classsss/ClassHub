@@ -8,63 +8,14 @@
 @inject IJSRuntime JSRuntime
 @inject Blazored.Modal.Services.IModalService ModalService
 
-<style>
-    .ql-editor{
-        min-height:200px;
-    }
-</style>
-
 <div class="col-md-12">
     <BackButton Msg="저장하지 않고 나가기" />
     <div class="card mb-4">
         <div class="card-header">
-            <input type="text" class="form-control mb-3" placeholder="Title">
-            <ul class="nav nav-tabs card-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" data-toggle="tab" data-target="#editor-tab">Write</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" data-target="#preview-tab">Preview</a>
-                </li>
-            </ul>
+            시험 제목 입력
         </div>
-
-        <div class="card-body d-flex flex-column align-items-stretch">
-            <BlazoredTextEditor @ref=QuillHtml Placeholder="Write Exam Description...">
-                <ToolbarContent>
-                    <select class="ql-header">
-                        <option selected=""></option>
-                        <option value="1"></option>
-                        <option value="2"></option>
-                        <option value="3"></option>
-                        <option value="4"></option>
-                        <option value="5"></option>
-                    </select>
-                    <span class="ql-formats">
-                        <button class="ql-bold"></button>
-                        <button class="ql-italic"></button>
-                        <button class="ql-underline"></button>
-                        <button class="ql-strike"></button>
-                    </span>
-                    <span class="ql-formats">
-                        <select class="ql-color"></select>
-                        <select class="ql-background"></select>
-                    </span>
-                    <span class="ql-formats">
-                        <button class="ql-list" value="ordered"></button>
-                        <button class="ql-list" value="bullet"></button>
-                    </span>
-                    <span class="ql-formats">
-                        <button class="ql-link"></button>
-                    </span>
-                    <span class="ql-formats">
-                        <button class="ql-align" value=""></button>
-                        <button class="ql-align" value="center"></button>
-                        <button class="ql-align" value="right"></button>
-                        <button class="ql-align" value="justify"></button>
-                    </span>
-                </ToolbarContent>
-            </BlazoredTextEditor>
+        <div class="card-body">
+            <input type="text" class="form-control" placeholder="제목">
         </div>
     </div>
 
