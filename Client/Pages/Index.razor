@@ -15,12 +15,50 @@
 @using System.Text;
 @using System.Text.Json
 
+<style>
+    @@media (max-width: 1400px) {
+        .responsive-font, .button-text {
+            font-size: 90%;
+        }
+    }
+
+    @@media (max-width: 1200px) {
+        .responsive-font, .button-text {
+            font-size: 80%;
+        }
+    }
+
+    @@media (max-width: 1000px) {
+        .responsive-font, .button-text {
+            font-size: 70%;
+        }
+    }
+
+    @@media (max-width: 800px) {
+        .responsive-font, .button-text {
+            font-size: 60%;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .responsive-font, .button-text {
+            font-size: 50%;
+        }
+    }
+
+    @@media (max-width: 400px) {
+        .responsive-font, .button-text {
+            font-size: 40%;
+        }
+    }
+</style>
+
 @if (classRoomList == null || notificationList == null || toDoList == null) {
     <div class="d-flex justify-content-center mt-5">
         <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
     </div>  
 } else {
-    <div class="container-fluid">
+    <div class="container-fluid responsive-font">
         <div class="row">
             <div class="col-12">
                 <div class="alert alert-primary" role="alert">
