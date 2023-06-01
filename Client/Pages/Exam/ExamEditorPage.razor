@@ -117,39 +117,39 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var problem in problems) {
+                    @foreach (var problem in problems.Select((value, index) => new { Value = value, Index = index })) {
                         <tr style="vertical-align: middle;">
-                            <td>@problem.ProblemId</td>
+                            <td>@problem.Value.ProblemId</td>
                             <td>
                                 @{
-                                    string description = problem.Description;
+                                    string description = problem.Value.Description;
                                     if (description.Length > maxDisplayLength) {
                                         description = $"{description.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
                                     }
                                 }
                                 <span>@description</span>
-                                @if (problem.Description.Length > maxDisplayLength) {
+                                @if (problem.Value.Description.Length > maxDisplayLength) {
                                     // 일정 길이 이상일 경우 "더 보기" 버튼 추가
-                                    <button class="btn btn-link" @onclick="() => ShowFullDescription(problem.Description)">더 보기</button>
+                                    <button class="btn btn-link" @onclick="() => ShowFullDescription(problem.Value.Description)">더 보기</button>
                                 }
                             </td>
                             <td>
-                                @if (problem is MultipleChoiceProblem) {
+                                @if (problem.Value is MultipleChoiceProblem) {
                                     <span>객관식</span>
-                                } else if (problem is ShortAnswerProblem) {
+                                } else if (problem.Value is ShortAnswerProblem) {
                                     <span>단답형</span>
-                                } else if (problem is CodeProblem) {
+                                } else if (problem.Value is CodeProblem) {
                                     <span>코드형</span>
                                 }
                             </td>
-                            <td>@problem.Score</td>
+                            <td>@problem.Value.Score</td>
                             <td>
-                                <button class="btn btn-sm" @onclick="() => ModifyProblem(problem)">
+                                <button class="btn btn-sm" @onclick="() => ModifyProblem(problem.Index, problem.Value)">
                                     <i class="oi oi-pencil" style="background-color: transparent; color: black;" />
                                 </button>
                             </td>
                             <td>
-                                <button class="btn btn-sm" @onclick="() => DeleteProblem(problem)">
+                                <button class="btn btn-sm" @onclick="() => DeleteProblem(problem.Index, problem.Value)">
                                     <i class="oi oi-x" style="background-color: transparent; color: red;" />
                                 </button>
                             </td>
@@ -242,7 +242,7 @@
         }
     }
 
-    private async Task ModifyProblem(ExamProblem selectedProblem) {
+    private async Task ModifyProblem(int index, ExamProblem selectedProblem) {
         var parameters = new ModalParameters();
         parameters.Add("Problem", selectedProblem);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
@@ -252,7 +252,6 @@
         if (result.Confirmed && result.Data != null) {
             ExamProblem problem = (ExamProblem)result.Data;
             if (problem != null) {
-                var index = problems.IndexOf(selectedProblem);
                 if (index != -1) {
                     problems[index] = problem;
                     StateHasChanged(); // Notify the UI to update
@@ -261,11 +260,10 @@
         }
     }
 
-    private async Task DeleteProblem(ExamProblem selectedProblem) {
+    private async Task DeleteProblem(int index, ExamProblem selectedProblem) {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "해당 문제가 제거됩니다.");
         if (confirmed) {
             if (selectedProblem != null) {
-                var index = problems.IndexOf(selectedProblem);
                 if (index != -1) {
                     problems.RemoveAt(index);
 
