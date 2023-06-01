@@ -44,5 +44,8 @@
 
         /// <summary>이전 문제로 돌아갈 수 있는지 여부</summary>
         public bool IsBackToPreviousProblem { get; set; } = false;
+
+        /// <summary>시험 문제들</summary>
+        public List<ExamProblem> Problems { get; set; }
     }
 }
