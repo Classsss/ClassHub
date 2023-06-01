@@ -21,6 +21,7 @@
         <h3 style="margin: 0 auto;">
             과제 제출 내역
         </h3>
+        <button class="btn btn-outline-dark btn-sm" @onclick="() => DownloadAllFile()">모든 파일 일괄 다운</button>
     </div>
 </div>
 <table class="table">
@@ -45,7 +46,7 @@
                         </td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">
-                        <button class="btn btn-outline-dark btn-sm" @onclick="() => DownloadFile(submit)">일괄 다운</button>
+                        <button class="btn btn-outline-dark btn-sm" @onclick="() => DownloadStudentFile(submit)">일괄 다운</button>
                         <button class="btn btn-outline-dark btn-sm" @onclick="() => ShowFileModal(submit)">제출 파일 확인</button>
                     </td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">
@@ -73,6 +74,7 @@
     public int AssignmentId { get; set; }
 
     private List<AssignmentSubmit> submitList = new List<AssignmentSubmit>();
+    List<Task> downloadTasks = new List<Task>();
 
     // 초기화 할때 일단 내역을 보여준다.  
     protected async override void OnInitialized(){    
@@ -80,15 +82,32 @@
         StateHasChanged();
     }
 
-    // 파일을 일괄 다운로드한다.
-    private async Task DownloadFile(AssignmentSubmit assignmentSubmit){
+    private async Task DownloadStudentFile(AssignmentSubmit assignmentSubmit){
         List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
         submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
-        foreach(AssignmentSubmitUrl submitAttachment in submitAttachments) {
-            var downloadUrl = submitAttachment.file_url;
-            Console.WriteLine($"downloadUrl: {downloadUrl}");
-            await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
+        int delayMilliseconds = 500; // 다운로드 사이의 딜레이 시간 (1초)
+        foreach (var attachment in submitAttachments) {
+            await JSRuntime.InvokeVoidAsync("downloadFile", attachment.file_url);
+            await Task.Delay(delayMilliseconds); // 딜레이 추가
         }
+
+
+    }
+
+    // 모든 학생의 파일을 일괄 다운로드한다.
+    private async Task DownloadAllFile(){
+        List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
+        int delayMilliseconds = 500; // 다운로드 사이의 딜레이 시간 (1초)
+        foreach(AssignmentSubmit submit in submitList) {
+            submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={submit.room_id}&submit_id={submit.submit_id}");
+            foreach (AssignmentSubmitUrl submitAttachment in submitAttachments) {
+                var downloadUrl = submitAttachment.file_url;
+                Console.WriteLine($"downloadUrl: {downloadUrl}");
+                await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
+                await Task.Delay(delayMilliseconds); // 딜레이 추가
+            }
+        }
+       
     }
 
     // 학생이 제출한 파일을 띄운다.
