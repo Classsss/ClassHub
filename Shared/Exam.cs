@@ -4,6 +4,7 @@
         public int room_id { get; set; }
         public int week { get; set; }
         public string title { get; set; }
+        public string author { get; set; }
         public DateTime start_date { get; set; }
         public DateTime end_date { get; set; }
         public bool is_random_problem { get; set; }
