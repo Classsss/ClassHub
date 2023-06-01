@@ -21,7 +21,7 @@
             const rows = document.querySelectorAll('.timetable tr');
 
             // Find the highest row
-            for (let i = 0; i < rows.length; i++) {
+            for (let i = 1; i < rows.length; i++) {
                 const rowHeight = rows[i].clientHeight;
                 if (rowHeight > maxHeight) {
                     maxHeight = rowHeight;
@@ -29,7 +29,7 @@
             }
 
             // Set all rows to the highest row's height
-            for (let i = 0; i < rows.length; i++) {
+            for (let i = 1; i < rows.length; i++) {
                 rows[i].style.height = maxHeight + 'px';
             }
         }

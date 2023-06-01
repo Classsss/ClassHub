@@ -255,7 +255,7 @@ namespace ClassHub.Server.Controllers {
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
-                message = $"(수정) {lectureMaterial.title}",
+                message = $"[강의자료(수정)] {lectureMaterial.title}",
                 uri = $"classroom/{lectureMaterial.room_id}/notice/{lectureMaterial.material_id}",
                 notify_date = DateTime.Now
             });
@@ -293,7 +293,7 @@ namespace ClassHub.Server.Controllers {
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
-                message = lectureMaterial.title,
+                message = $"[강의자료] {lectureMaterial.title}",
                 uri = $"classroom/{lectureMaterial.room_id}/lecturematerial/{lectureMaterial.material_id}",
                 notify_date = DateTime.Now
             });
@@ -429,7 +429,7 @@ namespace ClassHub.Server.Controllers {
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = notice.room_id,
-                message = $"(수정) {notice.title}",
+                message = $"[공지사항(수정)] {notice.title}",
                 uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
                 notify_date = DateTime.Now
             });
@@ -486,7 +486,7 @@ namespace ClassHub.Server.Controllers {
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = notice.room_id,
-                message = notice.title,
+                message = $"[공지사항] {notice.title}",
                 uri = $"classroom/{notice.room_id}/notice/{notice.notice_id}",
                 notify_date = DateTime.Now
             });
@@ -677,7 +677,7 @@ namespace ClassHub.Server.Controllers {
                 FROM CodeAssignment CA
                 LEFT JOIN CodeProblem CP ON CA.problem_id = CP.problem_id
                 LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = @room_id AND CS.student_id = @student_id
-                WHERE CA.room_id = @room_id AND CS.submit_id IS NULL;
+                WHERE CA.room_id = @room_id AND CS.submit_id IS NULL AND CA.start_date <= NOW() AND CA.end_date >= NOW();
             ";
 
             parameters = new DynamicParameters();
@@ -738,7 +738,7 @@ namespace ClassHub.Server.Controllers {
                 LEFT JOIN CodeSubmit CS ON CA.assignment_id = CS.assignment_id AND CS.room_id = CA.room_id AND CS.student_id = @student_id
                 INNER JOIN ClassRoom CR ON CA.room_id = CR.room_id
                 INNER JOIN Student S ON CA.room_id = S.room_id AND S.student_id = @student_id
-                WHERE CS.submit_id IS NULL
+                WHERE CS.submit_id IS NULL AND CA.start_date <= NOW() AND CA.end_date >= NOW()
                 UNION ALL
                 -- 미완료 강의 조회
                 SELECT 
@@ -751,7 +751,7 @@ namespace ClassHub.Server.Controllers {
                 LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = L.room_id AND LP.student_id = @student_id
                 INNER JOIN ClassRoom CR ON L.room_id = CR.room_id
                 INNER JOIN Student S ON L.room_id = S.room_id AND S.student_id = @student_id
-                WHERE LP.is_enroll IS NULL OR LP.is_enroll = FALSE;
+                WHERE (LP.is_enroll IS NULL OR LP.is_enroll = FALSE) AND L.start_date <= NOW() AND L.end_date >= NOW();
             ";
 
             var parameters = new DynamicParameters();

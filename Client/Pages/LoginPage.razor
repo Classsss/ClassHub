@@ -95,7 +95,9 @@
             var content = await response.Content.ReadAsStringAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).AccessToken);
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", JsonSerializer.Deserialize<AccessTokenResponse>(content).RefreshToken);
-            await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "tokenExpireTime", DateTime.Now.AddMinutes(15));
+
+            var expireTime = await UserInfo.GetExpirationTimeAsync(JSRuntime);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "tokenExpireTime", expireTime);
 
             authProvider.StateChanged();
         } catch (Exception ex) {
