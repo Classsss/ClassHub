@@ -86,25 +86,27 @@
 					@((MarkupString)boardContent.contents) <!--보안에 취약?-->
 				</div>
 				
-				<hr />
-				<h4>첨부 파일 목록:</h4>
-				@if(attachmentList != null) {
-					@if(attachmentList.Count == 0) {
-						<h6>첨부 파일이 없습니다.</h6>
+				@if(type == BoardType.LectureMaterial) {
+					<hr />
+					<h4>첨부 파일 목록:</h4>
+					@if(attachmentList != null) {
+						@if(attachmentList.Count == 0) {
+							<h6>첨부 파일이 없습니다.</h6>
+						} else {
+							<ul class="attachment-list">
+								@foreach(var attachment in attachmentList) {
+									<li class="attachment-item" @onclick="() => DownloadFile(attachment.download_url)">
+										<span class="attachment-icon oi oi-file" aria-hidden="true"></span>
+										<span>@attachment.file_name</span>
+										<span style="margin-left: 10px;">(@(attachment.GetFileSizeString()))</span>
+										<span class="attachment-date">@attachment.up_date</span>
+									</li>
+								}
+							</ul>
+						}
 					} else {
-						<ul class="attachment-list">
-							@foreach(var attachment in attachmentList) {
-								<li class="attachment-item" @onclick="() => DownloadFile(attachment.download_url)">
-									<span class="attachment-icon oi oi-file" aria-hidden="true"></span>
-									<span>@attachment.file_name</span>
-									<span style="margin-left: 10px;">(@(attachment.GetFileSizeString()))</span>
-									<span class="attachment-date">@attachment.up_date</span>
-								</li>
-							}
-						</ul>
+						<h6>첨부 파일을 불러오는 중입니다...</h6>
 					}
-				} else {
-					<h6>첨부 파일을 불러오는 중입니다...</h6>
 				}
 
 				<hr />
