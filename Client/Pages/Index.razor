@@ -160,7 +160,7 @@
             try {
                 string role = await UserInfo.GetRoleAsync(JSRuntime);
                 Console.WriteLine($"role: {role}");
-                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches?instructor_id={id}&accessToken={accessToken}");
+                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches/detail?instructor_id={id}&accessToken={accessToken}");
                 else classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
 
                 Console.WriteLine($"classRoomListCount: {classRoomList.Count}");

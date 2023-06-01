@@ -124,11 +124,46 @@ namespace ClassHub.Server.Controllers {
             return Ok(classRoomDetailList);
         }
 
-		// 교수가 강의 중인 강의실 리스트를 불러옴
-		// 실제 요청 url 예시 : 'api/classroom/teaches'
-		[HttpGet("teaches")]
+        // 교수가 강의 중인 강의실 리스트를 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/teaches'
+        [HttpGet("teaches")]
         public async Task<IActionResult> GetTeachesClassRoomList([FromQuery] int instructor_id, [FromQuery] string accessToken) {
             _logger.LogInformation($"GetTeachesClassRoomList?instructor_id={instructor_id}");
+            string requestUri = $"teaches/all?id={instructor_id}&accessToken={accessToken}";
+            List<ClassRoom>? classRoomList = new List<ClassRoom>();
+            using(var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
+                classRoomList = await academicClient.GetFromJsonAsync<List<ClassRoom>>(requestUri);
+                if(classRoomList == null) classRoomList = new List<ClassRoom>();
+                for(int i = 0; i < classRoomList.Count; i++) {
+                    var classRoom = classRoomList[i];
+                    switch(int.Parse(classRoom.semester)) {
+                        case 1:
+                            classRoom.semester = "Spring";
+                            break;
+                        case 2:
+                            classRoom.semester = "Summer";
+                            break;
+                        case 3:
+                            classRoom.semester = "Fall";
+                            break;
+                        case 4:
+                            classRoom.semester = "Winter";
+                            break;
+                        default:
+                            break;
+                    }
+                    classRoomList[i] = await GetClassRoomBySectionId(classRoom.course_id, classRoom.section_id, classRoom.semester, classRoom.year);
+                }
+            }
+
+            return Ok(classRoomList);
+        }
+
+		// 교수가 강의 중인 강의실 리스트를 시간표 출력에 필요한 정보를 함께 담아 불러옴
+		// 실제 요청 url 예시 : 'api/classroom/teaches/detail'
+		[HttpGet("teaches/detail")]
+        public async Task<IActionResult> GetTeachesClassRoomDetailList([FromQuery] int instructor_id, [FromQuery] string accessToken) {
+            _logger.LogInformation($"GetTeachesClassRoomListDetail?instructor_id={instructor_id}");
             string requestUri = $"teaches/all?id={instructor_id}&accessToken={accessToken}";
             List<ClassRoom>? classRoomList = new List<ClassRoom>();
             using(var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
@@ -465,7 +500,7 @@ namespace ClassHub.Server.Controllers {
             using(var transaction = connection.BeginTransaction()) {
                 try {
                     string query1 = // 다음 notice_id 시퀀스를 가져옴. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 실제 DB내 시퀀스는 2로 바뀜)
-                    "SELECT nextval('notice_notice_id_seq');";
+                        "SELECT nextval('notice_notice_id_seq');";
                     notice.notice_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
 
                     _logger.LogInformation($"PostNotice?room_id={notice.room_id}&notice_id={notice.notice_id}");
