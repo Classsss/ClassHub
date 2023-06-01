@@ -138,7 +138,7 @@
                                     <span>객관식</span>
                                 } else if (problem.Value is ShortAnswerProblem) {
                                     <span>단답형</span>
-                                } else if (problem.Value is CodeProblem) {
+                                } else if (problem.Value is CodingProblem) {
                                     <span>코드형</span>
                                 }
                             </td>
@@ -210,7 +210,7 @@
             Score = 10,
             Answer = "Seoul"
         });
-        problems.Add(new CodeProblem {
+        problems.Add(new CodingProblem {
             ProblemId = 3,
             Description = "What is the capital of South Korea?",
             Score = 10,

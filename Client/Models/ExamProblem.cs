@@ -32,7 +32,7 @@
     }
 
     // 코드형
-    public class CodeProblem : ExamProblem {
+    public class CodingProblem : ExamProblem {
         // 문제와 함께 제공할 예시 코드
         public string Example { get; set; } = "";
 

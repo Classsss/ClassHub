@@ -11,8 +11,8 @@
     case ShortAnswerProblem shortAnswerProblem:
         <ShortAnswerDisplay Problem="@shortAnswerProblem" />
         break;
-    case CodeProblem codeProblem:
-        <CodeProblemDisplay Problem="@codeProblem" />
+    case CodingProblem codingProblem:
+        <CodeProblemDisplay Problem="@codingProblem" />
         break;
 }
 
@@ -75,7 +75,7 @@
                 ProblemId = 2,
                 Description = "무엇이 의미 있는 삶인가? (10자 이내)"
             },
-            new CodeProblem {
+            new CodingProblem {
                 ProblemId = 3,
                 Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
                 Example = @"int a, b;

@@ -86,7 +86,7 @@
                         <input type="text" class="form-control mb-3" @bind="shortAnswer">
                     </div>
                 </div>
-            } else if (type == "CodeProblem") {
+            } else if (type == "CodingProblem") {
                 <div class="card mb-4">
                     <div class="card-header">
                         예시 코드 입력
@@ -157,11 +157,11 @@
                     shortAnswer = shortAnswerProblem.Answer;
                 }
                 break;
-            case "CodeProblem":
-                CodeProblem codeProblem = (CodeProblem)Problem;
-                if (codeProblem != null) {
-                    exampleCode = codeProblem.Example;
-                    answerCode = codeProblem.Answer;
+            case "CodingProblem":
+                CodingProblem codingProblem = (CodingProblem)Problem;
+                if (codingProblem != null) {
+                    exampleCode = codingProblem.Example;
+                    answerCode = codingProblem.Answer;
                 }
                 break;
         }
@@ -248,16 +248,16 @@
                 await ModalInstance.CloseAsync(ModalResult.Ok(shortAnswerProblem));
                 break;
 
-            case "CodeProblem":
-                CodeProblem codeProblem = new CodeProblem();
+            case "CodingProblem":
+                CodingProblem codingProblem = new CodingProblem();
 
-                codeProblem.Example = await ExampleCodeEditor.editor.GetValue();
-                codeProblem.Answer = await AnswerCodeEditor.editor.GetValue();
+                codingProblem.Example = await ExampleCodeEditor.editor.GetValue();
+                codingProblem.Answer = await AnswerCodeEditor.editor.GetValue();
 
-                codeProblem.Description = description;
-                codeProblem.Score = score;
+                codingProblem.Description = description;
+                codingProblem.Score = score;
 
-                await ModalInstance.CloseAsync(ModalResult.Ok(codeProblem));
+                await ModalInstance.CloseAsync(ModalResult.Ok(codingProblem));
                 break;
         }
     }
