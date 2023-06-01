@@ -28,5 +28,12 @@ namespace ClassHub.Client.Models {
 
     public class NoticeContent : BoardContent
     {
-    }
+		[JsonIgnore]
+		public override int content_id { get; set; }
+
+		public int notice_id {
+			get { return content_id; }
+			set { content_id = value; }
+		}
+	}
 }

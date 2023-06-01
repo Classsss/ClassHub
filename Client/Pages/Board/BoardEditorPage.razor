@@ -200,8 +200,6 @@
     }
 
     private async void RegisterContent() {
-        string jsonString = "";
-        string requestUri = "";
         contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
@@ -232,20 +230,20 @@
             await lectureMaterial.PostLectureMaterialAsync();
         } else if(type == 3) {
             // 공지사항 수정
-            jsonString = JsonSerializer.Serialize(new Notice {
+            Notice notice = new Notice(Http) {
                 room_id = RoomId,
-                notice_id = ContentId,
+                notice_id = targetBoardContent.content_id,
                 title = title,
                 author = targetBoardContent.author,
                 contents = contents,
                 publish_date = targetBoardContent.publish_date,
                 up_date = DateTime.Now,
                 view_count = targetBoardContent.view_count
-            });
-            requestUri = "/api/classroom/modify/notice";
+            };
+            await notice.PutNoticeAsync();
         } else if(type == 4) {
             // 공지사항 게시
-            jsonString = JsonSerializer.Serialize(new Notice {
+            Notice notice = new Notice(Http) {
                 room_id = RoomId,
                 title = title,
                 author = await UserInfo.GetUserNameAsync(JSRuntime),
@@ -253,17 +251,8 @@
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
                 view_count = 0
-            });
-            requestUri = "/api/classroom/register/notice";
-        }
-
-        if(type != 2 && type != 1) {
-            HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-            if(type == 3) await Http.PutAsync(requestUri, httpContent);
-            else {
-                var response = await Http.PostAsync(requestUri, httpContent);
-                if(!response.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
-            }
+            };
+            await notice.PostNoticeAsync();
         }
 
         // 목록 또는 게시글 페이지로 돌아감
