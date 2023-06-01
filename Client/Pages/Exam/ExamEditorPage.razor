@@ -253,6 +253,8 @@
             ExamProblem problem = (ExamProblem)result.Data;
             if (problem != null) {
                 if (index != -1) {
+                    problem.ProblemId = selectedProblem.ProblemId;
+
                     problems[index] = problem;
                     StateHasChanged(); // Notify the UI to update
                 }
