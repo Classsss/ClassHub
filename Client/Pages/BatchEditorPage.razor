@@ -13,7 +13,7 @@
 </style>
 
 <AuthorizeView Roles="professor">
-    @if(ClassRoomList == null || isLoading) {
+    @if(ClassRoomList == null) {
         <LoadingBar />
     } else {
         <div class="col-md-12">
@@ -117,7 +117,6 @@
     private string contents;
     BlazoredTextEditor QuillHtml;
     private bool isWriteTabSelected = true;
-    private bool isLoading = false;
 
     private List<ClassRoom>? ClassRoomList;
     private List<int> selectedRoomIdList = new List<int>();
@@ -137,8 +136,7 @@
     }
 
     private async Task RegisterContent() {
-        isLoading = true;
-        StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("showLoadingBar");
 
         contents = await QuillHtml.GetHTML();
         List<Task> taskList = new List<Task>();
@@ -155,24 +153,25 @@
         } else if(kind == Kind.LectureMaterial) {
             foreach(var room_id in selectedRoomIdList) {
                 LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
-                        room_id = room_id,
-                        week = 1, // TODO
-                        title = title,
-                        author = await UserInfo.GetUserNameAsync(JSRuntime),
-                        contents = contents
-                    };
+                    room_id = room_id,
+                    week = selectedWeek[0],
+                    title = title,
+                    author = await UserInfo.GetUserNameAsync(JSRuntime),
+                    contents = contents
+                };
                 taskList.Add(lectureMaterial.PostLectureMaterialAsync());
             }
         }
         Console.WriteLine($"taskList.Count:{taskList.Count}");
         await Task.WhenAll(taskList);
 
+        await JSRuntime.InvokeVoidAsync("hideLoadingBar");
+
         NavigationManager.NavigateTo(NavigationManager.BaseUri);
     }
 
     private async Task OnWeekChanged(List<int> week) {
         selectedWeek = week;
-        Console.WriteLine(selectedWeek[0]);
         await Task.CompletedTask;
     }
 
