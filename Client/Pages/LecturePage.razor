@@ -87,8 +87,8 @@
     private bool IsPrevDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter - 1) == null;
     private bool IsNextDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter + 1) == null;
 
-    //private const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://classhub.azurewebsites.net/lecturehub";
-    private const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://localhost:7182/lecturehub";
+    private const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://classhub.azurewebsites.net/lecturehub";
+
 
 
     protected async override void OnInitialized(){   
