@@ -28,18 +28,15 @@
                 <p class="fw-bold" style="margin: auto; color:#0071C1">로그인 남은 시간</p>
                 <p style="margin: auto;">@TimeLeft</p>
             </div>
-            <a class="oi oi-envelope-closed" aria-hidden="true"></a>
             <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
-            <AuthorizeView Roles="student">
-                <Authorized>
-                    <a>@(userName) 학생</a>
-                </Authorized>
-            </AuthorizeView>
-            <AuthorizeView Roles="professor">
-                <Authorized>
-                    <a>@(userName) 교수</a>
-                </Authorized>
-            </AuthorizeView>
+            <a class="oi oi-task" aria-hidden="true" @onclick="OpenToDoList"></a>
+            <a class="oi oi-envelope-closed" aria-hidden="true"></a>
+            @if (userRole == "student") {
+                <a>@(userName) 학생</a>
+            } else if (userRole == "professor") {
+                <a>@(userName) 교수</a>
+            }
+                    
             <a href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self">Logout</a>
         </div>
         <article class="content px-4">
@@ -53,6 +50,7 @@
     public bool IncludeSideBar { get; set; } = true;
 
     public string userName;
+    public string userRole;
     public string TimeLeft { get; set; } = "10:00";
 
     private async void Logout()
@@ -66,6 +64,16 @@
         parameters.Add("StudentId", student_id);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Medium };
         var modalReference = ModalService.Show<NotificationModal>("알림 목록", parameters, modalOptions);
+
+        var result = await modalReference.Result;
+    }
+
+    private async void OpenToDoList() {
+        var parameters = new ModalParameters();
+        int student_id = int.Parse(await JSRuntime.InvokeAsync<string>("localStorage.getItem", "userID"));
+        parameters.Add("StudentId", student_id);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Medium };
+        var modalReference = ModalService.Show<ToDoModal>("할 일 목록", parameters, modalOptions);
 
         var result = await modalReference.Result;
     }
@@ -85,6 +93,7 @@
         string uri = NavigationManager.Uri;
 
         userName = await UserInfo.GetUserNameAsync(JSRuntime);
+        userRole = await UserInfo.GetRoleAsync(JSRuntime);
 
         if(new Regex("/classroom/[0-9]+").IsMatch(uri)) {
             int start = uri.IndexOf("classroom");
@@ -104,18 +113,23 @@
         NavigationManager.NavigateTo(uri.Substring(start, 10) + uri.Substring(start).Split('/')[1]);
     }
 
-    private async Task UpdateTimeLeft() {
-        var endTime = await JSRuntime.InvokeAsync<DateTime>("sessionStorage.getItem", "tokenExpireTime");
+    private async Task UpdateTimeLeft()
+    {
+        var endTimeString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "tokenExpireTime");
 
-        while (DateTime.Now < endTime) {
-            var timeRemaining = endTime - DateTime.Now;
-            TimeLeft = $"{timeRemaining:mm\\:ss}"; // 시간을 mm:ss 형식으로 변환
-            await InvokeAsync(StateHasChanged);
-            await Task.Delay(1000); // 1초마다 업데이트
+        if (!string.IsNullOrEmpty(endTimeString) && DateTime.TryParse(endTimeString, out var endTime))
+        {
+            while (DateTime.Now < endTime)
+            {
+                var timeRemaining = endTime - DateTime.Now;
+                TimeLeft = $"{timeRemaining:mm\\:ss}"; // 시간을 mm:ss 형식으로 변환
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(1000); // 1초마다 업데이트
+            }
         }
 
         // 시간이 만료된 경우
-        TimeLeft = "00:00"; 
+        TimeLeft = "00:00";
         await InvokeAsync(StateHasChanged);
     }
 }

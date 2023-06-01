@@ -1,0 +1,114 @@
+﻿@page "/classroom/{roomid:int}/assignment/{assignmentid:int}/submit"
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using System.Collections.ObjectModel
+@using ClassHub.Shared
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Collections.Specialized
+@using Microsoft.Extensions.Primitives
+
+@inject HttpClient Http
+@inject Blazored.Modal.Services.IModalService ModalService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<BackButton />
+
+<div class="text-bg-light p-3" style="padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
+    <div style="display: flex; align-items: center;">
+        <h3 style="margin: 0 auto;">
+            과제 제출 내역
+        </h3>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />제출 번호</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-123"></i>학번</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-check-lg"></i>점수</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-memory"></i>제출 날짜</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>제출 파일</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>채점 하기</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (submitList != null) {
+            @foreach (AssignmentSubmit submit in submitList) {
+                <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_id</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
+                        @submit.score
+                        </td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
+                        <button class="btn btn-outline-dark btn-sm" @onclick="() => DownloadFile(submit)">일괄 다운</button>
+                        <button class="btn btn-outline-dark btn-sm" @onclick="() => ShowFileModal(submit)">제출 파일 확인</button>
+                    </td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
+                        <button class="btn btn-outline-dark btn-sm" @onclick="() => ShowJudgeModal(submit)">채점 하기</button>
+                    </td>
+                </tr>
+
+            }
+        } else {
+            <tr>
+                <td colspan="8">제출한 내역이 없습니다.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+
+
+@code {
+
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int AssignmentId { get; set; }
+
+    private List<AssignmentSubmit> submitList = new List<AssignmentSubmit>();
+
+    // 초기화 할때 일단 내역을 보여준다.  
+    protected async override void OnInitialized(){    
+        submitList = await Http.GetFromJsonAsync<List<AssignmentSubmit>>($"api/assignmentsubmit/RoomId/{RoomId}/AssignmentId/{AssignmentId}");
+        StateHasChanged();
+    }
+
+    // 파일을 일괄 다운로드한다.
+    private async Task DownloadFile(AssignmentSubmit assignmentSubmit){
+        List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
+        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
+        foreach(AssignmentSubmitUrl submitAttachment in submitAttachments) {
+            var downloadUrl = submitAttachment.file_url;
+            Console.WriteLine($"downloadUrl: {downloadUrl}");
+            await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
+        }
+    }
+
+    // 학생이 제출한 파일을 띄운다.
+    private async Task ShowFileModal(AssignmentSubmit assignmentSubmit){
+        var parameters = new ModalParameters();
+        parameters.Add("assignmentSubmit", assignmentSubmit);
+        var modalOptions = new ModalOptions() { DisableBackgroundCancel = true, Size = Blazored.Modal.ModalSize.ExtraLarge };
+        var modalReference = ModalService.Show<AssignmentSubmitFileModal>("제출 파일 확인", parameters, modalOptions);
+        var result = await modalReference.Result;
+        if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
+    }
+
+    // 채점창을 띄운다.
+    private async Task ShowJudgeModal(AssignmentSubmit assignmentSubmit){
+        var parameters = new ModalParameters();
+        parameters.Add("assignmentSubmit", assignmentSubmit);
+        var modalOptions = new ModalOptions() { DisableBackgroundCancel = true, Size = Blazored.Modal.ModalSize.Large};
+        var modalReference = ModalService.Show<AssignmentSubmitJudgeModal>("과제 채점", parameters, modalOptions);
+        var result = await modalReference.Result;
+        if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
+    }
+
+}

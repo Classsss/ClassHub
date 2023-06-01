@@ -21,7 +21,7 @@
             const rows = document.querySelectorAll('.timetable tr');
 
             // Find the highest row
-            for (let i = 0; i < rows.length; i++) {
+            for (let i = 1; i < rows.length; i++) {
                 const rowHeight = rows[i].clientHeight;
                 if (rowHeight > maxHeight) {
                     maxHeight = rowHeight;
@@ -29,7 +29,7 @@
             }
 
             // Set all rows to the highest row's height
-            for (let i = 0; i < rows.length; i++) {
+            for (let i = 1; i < rows.length; i++) {
                 rows[i].style.height = maxHeight + 'px';
             }
         }
@@ -55,6 +55,25 @@
         window.addResizeEventListener = function () {
             window.addEventListener('resize', function () {
                 window.updateEditorContainerWidth();
+            });
+        }
+    </script>
+    <!--바로 전 페이지로 가기-->
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+    <!-- Date-->
+    <script>
+        function initializeDateTimePicker() {
+            $('#datetimepicker').datetimepicker({
+                format: 'YYYY-MM-DD HH:mm',
+                useCurrent: false
+            }).on('change.datetimepicker', function (e) {
+                // 바인딩된 DateTime 속성에 값을 설정합니다.
+                DotNet.invokeMethodAsync('YourAppNamespace', 'SetDateTime', e.date.toISOString());
             });
         }
     </script>
@@ -86,6 +105,13 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="ResizeEditor.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    
+    <!--첨부파일 관련-->
+    <script>
+        window.resetInputFile = (inputElement) => {
+            inputElement.value = '';
+        }
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,272 @@
+﻿@page "/classroom/{roomid:int}/assignment/editor"
+@page "/classroom/{roomid:int}/assignment/{assignmentid:int}/editor"
+@layout MainLayout
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using Blazored.TextEditor
+@using ClassHub.Client.Models
+@using ClassHub.Shared
+@using System.Text.RegularExpressions;
+@using System.Text.Json;
+@using System.Text;
+@using System.Net.Http.Headers;
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+ <style>
+       .ql-editor{
+           min-height:200px;
+       }
+
+        .attachment-iconx:hover{
+            color: red;
+            cursor: pointer;
+        }
+
+    .attachment-down:hover {
+        color: blue;
+        cursor: pointer;
+    }
+ </style>
+
+
+   <div class="col-md-12">
+       <BackButton Msg="저장하지 않고 나가기" />
+       <div class="card mb-4">
+           <div class="card-header">
+               <input type="text" @bind="title" class="form-control mb-3" placeholder="제목을 입력해주세요.">
+               <ul class="nav nav-tabs card-header-tabs">
+                   <li class="nav-item">
+                        <a class="nav-link @(isWriteTabSelected ? "active" : "")" @onclick="SelectWriteTab" data-toggle="tab" data-target="#editor-tab" style="cursor: pointer;">Write</a>
+                   </li>
+                   <li class="nav-item">
+                        <a class="nav-link @(isWriteTabSelected ? "" : "active")" @onclick="SelectPreviewTab" data-toggle="tab" data-target="#preview-tab" style="cursor: pointer;">Preview</a>
+                   </li>
+               </ul>
+           </div>
+           <div class="card-body d-flex flex-column align-items-stretch">
+               <BlazoredTextEditor DebugLevel="warn" @ref="@QuillHtml" Placeholder="내용을 입력해주세요.">
+                   <ToolbarContent>
+                       <select class="ql-header">
+                           <option selected=""></option>
+                           <option value="1"></option>
+                           <option value="2"></option>
+                           <option value="3"></option>
+                           <option value="4"></option>
+                           <option value="5"></option>
+                       </select>
+                       <span class="ql-formats">
+                           <button class="ql-bold"></button>
+                           <button class="ql-italic"></button>
+                           <button class="ql-underline"></button>
+                           <button class="ql-strike"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <select class="ql-color"></select>
+                           <select class="ql-background"></select>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-list" value="ordered"></button>
+                           <button class="ql-list" value="bullet"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-link"></button>
+                       </span>
+                       <span class="ql-formats">
+                           <button class="ql-align" value=""></button>
+                           <button class="ql-align" value="center"></button>
+                           <button class="ql-align" value="right"></button>
+                           <button class="ql-align" value="justify"></button>
+                       </span>
+                   </ToolbarContent>
+                   <EditorContent>
+                       @if (type == 1 || type == 3)
+                       {
+                           QuillHtml.LoadHTMLContent(contents);
+                       }
+              </EditorContent>
+           </BlazoredTextEditor>
+           </div>
+        </div>
+   </div>
+    <div class="form-group" style="margin-top: 2em;">
+        <label for="startTime">시작 일:</label>
+        <input type="datetime-local"
+               max="2023-06-21T21:00"
+               min="2023-05-26T12:30"
+               @bind="start_date"
+               class="form-control" />
+    </div>
+
+    <div class="form-group" style="margin-top: 1em; margin-bottom: 1em">
+        <label for="endTime">종료 일:</label>
+        <input type="datetime-local"
+               max="2023-06-21T21:00"
+               min="2023-05-26T12:30"
+               @bind="end_date"
+               class="form-control" />
+    </div>
+    @if(type == 1){
+            <ul class="attachment-list">
+                @foreach (var attachment in attachments) {
+                    <li class="attachment-item">
+                        <span class="attachment-icon oi oi-file" aria-hidden="true"></span>
+                        <span class="attachment-down" @onclick="() => DownloadFile(attachment.file_url)">@(attachment.file_name.Substring(attachment.file_name.IndexOf('/', 2) + 1))</span>
+                        <span style="margin-left: 10px;">(@(attachment.file_size.ToString("0.##")) KB)</span>
+                        <span class="attachment-date">@attachment.update</span>
+                        <span class="attachment-iconx"><i class="bi bi-x" @onclick="() => excludeFile(attachment)" ></i></span>
+                    </li>
+                }
+            </ul>
+    }
+  
+
+     <DragDropUpload @bind-droppedFiles="uploadFileList" IsMultiple=true/>
+    <br />
+    <div class="d-flex justify-content-between mb-2">
+    <button class="btn btn-success" @onclick="@(()=>OpenDetail())">이전</button>
+    <button type="submit" class="btn btn-primary" @onclick="RegisterContent">등록</button>
+    </div>
+@code{
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int AssignmentId { get; set; }
+
+    /// <summary>
+    /// 1 - 과제 수정, 2 - 과제 게시
+    /// </summary>
+    private int type = 0;
+
+    private string title;
+    private string contents;
+    private DateTime start_date;
+    private DateTime end_date;
+    BlazoredTextEditor QuillHtml;
+    //기본 설정은 WriteTab
+    private bool isWriteTabSelected = true;
+
+    private List<AssignmentMaterialUrl>? attachments = new List<AssignmentMaterialUrl>();
+    private List<AssignmentMaterialUrl> excludeAttachments = new List<AssignmentMaterialUrl>();
+    private List<IBrowserFile> uploadFileList = new List<IBrowserFile>();
+
+    protected override async Task OnParametersSetAsync() // OninitializedAsync()를 대체함
+    {
+        start_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+        end_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+
+        string uri = NavigationManager.Uri;
+        if (new Regex("/classroom/[0-9]+/assignment/[0-9]+/editor").IsMatch(uri)){
+            Console.WriteLine("과제 수정");
+            type = 1;
+            // 수정 해야 하는 과제의 정보를 불러옵니다
+            var assignment = await Http.GetFromJsonAsync<Models.Assignment>($"api/assignment/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+            title = assignment.Title;
+            contents = assignment.Description;
+            start_date = assignment.StartDate;
+            end_date = assignment.EndDate;
+            LoadAttachments();
+        }
+        else if (new Regex("/classroom/[0-9]+/assignment/editor").IsMatch(uri)){
+            Console.WriteLine("강의자료 게시");
+            type = 2;
+        }
+    }
+    private async void OpenDetail() {
+        bool result = await JSRuntime.InvokeAsync<bool>("showConfirm", "사이트에서 나가시겠습니까?", "변경사항이 저장되지 않을 수 있습니다.", "나가기");
+        if (result)
+        {
+            NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+        }
+    }
+
+    private async void RegisterContent() {
+        if (title == null) {
+            await JSRuntime.InvokeVoidAsync("alert", "제목을 입력해 주세요.");
+            return;
+        }
+
+        string jsonString = "";
+        string requestUri = "";
+        contents = await this.QuillHtml.GetHTML();
+        jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Assignment {
+                assignment_id = AssignmentId,
+                room_id = RoomId,
+                title = title,
+                author = await UserInfo.GetUserNameAsync(JSRuntime),
+                contents = contents,
+                start_date = start_date,
+                end_date = end_date
+         });
+
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        if (type == 1){ // 게시글 수정
+
+            await Http.PutAsync($"api/assignment/{RoomId}/modifydb/{AssignmentId}", httpContent);
+            // 원래 첨부파일에서 삭제하는게 있을 때
+            if (excludeAttachments.Count >0) {
+                foreach(AssignmentMaterialUrl excludeAttachment in excludeAttachments) {
+                     Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
+                     Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
+                }               
+            }
+        } else {  //게시글 등록
+            var responsePost = await Http.PostAsync("/api/assignment/register", httpContent);
+            if (!responsePost.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
+            else {
+                    string json = await responsePost.Content.ReadAsStringAsync();
+                    AssignmentId = JsonSerializer.Deserialize<int>(json);
+            }
+        }
+
+        // 첨부 파일을 서버로 전송 합니다.
+        var content = new MultipartFormDataContent();
+
+        foreach (var file in uploadFileList) {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+            content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{file.Name}");
+        }
+        Http.PostAsync($"api/assignment/{RoomId}/upload/{AssignmentId}", content);
+
+        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 파일의 경우에는 10여초 후에 등록됩니다.");
+        // 목록 또는 게시글 페이지로 돌아감
+        
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    private async void LoadAttachments() {
+        attachments = await Http.GetFromJsonAsync<List<AssignmentMaterialUrl>>($"api/assignment/attachments?room_id={RoomId}&assignment_id={AssignmentId}");
+        StateHasChanged();
+    }
+
+    private async void excludeFile(AssignmentMaterialUrl attachment) {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "해당 파일을 첨부파일에서 삭제하시겠습니까?", "삭제 후 등록하려면 다시 등록해야합니다.", "삭제");
+        if (confirmed) {
+            attachments.Remove(attachment);
+            excludeAttachments.Add(attachment);     
+            StateHasChanged();
+        }
+    }
+
+    // 파일을 다운받는다
+    private async void DownloadFile(string fileUrl) {
+        var downloadUrl = fileUrl;
+        Console.WriteLine($"downloadUrl: {downloadUrl}");
+        await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);
+    }
+
+    private void SelectWriteTab() {
+        isWriteTabSelected = true;
+        StateHasChanged();
+    }
+
+    private void SelectPreviewTab() {
+        isWriteTabSelected = false;
+        StateHasChanged();
+    }
+ 
+ 
+ 
+ }
