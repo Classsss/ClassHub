@@ -207,29 +207,32 @@
             // 원래 첨부파일에서 삭제하는게 있을 때
             if (excludeAttachments.Count >0) {
                 foreach(AssignmentMaterialUrl excludeAttachment in excludeAttachments) {
-                     Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
-                     Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
+                    Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
+                    Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
                 }               
             }
         } else {  //게시글 등록
             var responsePost = await Http.PostAsync("/api/assignment/register", httpContent);
             if (!responsePost.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
             else {
-                    string json = await responsePost.Content.ReadAsStringAsync();
-                    AssignmentId = JsonSerializer.Deserialize<int>(json);
+                string json = await responsePost.Content.ReadAsStringAsync();
+                AssignmentId = JsonSerializer.Deserialize<int>(json);
             }
         }
+        // 첨부 파일이 있을때 서버로 전송 합니다.
+        if (uploadFileList.Count > 0) {
+            var content = new MultipartFormDataContent();
 
-        // 첨부 파일을 서버로 전송 합니다.
-        var content = new MultipartFormDataContent();
+            foreach (var file in uploadFileList) {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream().ReadAsync(buffer);
+                content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{file.Name}");
+            }
+            Http.PostAsync($"api/assignment/{RoomId}/upload/{AssignmentId}", content);
 
-        foreach (var file in uploadFileList) {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream().ReadAsync(buffer);
-            content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{AssignmentId}/{file.Name}");
         }
-        Http.PostAsync($"api/assignment/{RoomId}/upload/{AssignmentId}", content);
-
+     
+       
         await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 파일의 경우에는 10여초 후에 등록됩니다.");
         // 목록 또는 게시글 페이지로 돌아감
         

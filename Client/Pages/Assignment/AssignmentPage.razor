@@ -181,7 +181,7 @@
         bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "게시글을 삭제하시겠습니까?", "삭제 후에는 복구할 수 없습니다.", "삭제");
         if (confirmed){
             // 서버와 연결해서 삭제 작업 수행
-            Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}");
+            await Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}");
             Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}");
             await JSRuntime.InvokeVoidAsync("alert", "삭제 완료하였습니다!");
             NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
@@ -277,7 +277,7 @@
         if (excludeAttachments.Count > 0) {
             foreach (AssignmentSubmitUrl excludeAttachment in excludeAttachments) {
                 Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removeblob/{AssignmentId}/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
-                Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
+                await Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
             }
         }
 

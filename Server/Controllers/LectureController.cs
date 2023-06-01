@@ -27,26 +27,26 @@ namespace ClassHub.Server.Controllers {
 
         // 동영상 강의 db를 생성한다
         [HttpPost("{RoomId}/createdb")]
-        public async Task<int> UploadLectureDb(int room_id, Shared.Lecture lecture) {
-
-           using var connection = new NpgsqlConnection(connectionString);
-           var insertQuery = "INSERT INTO lecture (room_id,week,title,contents,start_date,end_date,video_url,learning_time) " +
-                              "VALUES (@room_id, @week,@title,@contents,@start_date,@end_date,@video_url,@learning_time);"+
-                               "SELECT lastval();";
-
-            var parameters = new DynamicParameters();
-            parameters.Add("room_id", lecture.room_id);
-            parameters.Add("week", lecture.week);
-            parameters.Add("title", lecture.title);
-            parameters.Add("contents", lecture.contents);
-            parameters.Add("start_date", lecture.start_date);
-            parameters.Add("end_date", lecture.end_date);
-            parameters.Add("video_url", "none");
-            parameters.Add("learning_time", 0);
-
-            // lecture_id를 반환한다.
-            int lecture_id = connection.ExecuteScalar<int>(insertQuery,parameters);
-            return lecture_id;
+        public ActionResult UploadLectureDb(int room_id, Shared.Lecture lecture) {
+            using var connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+            using (var transaction = connection.BeginTransaction()) {
+                try {
+                    string query1 = // 다음 material_id 시퀀스를 가져옴.
+                        "SELECT nextval('lecture_lecture_id_seq');";
+                    lecture.lecture_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
+                    Console.WriteLine(lecture.lecture_id);
+                    string query2 =
+                         "INSERT INTO lecture (lecture_id, room_id,week,title,contents,start_date,end_date,video_url,learning_time) " +
+                              "VALUES (@lecture_id, @room_id, @week,@title,@contents,@start_date,@end_date,@video_url,@learning_time);";
+                    connection.Execute(query2, lecture);
+                    transaction.Commit();
+                } catch (Exception ex) {
+                    transaction.Rollback();
+                    return BadRequest();
+                }
+            }
+            return new ObjectResult(lecture.lecture_id);
         }
 
         // 동영상 강의 db를 수정한다

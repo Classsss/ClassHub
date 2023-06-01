@@ -93,20 +93,19 @@
 
         // 서버와 통신해 lecture를 db에 등록
         string jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Lecture{
+                lecture_id = 1,
                 room_id = RoomId,
                 week = selectedWeek[0],
-                lecture_id = 0,
                 title = lecture.Title,
                 contents = lecture.Description,
                 start_date = lecture.StartDate,
                 end_date = lecture.EndDate,
-                video_url = $"{RoomId}/{" "}/{file[0].Name}",
+                video_url = "none",
                 learning_time = 0
         });
 
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         var responsedb = await Http.PostAsync($"api/lecture/{RoomId}/createdb", httpContent);
-
         string json = await responsedb.Content.ReadAsStringAsync();
         int lecture_id = JsonSerializer.Deserialize<int>(json);
 

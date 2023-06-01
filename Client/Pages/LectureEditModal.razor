@@ -118,7 +118,7 @@
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "정말로 삭제하시겠습니까?");
         if (confirmed) {
             // 서버와 연결해서 삭제 작업 수행
-            Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removedb/{lecture.LectureId}");
+            await Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removedb/{lecture.LectureId}");
             Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
             await JSRuntime.InvokeVoidAsync("alert", "삭제 완료하였습니다!");
             await ModalInstance.CloseAsync(ModalResult.Ok());

@@ -88,15 +88,15 @@ namespace ClassHub.Server.Controllers {
             connection.Open();
             using (var transaction = connection.BeginTransaction()) {
                 try {
-                    string query1 = // 다음 material_id 시퀀스를 가져옴.
+                    string query1 = // 다음 assignment_id 시퀀스를 가져옴.
                         "SELECT nextval('assignment_assignment_id_seq');";
                     assignment.assignment_id = connection.QuerySingle<int>(sql: query1, transaction: transaction);
-
+                    Console.WriteLine(assignment.assignment_id);
                     string query2 =
                         "INSERT INTO assignment (assignment_id, room_id, title, author, contents, start_date, end_date) " +
                         "VALUES (@assignment_id, @room_id, @title, @author, @contents, @start_date, @end_date);";
                     connection.Execute(query2, assignment);
-
+                    Console.WriteLine(assignment.assignment_id);
                     transaction.Commit();
                 } catch (Exception ex) {
                     transaction.Rollback();
