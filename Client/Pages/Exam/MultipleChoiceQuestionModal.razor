@@ -23,7 +23,7 @@
 
     private async Task SaveAndCloseModal() {
         if (Question == string.Empty) {
-            await JSRuntime.InvokeVoidAsync("alert", "보기 내용을 입력하세요.");
+            await JSRuntime.InvokeVoidAsync("alert", "보기를 입력하세요.");
             return;
         }
 
