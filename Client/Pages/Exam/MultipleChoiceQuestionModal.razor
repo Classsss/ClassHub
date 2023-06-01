@@ -1,0 +1,36 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+@using Blazored.TextEditor
+@inject IJSRuntime JSRuntime
+
+<Modal>
+    <ModalContent>
+        <div class="card mb-4">
+            <div class="card-body d-flex flex-column align-items-stretch">
+                <input type="text" class="form-control mb-3" @bind="Question">
+            </div>
+        </div>
+    </ModalContent>
+    <ModalFooter>
+        <button class="btn btn-primary" @onclick="SaveAndCloseModal">저장</button>
+        <button class="btn btn-secondary" @onclick="CloseModal">취소</button>
+    </ModalFooter>
+</Modal>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public string Question { get; set; } = string.Empty;
+
+    private async Task SaveAndCloseModal() {
+        if (Question == string.Empty) {
+            await JSRuntime.InvokeVoidAsync("alert", "보기 내용을 입력하세요.");
+            return;
+        }
+
+        await ModalInstance.CloseAsync(ModalResult.Ok(Question));
+    }
+
+    private async Task CloseModal() {
+        await ModalInstance.CloseAsync();
+    }
+}
