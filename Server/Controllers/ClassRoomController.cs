@@ -306,37 +306,44 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("{room_id}/upload/lecturematerial/{material_id}")]
         public IActionResult UploadLectureMaterialFiles(int room_id, int material_id, List<IFormFile> files) {
             using var connection = new NpgsqlConnection(connectionString);
-
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
 
+            List<Attachment> attachments = GetLectureMaterialAttachments(room_id, material_id);
             foreach(var file in files) {
-                string query = 
-                    "INSERT INTO lecturematerialattachment (material_id, file_name, file_size, up_date, download_url) " +
-                    "VALUES (@material_id, @file_name, @file_size, @up_date, @download_url)";
-
+                string query;
                 var blobClient = containerClient.GetBlobClient($"{room_id}/{material_id}/{file.FileName}");
+                var parameters = new DynamicParameters();
+                
+                parameters.Add("file_size", file.Length);
+                parameters.Add("up_date", DateTime.UtcNow);
+                if(attachments.Select((x) => x.file_name).Contains(file.FileName)) {
+                    query =
+                        "UPDATE lecturematerialattachment " +
+                        "SET file_size = @file_size, up_date = @up_date " +
+                        "WHERE attachment_id = @attachment_id;";
+                    parameters.Add("attachment_id", attachments.Find((x) => x.file_name == file.FileName).attachment_id);
+                } else {
+                    query = 
+                        "INSERT INTO lecturematerialattachment (material_id, file_name, file_size, up_date, download_url) " +
+                        "VALUES (@material_id, @file_name, @file_size, @up_date, @download_url)";
+                    parameters.Add("material_id", material_id);
+                    parameters.Add("file_name", file.FileName);
+                    parameters.Add("download_url", CreateSasUri(blobClient, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)));
+                }
+                connection.Query(query, parameters);
 
-                // UploadAsync를 직접 await 하지 않고 Task 리스트에 추가합니다.
-                var task = Task.Run(async () => {
+                _ = Task.Run(async () => {
                     try {
                         using(var memoryStream = new MemoryStream()) {
                             await file.CopyToAsync(memoryStream);
                             memoryStream.Position = 0;
                             await blobClient.UploadAsync(memoryStream, overwrite: true);
                         }
-                    } catch (Exception e) {
+                    } catch(Exception e) {
                         // 콘솔에 예외 로그를 출력합니다.
                         Console.WriteLine($"File upload failed: {e.Message}");
                     }
                 });
-
-                var parameters = new DynamicParameters();
-                parameters.Add("material_id", material_id);
-                parameters.Add("file_name", file.FileName);
-                parameters.Add("file_size", file.Length);
-                parameters.Add("up_date", DateTime.UtcNow);
-                parameters.Add("download_url", CreateSasUri(blobClient, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)));
-                connection.Query(query, parameters);
             }
 
             return Ok();

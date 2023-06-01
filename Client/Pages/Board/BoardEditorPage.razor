@@ -205,9 +205,9 @@
         contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
-            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+            LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
+                material_id =targetBoardContent.content_id,
                 room_id = RoomId,
-                material_id = ContentId,
                 week = selectedWeek[0],
                 title = title,
                 author = targetBoardContent.author,
@@ -215,11 +215,11 @@
                 publish_date = targetBoardContent.publish_date,
                 up_date = DateTime.Now,
                 view_count = targetBoardContent.view_count
-            });
-            requestUri = "/api/classroom/modify/lecturematerial";
+            };
+            await lectureMaterial.PutLectureMaterialAsync();
         } else if(type == 2) {
             // 강의자료 게시
-            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+            LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
                 room_id = RoomId,
                 week = selectedWeek[0],
                 title = title,
@@ -228,8 +228,8 @@
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
                 view_count = 0
-            });
-            requestUri = "/api/classroom/register/lecturematerial";
+            };
+            await lectureMaterial.PostLectureMaterialAsync();
         } else if(type == 3) {
             // 공지사항 수정
             jsonString = JsonSerializer.Serialize(new Notice {
@@ -257,34 +257,13 @@
             requestUri = "/api/classroom/register/notice";
         }
 
-        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-        if(type == 1 || type == 3) await Http.PutAsync(requestUri, httpContent);
-        else {
-            var response = await Http.PostAsync(requestUri, httpContent);
-            if (!response.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
+        if(type != 2 && type != 1) {
+            HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            if(type == 3) await Http.PutAsync(requestUri, httpContent);
             else {
-                if(type == 2) {
-                    string json = await response.Content.ReadAsStringAsync();
-                    ContentId = JsonSerializer.Deserialize<int>(json);
-                }
+                var response = await Http.PostAsync(requestUri, httpContent);
+                if(!response.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
             }
-        }
-
-        // 강의자료 게시 또는 수정일 경우 첨부 파일을 서버로 전송 합니다.
-        if(type == 1 || type == 2) {
-            var content = new MultipartFormDataContent();
-
-            foreach(var file in fileList) {
-                var buffer = new byte[file.Size];
-                await file.OpenReadStream(maxAllowedSize: 30L * 1024 * 1024).ReadAsync(buffer); // 30MB까지 허용
-                content.Add(new ByteArrayContent(buffer), "files", file.Name);
-            }
-
-            isLoading = true;
-            StateHasChanged();
-
-            var response = await Http.PostAsync($"api/classroom/{RoomId}/upload/lecturematerial/{ContentId}", content);
-            if(!response.IsSuccessStatusCode) Console.WriteLine($"Error uploading file: {response.StatusCode}");
         }
 
         // 목록 또는 게시글 페이지로 돌아감

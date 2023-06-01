@@ -270,7 +270,7 @@
 				foreach(var content in lectureMaterialContents) {
 					this.boardContents.Add(new LectureMaterialContent() {
 						room_id = content.room_id,
-						content_id = content.material_id,
+						material_id = content.material_id,
 						title = content.title,
 						week = content.week,
 						author = content.author,
@@ -300,7 +300,6 @@
 			await Http.DeleteAsync(requestUri);
 			NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
 		}
-
 	}
 
 	/// <summary>
