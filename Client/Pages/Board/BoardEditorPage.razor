@@ -6,9 +6,9 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
-@using Blazored.TextEditor
-@using ClassHub.Client.Models
-@using ClassHub.Shared
+@using Blazored.TextEditor;
+@using ClassHub.Client.Models;
+@using ClassHub.Shared;
 @using System.Text.RegularExpressions;
 @using System.Text.Json;
 @using System.Text;
@@ -23,65 +23,64 @@
        }
    </style>
 
-   <div class="col-md-12">
-       <BackButton Msg="저장하지 않고 나가기" />
-       <div class="card mb-4">
-           <div class="card-header">
-               <input type="text" @bind="title" class="form-control mb-3" placeholder="제목을 입력해주세요.">
-               <ul class="nav nav-tabs card-header-tabs">
-                   <li class="nav-item">
-                        <a class="nav-link @(isWriteTabSelected ? "active" : "")" @onclick="SelectWriteTab" data-toggle="tab" data-target="#editor-tab" style="cursor: pointer;">Write</a>
-                   </li>
-                   <li class="nav-item">
-                        <a class="nav-link @(isWriteTabSelected ? "" : "active")" @onclick="SelectPreviewTab" data-toggle="tab" data-target="#preview-tab" style="cursor: pointer;">Preview</a>
-                   </li>
-               </ul>
-           </div>
-           <div class="card-body d-flex flex-column align-items-stretch">
-               <BlazoredTextEditor DebugLevel="warn" @ref="@QuillHtml" Placeholder="내용을 입력해주세요.">
-                   <ToolbarContent>
-                       <select class="ql-header">
-                           <option selected=""></option>
-                           <option value="1"></option>
-                           <option value="2"></option>
-                           <option value="3"></option>
-                           <option value="4"></option>
-                           <option value="5"></option>
-                       </select>
-                       <span class="ql-formats">
-                           <button class="ql-bold"></button>
-                           <button class="ql-italic"></button>
-                           <button class="ql-underline"></button>
-                           <button class="ql-strike"></button>
-                       </span>
-                       <span class="ql-formats">
-                           <select class="ql-color"></select>
-                           <select class="ql-background"></select>
-                       </span>
-                       <span class="ql-formats">
-                           <button class="ql-list" value="ordered"></button>
-                           <button class="ql-list" value="bullet"></button>
-                       </span>
-                       <span class="ql-formats">
-                           <button class="ql-link"></button>
-                       </span>
-                       <span class="ql-formats">
-                           <button class="ql-align" value=""></button>
-                           <button class="ql-align" value="center"></button>
-                           <button class="ql-align" value="right"></button>
-                           <button class="ql-align" value="justify"></button>
-                       </span>
-                   </ToolbarContent>
-                   <EditorContent>
-                       @if (type == 1 || type == 3)
-                       {
-                           QuillHtml.LoadHTMLContent(contents);
-                       }
-              </EditorContent>
-           </BlazoredTextEditor>
-           </div>
+<div class="col-md-12">
+    <BackButton Msg="저장하지 않고 나가기" />
+    <div class="card mb-4">
+        <div class="card-header">
+            <input type="text" @bind="title" class="form-control mb-3" placeholder="제목을 입력해주세요.">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link @(isWriteTabSelected ? "active" : "")" @onclick="SelectWriteTab" data-toggle="tab" data-target="#editor-tab" style="cursor: pointer;">Write</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(isWriteTabSelected ? "" : "active")" @onclick="SelectPreviewTab" data-toggle="tab" data-target="#preview-tab" style="cursor: pointer;">Preview</a>
+                </li>
+            </ul>
         </div>
-   </div>
+        <div class="card-body d-flex flex-column align-items-stretch">
+            <BlazoredTextEditor DebugLevel="warn" @ref="@QuillHtml" Placeholder="내용을 입력해주세요.">
+                <ToolbarContent>
+                    <select class="ql-header">
+                        <option selected=""></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
+                    </select>
+                    <span class="ql-formats">
+                        <button class="ql-bold"></button>
+                        <button class="ql-italic"></button>
+                        <button class="ql-underline"></button>
+                        <button class="ql-strike"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <select class="ql-color"></select>
+                        <select class="ql-background"></select>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-list" value="ordered"></button>
+                        <button class="ql-list" value="bullet"></button>
+                     </span>
+                    <span class="ql-formats">
+                        <button class="ql-link"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-align" value=""></button>
+                        <button class="ql-align" value="center"></button>
+                        <button class="ql-align" value="right"></button>
+                        <button class="ql-align" value="justify"></button>
+                    </span>
+                </ToolbarContent>
+                <EditorContent>
+                    @if (type == 1 || type == 3) {
+                        QuillHtml.LoadHTMLContent(contents);
+                    }
+                </EditorContent>
+            </BlazoredTextEditor>
+        </div>
+    </div>
+</div>
 
     if(type == 1 || type == 2) {
         <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
@@ -201,14 +200,12 @@
     }
 
     private async void RegisterContent() {
-        string jsonString = "";
-        string requestUri = "";
         contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
-            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+            LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
+                material_id =targetBoardContent.content_id,
                 room_id = RoomId,
-                material_id = ContentId,
                 week = selectedWeek[0],
                 title = title,
                 author = targetBoardContent.author,
@@ -216,11 +213,11 @@
                 publish_date = targetBoardContent.publish_date,
                 up_date = DateTime.Now,
                 view_count = targetBoardContent.view_count
-            });
-            requestUri = "/api/classroom/modify/lecturematerial";
+            };
+            await lectureMaterial.PutLectureMaterialAsync();
         } else if(type == 2) {
             // 강의자료 게시
-            jsonString = JsonSerializer.Serialize(new LectureMaterial {
+            LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
                 room_id = RoomId,
                 week = selectedWeek[0],
                 title = title,
@@ -229,24 +226,24 @@
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
                 view_count = 0
-            });
-            requestUri = "/api/classroom/register/lecturematerial";
+            };
+            await lectureMaterial.PostLectureMaterialAsync();
         } else if(type == 3) {
             // 공지사항 수정
-            jsonString = JsonSerializer.Serialize(new Notice {
+            Notice notice = new Notice(Http) {
                 room_id = RoomId,
-                notice_id = ContentId,
+                notice_id = targetBoardContent.content_id,
                 title = title,
                 author = targetBoardContent.author,
                 contents = contents,
                 publish_date = targetBoardContent.publish_date,
                 up_date = DateTime.Now,
                 view_count = targetBoardContent.view_count
-            });
-            requestUri = "/api/classroom/modify/notice";
+            };
+            await notice.PutNoticeAsync();
         } else if(type == 4) {
             // 공지사항 게시
-            jsonString = JsonSerializer.Serialize(new Notice {
+            Notice notice = new Notice(Http) {
                 room_id = RoomId,
                 title = title,
                 author = await UserInfo.GetUserNameAsync(JSRuntime),
@@ -254,38 +251,8 @@
                 publish_date = DateTime.Now,
                 up_date = DateTime.Now,
                 view_count = 0
-            });
-            requestUri = "/api/classroom/register/notice";
-        }
-
-        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-        if(type == 1 || type == 3) await Http.PutAsync(requestUri, httpContent);
-        else {
-            var response = await Http.PostAsync(requestUri, httpContent);
-            if (!response.IsSuccessStatusCode) Console.WriteLine("게시글 등록 실패");
-            else {
-                if(type == 2) {
-                    string json = await response.Content.ReadAsStringAsync();
-                    ContentId = JsonSerializer.Deserialize<int>(json);
-                }
-            }
-        }
-
-        // 강의자료 게시 또는 수정일 경우 첨부 파일을 서버로 전송 합니다.
-        if(type == 1 || type == 2) {
-            var content = new MultipartFormDataContent();
-
-            foreach(var file in fileList) {
-                var buffer = new byte[file.Size];
-                await file.OpenReadStream(maxAllowedSize: 30L * 1024 * 1024).ReadAsync(buffer); // 30MB까지 허용
-                content.Add(new ByteArrayContent(buffer), "files", file.Name);
-            }
-
-            isLoading = true;
-            StateHasChanged();
-
-            var response = await Http.PostAsync($"api/classroom/{RoomId}/upload/lecturematerial/{ContentId}", content);
-            if(!response.IsSuccessStatusCode) Console.WriteLine($"Error uploading file: {response.StatusCode}");
+            };
+            await notice.PostNoticeAsync();
         }
 
         // 목록 또는 게시글 페이지로 돌아감

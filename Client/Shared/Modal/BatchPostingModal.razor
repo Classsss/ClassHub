@@ -1,0 +1,22 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+@inject NavigationManager NavigationManager
+
+<AuthorizeView Roles="professor">
+    <div class="row">
+        <button class="btn btn-primary mb-3" @onclick="@(() => GoToEditorWithKind(0))">공지사항</button>
+        <button class="btn btn-secondary mb-3" @onclick="@(() => GoToEditorWithKind(1))">동영상강의</button>
+        <button class="btn btn-secondary mb-3" @onclick="@(() => GoToEditorWithKind(2))">과제</button>
+        <button class="btn btn-secondary mb-3" @onclick="@(() => GoToEditorWithKind(3))">실습</button>
+        <button class="btn btn-secondary mb-3" @onclick="@(() => GoToEditorWithKind(4))">시험</button>
+        <button class="btn btn-primary" @onclick="@(() => GoToEditorWithKind(5))">강의자료</button>
+    </div>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    private void GoToEditorWithKind(int kind) {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"batcheditor?kind={kind}");
+    }
+}

@@ -63,8 +63,10 @@
     protected override async Task OnInitializedAsync() {
         string uri = NavigationManager.Uri;
         int start = uri.IndexOf("classroom");
-        classRoomUri = uri.Substring(start, 10) + uri.Substring(start).Split('/')[1];
-        Console.WriteLine($"classRoomUri : {classRoomUri}");
+        if(start != -1) {
+            classRoomUri = uri.Substring(start, 10) + uri.Substring(start).Split('/')[1];
+            Console.WriteLine($"classRoomUri : {classRoomUri}");
+        }
     }
 
     private void ToggleNavMenu()
