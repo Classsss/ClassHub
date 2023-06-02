@@ -39,11 +39,11 @@
     [Parameter]
     public int ExamId { get; set; }
 
-    [Parameter]
-    public Exam examInfo { get; set; }
+    private Exam examInfo = new Exam();
+
     private int currentProblemIndex;
-    private List<ExamProblem> problems;
-    private ExamProblem problem;
+    private List<ExamProblem> problems = new List<ExamProblem>();
+    private ExamProblem problem = new ExamProblem();
 
     private bool isRandomChoice;
     private bool isBackToPreviousProblem;

@@ -46,6 +46,6 @@
         public bool IsBackToPreviousProblem { get; set; } = false;
 
         /// <summary>시험 문제들</summary>
-        public List<ExamProblem> Problems { get; set; }
+        public List<ExamProblem> Problems { get; set; } = new List<ExamProblem>();
     }
 }

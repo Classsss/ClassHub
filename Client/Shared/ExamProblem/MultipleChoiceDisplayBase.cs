@@ -1,7 +1,5 @@
 ﻿using ClassHub.Client.Models;
 using Microsoft.AspNetCore.Components;
-using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClassHub.Client.Shared.ExamProblem {
     public class MultipleChoiceDisplayBase : ComponentBase {
@@ -16,7 +14,7 @@ namespace ClassHub.Client.Shared.ExamProblem {
             if (IsRandomChoice) {
                 // 보기 순서 무작위 셔플
                 var rnd = new Random();
-                Problem.Questions = Problem.Questions.OrderBy(item => rnd.Next()).ToArray();
+                Problem.Questions = Problem.Questions.OrderBy(item => rnd.Next()).ToList();
             }
         }
 

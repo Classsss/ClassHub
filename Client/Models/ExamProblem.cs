@@ -13,7 +13,7 @@
     // 객관식
     public class MultipleChoiceProblem : ExamProblem {
         // 문제에 대한 보기들
-        public string[] Questions { get; set; }
+        public List<string> Questions { get; set; } = new List<string>();
 
         // 문제에 대한 답안
         public string Answer { get; set; } = string.Empty;
