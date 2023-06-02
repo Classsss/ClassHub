@@ -16,7 +16,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <BackButton />
-
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <div class="text-bg-light p-3" style="padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
     <div style="display: flex; align-items: center;">
         <h3 style="margin: 0 auto;">
@@ -61,6 +63,7 @@
         }
     </tbody>
 </table>
+}
 
 @code {
 
@@ -71,11 +74,12 @@
 
     private List<AssignmentSubmit> submitList = new List<AssignmentSubmit>();
     List<Task> downloadTasks = new List<Task>();
-
+    bool dataLoaded = false;
     // 초기화 할때 일단 내역을 보여준다.
     protected async override void OnInitialized() {
         submitList = await Http.GetFromJsonAsync<List<AssignmentSubmit>>($"api/assignmentsubmit/RoomId/{RoomId}/AssignmentId/{AssignmentId}");
         submitList = submitList.OrderByDescending(a => a.student_id).ToList();
+        dataLoaded = true;
         StateHasChanged();
     }
 

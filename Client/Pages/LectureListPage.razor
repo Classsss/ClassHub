@@ -8,89 +8,105 @@
 @using Blazored.Modal.Services
 @using System.Collections.ObjectModel
 @using ClassHub.Client.Models
+@using ClassHub.Shared
 @using System.Text.Json
-
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h2 class="mb-4">동영상 강의 목록</h2>
-    <div>
-    @if (role == "professor") {
-            <button class="btn btn-success" @onclick=" ()=>ShowEnrollPage()">강의 등록</button>
-            <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowProgressPage())">강의 수강 내역</button>
-    }   
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="mb-4">동영상 강의 목록</h2>
+        <div>
+        @if (role == "professor") {
+                <button class="btn btn-success" @onclick=" ()=>ShowEnrollPage()">강의 등록</button>
+                <button class="btn btn-success" style="margin-left: 5px;" @onclick="@(()=>ShowProgressPage())">강의 수강 내역</button>
+        }   
+        </div>
     </div>
-</div>
 
-<WeekPicker weekValue = "@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
-<br />
+    <WeekPicker weekValue = "@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
+    <br />
 
-<style>
-    .Lecture-row:hover {
-        background-color: #bdc3c7;
-        cursor: pointer;
-    }
+    <style>
+        .Lecture-row:hover {
+            background-color: #bdc3c7;
+            cursor: pointer;
+        }
 
-</style>
+    </style>
 
-@foreach (var item in lectures.GroupBy(x => new { x.Week, x.Chapter }))
-{
-    @if (selectedWeek.Contains(item.Key.Week))
+    @foreach (var item in lectures.GroupBy(x => new { x.Week, x.Chapter }))
     {
-        <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Chapter)차시</i>
-        <table class="table table-bordered">
-            <tbody>
-                @foreach (var subItem in item)
-                {
-                    if (role == "student") {
-                        <tr class="Lecture-row">
-                            <td colspan="4" style="font-weight:bold;" @onclick="@(() => Showlecture(subItem))">
-                                <i class="oi oi-media-play" style="margin-right: 5px;">@subItem.Title</i>
+        @if (selectedWeek.Contains(item.Key.Week))
+        {
+            <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Chapter)차시</i>
+            <table class="table table-bordered">
+                <tbody>
+                    @foreach (var subItem in item)
+                    {
+                        if (role == "student") {
+                            <tr class="Lecture-row">
+                                <td colspan="5" style="font-weight:bold;" @onclick="@(() => Showlecture(subItem))">
+                                    <i class="oi oi-media-play" style="margin-right: 5px;">@subItem.Title</i>
+                                </td>
+                            </tr>
+                        } else {
+                            <tr>
+                                <td class="Lecture-row" colspan="3" style="font-weight:bold;" @onclick="@(() => Showlecture(subItem))">
+                                    <i class="oi oi-media-play" style="margin-right: 5px;">@subItem.Title</i>
+                                </td>
+                                <td colspan="1">
+                                    <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowEditPage(subItem))">강의 수정</button>
+                                </td>
+                            </tr>
+                        }
+                        <tr>
+                            <td style="font-weight:bold; width:10%">
+                                학습인정기간
+                            </td>
+                            <td style="width:70%">
+                                @(subItem.StartDate.ToString("yyyy년 MM월 dd일 HH시 mm분") + " ~ " + subItem.EndDate.ToString("yyyy년 MM월 dd일 HH시 mm분"))
+                            </td>
+                            <td style ="font-weight:bold; width:10%">
+                                수강상태
+                            </td>
+                            <td class="@(subItem.IsEnrolled ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
+                                <i class="@((subItem.IsEnrolled) ? "oi oi-circle-check" : "oi oi-x")"></i>
+                                @(subItem.IsEnrolled ? "수강" : "미수강")
                             </td>
                         </tr>
-                    } else {
                         <tr>
-                            <td class="Lecture-row" colspan="2" style="font-weight:bold;" @onclick="@(() => Showlecture(subItem))">
-                                <i class="oi oi-media-play" style="margin-right: 5px;">@subItem.Title</i>
+                            <td colspan="4">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuemax="100" aria-valuemin="0" style="@($"width: {subItem.CurrentLearningTime / (float)subItem.RequireLearningTime * 100}%")"></div>
+                                </div>
+                                <div class="text-center" style="font-size:12px">
+                                    @{
+                                        int currentLearningTimeInSeconds = subItem.CurrentLearningTime;
+                                        int requireLearningTimeInSeconds = subItem.RequireLearningTime;
+
+                                        int currentMinutes = currentLearningTimeInSeconds / 60;
+                                        int currentSeconds = currentLearningTimeInSeconds % 60;
+
+                                        int requireMinutes = requireLearningTimeInSeconds / 60;
+                                        int requireSeconds = requireLearningTimeInSeconds % 60;
+
+                                        string formattedTime = $"{currentMinutes}분 {currentSeconds}초 / {requireMinutes}분 {requireSeconds}초";
+                                    }
+                                    @formattedTime
+                                </div>
+
                             </td>
-                            <td colspan="2">
-                                <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowEditPage(subItem))">강의 수정</button>
-                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="font-size:14px;">@subItem.Description</td>
                         </tr>
                     }
-                    <tr>
-                        <td style="font-weight:bold; width:10%">
-                            학습인정기간
-                        </td>
-                        <td style="width:70%">
-                            @(subItem.StartDate.ToString("yyyy년 MM월 dd일 HH시 mm분") + " ~ " + subItem.EndDate.ToString("yyyy년 MM월 dd일 HH시 mm분"))
-                        </td>
-                        <td style ="font-weight:bold; width:10%">
-                            수강상태
-                        </td>
-                        <td class="@(subItem.IsEnrolled ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
-                            <i class="@((subItem.IsEnrolled) ? "oi oi-circle-check" : "oi oi-x")"></i>
-                            @(subItem.IsEnrolled ? "수강" : "미수강")
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="4">
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuemax="100" aria-valuemin="0" style="@($"width: {subItem.CurrentLearningTime / (float)subItem.RequireLearningTime * 100}%")"></div>
-                            </div>
-                            <div class="text-center" style="font-size:12px">
-                                @(subItem.CurrentLearningTime + "분 / " + subItem.RequireLearningTime + "분")
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" style="font-size:14px;">@subItem.Description</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <br />
+                </tbody>
+            </table>
+            <br />
+        }
     }
 }
-
 <style>
     .progress {
         height: 20px;
@@ -120,13 +136,14 @@
     public int RoomId { get; set; }
 
     public List<int> selectedWeek = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    private List<Lecture> lectures = new List<Lecture>();
+    private List<Models.Lecture> lectures = new List<Models.Lecture>();
     private string role;
-
+    bool dataLoaded = false;
     protected async override void OnInitialized() {
         // RoomId와 매칭되는 동영상강의의 정보를 가져옵니다
         role = await UserInfo.GetRoleAsync(JSRuntime);
-        lectures = await Http.GetFromJsonAsync<List<Lecture>>($"api/lecturelist/room_id/{RoomId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        lectures = await Http.GetFromJsonAsync<List<Models.Lecture>>($"api/lecturelist/room_id/{RoomId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        dataLoaded = true;
         StateHasChanged();
     }
 
@@ -137,7 +154,7 @@
         await Task.CompletedTask;
     }
 
-    private void Showlecture(Lecture selectedLecture) {
+    private void Showlecture(Models.Lecture selectedLecture) {
         var lecturesOfWeek = lectures.Where(lecture => lecture.Week == selectedLecture.Week).ToList();
         var lecturesJson = JsonSerializer.Serialize(lecturesOfWeek);
         NavigationManager.NavigateTo($"/classroom/{RoomId}/week/{selectedLecture.Week}/chapter/{selectedLecture.Chapter}?lectures={Uri.EscapeDataString(lecturesJson)}");
@@ -157,7 +174,7 @@
     }
 
     // 동영상 강의 수정페이지를 띄운다.
-    private async Task ShowEditPage(Lecture selectedLecture) {
+    private async Task ShowEditPage(Models.Lecture selectedLecture) {
         var parameters = new ModalParameters();
         parameters.Add("lecture", selectedLecture);
         var modalOptions = new ModalOptions() { DisableBackgroundCancel = true , Size = Blazored.Modal.ModalSize.ExtraLarge };
@@ -169,9 +186,19 @@
 
     // 동영상 강의 시청 현황페이지를 띄운다.
     private async Task ShowProgressPage() {
+
+        // 재정렬
+        var lecturesParam = lectures.OrderBy(x => x.Week)
+            .ThenBy(x => x.Chapter)
+            .ToList();
+
+        // 강의실의 학생 정보들을 가져옴
+        var studentsParam = await Http.GetFromJsonAsync<List<Student>>($"/api/student/{RoomId}");
+
         var parameters = new ModalParameters();
-        parameters.Add("lectures", lectures);
+        parameters.Add("lectures", lecturesParam);
         parameters.Add("RoomId", RoomId);
+        parameters.Add("students", studentsParam);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
         var modalReference = ModalService.Show<LectureProgressModal>("동영상 강의 시청 내역", parameters, modalOptions);
         var result = await modalReference.Result;

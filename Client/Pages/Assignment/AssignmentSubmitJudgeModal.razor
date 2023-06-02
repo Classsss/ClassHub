@@ -18,6 +18,9 @@
 
 <Modal>
     <ModalBody>
+          @if (!dataLoaded) {
+    <LoadingBar />
+} else {
         <div class="p-3 border-4 rounded-3" style="background-color: #F7F7F7;">
             <div class="form-group mb-4">
                 <label for="title" class="mb-2">평가</label>
@@ -28,7 +31,7 @@
                 <input type="number" class="form-control" id="score" name="score" @bind="score" />
             </div>
         </div>
-
+        }
 
     </ModalBody>
     <ModalFooter>
@@ -49,11 +52,12 @@
     private List<AssignmentSubmitAttachment> submitAttachments = new List<AssignmentSubmitAttachment>();
     int score;
     string message;
-
+    bool dataLoaded = false;
     protected override async Task OnInitializedAsync() {
         submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
         score = assignmentSubmit.score;
         message = assignmentSubmit.message;
+        dataLoaded = true;
         StateHasChanged();
     }
 

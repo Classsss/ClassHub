@@ -30,7 +30,9 @@
     }
  </style>
 
-
+ @if (!dataLoaded) {
+    <LoadingBar />
+} else {
    <div class="col-md-12">
        <BackButton Msg="저장하지 않고 나가기" />
        <div class="card mb-4">
@@ -120,7 +122,7 @@
                 }
             </ul>
     }
-  
+  }
 
      <DragDropUpload @bind-droppedFiles="uploadFileList" IsMultiple=true/>
     <br />
@@ -146,7 +148,7 @@
     BlazoredTextEditor QuillHtml;
     //기본 설정은 WriteTab
     private bool isWriteTabSelected = true;
-
+    bool dataLoaded = false;
     private List<AssignmentMaterialAttachment>? attachments = new List<AssignmentMaterialAttachment>();
     private List<AssignmentMaterialAttachment> excludeAttachments = new List<AssignmentMaterialAttachment>();
     private List<IBrowserFile> uploadFileList = new List<IBrowserFile>();
@@ -172,6 +174,7 @@
             Console.WriteLine("과제 게시");
             type = 2;
         }
+        dataLoaded = true;
     }
     private async void OpenDetail() {
         bool result = await JSRuntime.InvokeAsync<bool>("showConfirm", "사이트에서 나가시겠습니까?", "변경사항이 저장되지 않을 수 있습니다.", "나가기");

@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NReco.VideoInfo.LT" Version="1.2.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
   </ItemGroup>
 
