@@ -1,0 +1,194 @@
+﻿@page "/batcheditor"
+@layout MainLayout
+@using Blazored.TextEditor;
+@using ClassHub.Shared;
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<style>
+    .ql-editor {
+        min-height: 200px;
+    }
+</style>
+
+<AuthorizeView Roles="professor">
+    @if(ClassRoomList == null) {
+        <LoadingBar />
+    } else {
+        <div class="col-md-12">
+            <BackButton Msg="저장하지 않고 나가기" />
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    강의실 선택
+                </div>
+                <div class="card-body">
+                    @foreach(var classRoom in ClassRoomList) {
+                        <div class="form-check-inline">
+                            <input type="checkbox" @onchange="((e) => CheckboxChanged(e, classRoom))" />
+                            <label class="form-check-label" for="option1">
+                                @(classRoom.title)(@($"{classRoom.section_id:D4}"))
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <input type="text" @bind="title" class="form-control mb-3" placeholder="제목을 입력해주세요.">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link @(isWriteTabSelected ? "active" : "")" @onclick="SelectWriteTab" data-toggle="tab" data-target="#editor-tab" style="cursor: pointer;">Write</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(isWriteTabSelected ? "" : "active")" @onclick="SelectPreviewTab" data-toggle="tab" data-target="#preview-tab" style="cursor: pointer;">Preview</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body d-flex flex-column align-items-stretch">
+                    <BlazoredTextEditor DebugLevel="warn" @ref="@QuillHtml" Placeholder="내용을 입력해주세요.">
+                        <ToolbarContent>
+                            <select class="ql-header">
+                                <option selected=""></option>
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="3"></option>
+                                <option value="4"></option>
+                                <option value="5"></option>
+                            </select>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                                <button class="ql-strike"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <select class="ql-color"></select>
+                                <select class="ql-background"></select>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-link"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-align" value=""></button>
+                                <button class="ql-align" value="center"></button>
+                                <button class="ql-align" value="right"></button>
+                                <button class="ql-align" value="justify"></button>
+                            </span>
+                        </ToolbarContent>
+                        <EditorContent />
+                    </BlazoredTextEditor>
+                </div>
+            </div>
+        </div>
+
+        @if(kind == Kind.LectureMaterial) {
+            <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
+            <br />
+            <DragDropUpload @bind-droppedFiles="fileList" />
+            <br />
+        }
+
+        <div class="d-flex justify-content-end mb-2">
+            <button type="submit" class="btn btn-primary" @onclick="RegisterContent">등록</button>
+        </div>
+    }
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "kind")]
+    public int KindParam { get; set; }
+
+    public enum Kind {
+        Notice, Lecture, Assignment, CodeAssignment, Exam, LectureMaterial
+    }
+
+    private Kind kind {
+        get => (Kind)KindParam;
+    }
+    private string title;
+    private string contents;
+    BlazoredTextEditor QuillHtml;
+    private bool isWriteTabSelected = true;
+
+    private List<ClassRoom>? ClassRoomList;
+    private List<int> selectedRoomIdList = new List<int>();
+
+    // LectureMaterial Content에 필요한 변수
+    public List<int> selectedWeek = new List<int>() { 1, };
+    private List<IBrowserFile> fileList = new List<IBrowserFile>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if(firstRender) {
+            int instructor_id = await UserInfo.GetUserIdAsync(JSRuntime);
+            var accessToken = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "accessToken");
+
+            ClassRoomList = await Http.GetFromJsonAsync<List<ClassRoom>>($"api/classroom/teaches?instructor_id={instructor_id}&accessToken={accessToken}");
+            StateHasChanged();
+        }
+    }
+
+    private async Task RegisterContent() {
+        await JSRuntime.InvokeVoidAsync("showLoadingBar");
+
+        contents = await QuillHtml.GetHTML();
+        List<Task> taskList = new List<Task>();
+        if(kind == Kind.Notice) {
+            foreach(var room_id in selectedRoomIdList) {
+                Notice notice = new Notice(Http) {
+                    room_id = room_id,
+                    title = title,
+                    author = await UserInfo.GetUserNameAsync(JSRuntime),
+                    contents = contents
+                };
+                taskList.Add(notice.PostNoticeAsync());
+            }
+        } else if(kind == Kind.LectureMaterial) {
+            foreach(var room_id in selectedRoomIdList) {
+                LectureMaterial lectureMaterial = new LectureMaterial(Http, fileList) {
+                    room_id = room_id,
+                    week = selectedWeek[0],
+                    title = title,
+                    author = await UserInfo.GetUserNameAsync(JSRuntime),
+                    contents = contents
+                };
+                taskList.Add(lectureMaterial.PostLectureMaterialAsync());
+            }
+        }
+        Console.WriteLine($"taskList.Count:{taskList.Count}");
+        await Task.WhenAll(taskList);
+
+        await JSRuntime.InvokeVoidAsync("hideLoadingBar");
+
+        NavigationManager.NavigateTo(NavigationManager.BaseUri);
+    }
+
+    private async Task OnWeekChanged(List<int> week) {
+        selectedWeek = week;
+        await Task.CompletedTask;
+    }
+
+    private void SelectWriteTab() {
+        isWriteTabSelected = true;
+        StateHasChanged();
+    }
+
+    private void SelectPreviewTab() {
+        isWriteTabSelected = false;
+        StateHasChanged();
+    }
+
+    private void CheckboxChanged(ChangeEventArgs e, ClassRoom classRoom) {
+        var isCheck = (bool)e.Value;
+
+        if(isCheck) selectedRoomIdList.Add(classRoom.room_id);
+        else selectedRoomIdList.Remove(classRoom.room_id);
+    }
+}

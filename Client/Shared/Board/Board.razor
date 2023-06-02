@@ -13,6 +13,30 @@
         color: #007bff;
         text-decoration: underline;
     }
+
+    table {
+        font-size: calc(1vw);
+    }
+
+    th, td {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .mobile-date {
+        display: none;
+    }
+
+    @@media (max-width: 640.98px) {
+        .desktop-date, .view-count{
+            display: none;
+        }
+
+        .mobile-date {
+            display: inline;
+        }
+    }
 </style>
 
 <h3>@Title</h3>
@@ -35,14 +59,14 @@
             <th style="width: 50%;">제목</th>
             <th style="width: 10%;">작성자</th>
             <th style="width: 10%;">게시일</th>
-            <th style="width: 10%;">조회</th>
+            <th class="view-count" style="width: 10%;">조회</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var content in pagedContents)
         {
             <tr class="board-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
-                <td style="text-indent : 7px;">@content.content_id</td>
+                <td style="text-indent : 7px;">@(Contents.Count - Contents.IndexOf(content))</td>
                 @if (Title == "강의자료")
                 {
                     var lectureMaterial = content as LectureMaterialContent;
@@ -50,8 +74,11 @@
                 }
                 <td class="board-title">@content.title</td>
                 <td>@content.author</td>
-                <td>@content.publish_date.ToString("yyyy.MM.dd")</td>
-                <td style="text-indent : 7px;">@content.view_count</td>
+                <td class="publish-date">
+                    <span class="mobile-date">@content.publish_date.ToString("MM.dd")</span>
+                    <span class="desktop-date">@content.publish_date.ToString("yyyy.MM.dd")</span>
+                </td>
+                <td class="view-count" style="text-indent : 7px;">@content.view_count</td>
             </tr>
         }
     </tbody>

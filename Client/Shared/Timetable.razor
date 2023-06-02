@@ -5,8 +5,16 @@
 @inject NavMenuTitleService NavMenuTitleService
 
 <style>
+    .timetable td:first-child, .timetable th:first-child {
+        width: 6%;
+        height: 50px; /* 원하는 높이로 설정하세요. */
+        text-align: center; /* 가운데 정렬 */
+        vertical-align: middle; /* 수직 가운데 정렬 */
+        white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 설정 */
+    }
+
     .timetable td, .timetable th {
-        width: 14.2857%; /* 100% / 7 (시간 + 5개의 평일 요일) */
+        width: 18.8%; /* 90% / 5 (5개의 평일 요일) */
         height: 50px; /* 원하는 높이로 설정하세요. */
         text-align: center; /* 가운데 정렬 */
         vertical-align: middle; /* 수직 가운데 정렬 */
@@ -15,60 +23,75 @@
     .timetable th {
         background-color: ghostwhite;
     }
+
+    .btn {
+        /* white-space: nowrap;  텍스트가 한 줄로 유지되도록 설정 */
+        /* overflow: hidden;  넘치는 텍스트를 숨김 */
+        text-overflow: ellipsis; /* 넘치는 텍스트를 "..."으로 표시 */
+    }
 </style>
+
+
 
 @if(ClassRoomList == null) {
     <p><em>Loading...</em></p>
 } else {
-    <table class="table table-bordered timetable">
-        <thead>
-            <tr>
-                <th>Time</th>
-                @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
-                    <th>@dayOfWeek.ToString().Substring(0, 3)</th>
-                }
-            </tr>
-        </thead>
-        <tbody>
-            @for(int hour = StartHour; hour <= EndHour; hour++) {
+    <div class="responsive-font">
+        <table class="table table-bordered timetable">
+            <thead>
                 <tr>
-                    <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
+                    <th>Time</th>
                     @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
-                        bool flag = true;
-                        @foreach(var classRoom in ClassRoomList) {
-                            @foreach(var timeSlot in classRoom.timeSlots.Where(t => t.day_of_week == dayOfWeek && t.start_time <= hour && hour < t.end_time)) {
-                                if(timeSlot.start_time != hour) {
+                        <th>@dayOfWeekKor[dayOfWeek]</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for(int hour = StartHour; hour <= EndHour; hour++) {
+                    <tr>
+                        <td>@hour:00<br />(@((hour - StartHour + 1) + "교시"))</td>
+                        @foreach(var dayOfWeek in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().Where(d => d != DayOfWeek.Saturday && d != DayOfWeek.Sunday)) {
+                            bool flag = true;
+                            @foreach(var classRoom in ClassRoomList) {
+                                @foreach(var timeSlot in classRoom.timeSlots.Where(t => t.day_of_week == dayOfWeek && t.start_time <= hour && hour < t.end_time)) {
+                                    if(timeSlot.start_time != hour) {
+                                        flag = false;
+                                        break;
+                                    }
+
+                                    int span = timeSlot.end_time - timeSlot.start_time;
+                                    <td rowspan=@span>
+                                        <button class="btn btn-@colors[classRoom.color] btn-sm w-100 h-100 d-flex flex-column justify-content-start" @onclick="() => RoomSelected(classRoom)">
+                                            <strong class="button-text">@classRoom.title</strong>
+                                            <span class="button-text">@classRoom.buildingId</span>
+                                        </button>
+                                    </td>
                                     flag = false;
                                     break;
                                 }
-
-                                int span = timeSlot.end_time - timeSlot.start_time;
-                                <td rowspan=@span>
-                                    <button class="btn btn-@colors[classRoom.color] btn-sm w-100 h-100" @onclick="() => RoomSelected(classRoom)">
-                                        @classRoom.title
-                                        <br />
-                                        @classRoom.instructor
-                                        <br />
-                                        @classRoom.buildingId
-                                    </button>
-                                </td>
-                                flag = false;
-                                break;
+                            }
+                            if(flag) {
+                                <td />
                             }
                         }
-                        if(flag) {
-                            <td />
-                        }
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 @code {
     [Parameter]
     public List<ClassRoomDetail> ClassRoomList { get; set; }
+
+    private Dictionary<DayOfWeek, string> dayOfWeekKor = new Dictionary<DayOfWeek, string> {
+        {DayOfWeek.Monday, "월"},
+        {DayOfWeek.Tuesday, "화"},
+        {DayOfWeek.Wednesday, "수"},
+        {DayOfWeek.Thursday, "목"},
+        {DayOfWeek.Friday, "금"},
+    };
 
     private string[] colors = { "primary", "secondary", "success", "danger", "warning", "info", "light", "dark" };
 

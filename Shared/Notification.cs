@@ -18,5 +18,12 @@
     public class DisplayStudentNotification : ClassRoomNotification {
         public bool is_read { get; set; }
         public string title { get; set; }
+        public string GetNotifyDate() {
+            TimeSpan elapsedPeriod = DateTime.Now - notify_date;
+            if(elapsedPeriod.Days > 0) return $"{elapsedPeriod.Days}일 전";
+            else if(elapsedPeriod.Hours > 0) return $"{elapsedPeriod.Hours}시간 전";
+            else if(elapsedPeriod.Minutes > 0) return $"{elapsedPeriod.Minutes}분 전";
+            else return $"{elapsedPeriod.Seconds}초 전";
+        }
     }
 }
