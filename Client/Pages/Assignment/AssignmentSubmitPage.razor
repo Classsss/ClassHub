@@ -27,8 +27,8 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />제출 번호</th>
             <th style="border: 1px solid darkgray;"><i class="bi bi-123"></i>학번</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />이름</th>
             <th style="border: 1px solid darkgray;"><i class="bi bi-check-lg"></i>점수</th>
             <th style="border: 1px solid darkgray;"><i class="bi bi-memory"></i>제출 날짜</th>
             <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>제출 파일</th>
@@ -39,8 +39,8 @@
         @if (submitList != null) {
             @foreach (AssignmentSubmit submit in submitList) {
                 <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_id</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_name</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">
                         @submit.score
                         </td>
@@ -79,12 +79,13 @@
     // 초기화 할때 일단 내역을 보여준다.  
     protected async override void OnInitialized(){    
         submitList = await Http.GetFromJsonAsync<List<AssignmentSubmit>>($"api/assignmentsubmit/RoomId/{RoomId}/AssignmentId/{AssignmentId}");
+        submitList = submitList.OrderByDescending(a => a.student_id).ToList();
         StateHasChanged();
     }
 
     private async Task DownloadStudentFile(AssignmentSubmit assignmentSubmit){
-        List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
-        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
+        List<AssignmentSubmitAttachment> submitAttachments = new List<AssignmentSubmitAttachment>();
+        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
         int delayMilliseconds = 500; // 다운로드 사이의 딜레이 시간 (1초)
         foreach (var attachment in submitAttachments) {
             await JSRuntime.InvokeVoidAsync("downloadFile", attachment.file_url);
@@ -96,11 +97,11 @@
 
     // 모든 학생의 파일을 일괄 다운로드한다.
     private async Task DownloadAllFile(){
-        List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
+        List<AssignmentSubmitAttachment> submitAttachments = new List<AssignmentSubmitAttachment>();
         int delayMilliseconds = 500; // 다운로드 사이의 딜레이 시간 (1초)
         foreach(AssignmentSubmit submit in submitList) {
-            submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={submit.room_id}&submit_id={submit.submit_id}");
-            foreach (AssignmentSubmitUrl submitAttachment in submitAttachments) {
+            submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={submit.room_id}&submit_id={submit.submit_id}");
+            foreach (AssignmentSubmitAttachment submitAttachment in submitAttachments) {
                 var downloadUrl = submitAttachment.file_url;
                 Console.WriteLine($"downloadUrl: {downloadUrl}");
                 await JSRuntime.InvokeVoidAsync("downloadFile", downloadUrl);

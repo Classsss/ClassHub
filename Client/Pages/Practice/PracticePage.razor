@@ -133,6 +133,7 @@
                 status = JudgeResult.JResult.Pending.ToString(),
                 submit_id = 1,
                 student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                student_name = await UserInfo.GetUserNameAsync(JSRuntime),
                 exec_time = 0,
                 mem_usage = 0,
                 code = await MonacoEditorReference.editor.GetValue(),
@@ -147,6 +148,7 @@
         // 제출 내역 창으로 이동한다.
         CheckSubmitHistory();
         // 서버에 채점을 요청한다.
+        Console.WriteLine("?");
         HttpResponseMessage response = await Http.PostAsync("Judge", content);
     }
 
@@ -193,6 +195,7 @@
                 status = JudgeResult.JResult.Pending.ToString(),
                 submit_id = 1,
                 student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                student_name = await UserInfo.GetUserNameAsync(JSRuntime),
                 exec_time = 0,
                 mem_usage = 0,
                 code = typeCode,

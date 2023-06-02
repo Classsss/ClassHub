@@ -66,7 +66,7 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("room_id", room_id);
             var Assignments = connection.Query<Shared.Assignment>(query, parameters);
 
-            // 문제 번호가 problem_id인 문제를 찾은 후 practice를 생성하고 practiceList에 추가합니다.
+            // 과제 번호가 assignment_id인 문제를 찾은 후 assignment를 생성하고 assignment List에 추가합니다.
             foreach (Shared.Assignment Assignment in Assignments) {
                 query = "SELECT COUNT(DISTINCT student_id) FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id;";
                 var parametersSubmit = new DynamicParameters();

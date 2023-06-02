@@ -198,8 +198,8 @@ namespace ClassHub.Server.Controllers {
 
       
         // 학생이 해당 강의 진행률을 가지고 있는지 확인 후 없으면 생성한다.
-        [HttpPost("hasprogress/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}")]
-        public void CheckLectureProgress(int room_id, int lecture_id, int student_id) {
+        [HttpPost("hasprogress/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}/student_name/{student_name}")]
+        public void CheckLectureProgress(int room_id, int lecture_id, int student_id, string student_name) {
             using var connection = new NpgsqlConnection(connectionString);
             string query = "SELECT * FROM lectureprogress WHERE lecture_id = @lecture_id AND student_id = @student_id;";
             var parametersProgress = new DynamicParameters();
@@ -208,10 +208,11 @@ namespace ClassHub.Server.Controllers {
             var lectureProgress = connection.QuerySingleOrDefault<LectureProgress>(query, parametersProgress);
 
             if (lectureProgress == null) {
-                query = "INSERT INTO lectureprogress (room_id, lecture_id, student_id, elapsed_time, is_enroll) VALUES (@room_id, @lecture_id, @student_id, @elapsed_time, @is_enroll);";
+                query = "INSERT INTO lectureprogress (room_id, lecture_id, student_id, student_name, elapsed_time, is_enroll) VALUES (@room_id, @lecture_id, @student_id, @student_name, @elapsed_time, @is_enroll);";
                 parametersProgress.Add("room_id", room_id);
                 parametersProgress.Add("elapsed_time", 0);
                 parametersProgress.Add("is_enroll", false);
+                parametersProgress.Add("student_name", student_name);
                 connection.Execute(query, parametersProgress);
             }
         }

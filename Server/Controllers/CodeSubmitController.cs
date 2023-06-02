@@ -31,13 +31,12 @@ namespace ClassHub.Server.Controllers {
 
             // 빈 데이터 채우기
             codeSubmit.week = codeAssignment.week;
-            query = "INSERT INTO codesubmit (room_id, week, assignment_id, submit_date, status, student_id,exec_time,mem_usage,code,message,language) " +
-            "VALUES (@room_id, @week, @assignment_id, @submit_date, @status, @student_id,@exec_time,@mem_usage,@code,@message,@language);"
+            query = "INSERT INTO codesubmit (room_id, week, assignment_id, submit_date, status, student_id, student_name, exec_time,mem_usage,code,message,language) " +
+            "VALUES (@room_id, @week, @assignment_id, @submit_date, @status, @student_id,@student_name, @exec_time,@mem_usage,@code,@message,@language);"
             + "SELECT lastval();";
 
             //DB에서 생성된 submitId를 받아온다.
             int submitId = connection.ExecuteScalar<int>(query, codeSubmit);
-            
             return submitId;
         }
 

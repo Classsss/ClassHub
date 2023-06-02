@@ -46,12 +46,12 @@
     [Parameter] 
     public AssignmentSubmit assignmentSubmit{ get; set; }
 
-    private List<AssignmentSubmitUrl> submitAttachments = new List<AssignmentSubmitUrl>();
+    private List<AssignmentSubmitAttachment> submitAttachments = new List<AssignmentSubmitAttachment>();
     int score;
     string message;
 
     protected override async Task OnInitializedAsync() {
-        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
+        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
         score = assignmentSubmit.score;
         message = assignmentSubmit.message;
         StateHasChanged();

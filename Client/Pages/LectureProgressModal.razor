@@ -14,6 +14,7 @@
             <thead>
                 <tr>
                     <th class="col-2" style="border: 1px solid darkgray;">학번</th>
+                    <th class="col-2" style="border: 1px solid darkgray;">이름</th>
                     <th class="col-2" style="border: 1px solid darkgray;">수강 시간</th>
                     <th class="col-1" style="border: 1px solid darkgray;">수강 상태</th>
                 </tr>
@@ -23,6 +24,7 @@
                     @foreach (LectureProgress progress in lectureProgressList) {
                         <tr>
                             <td class="col-2" style="border: 1px solid darkgray;">@progress.student_id</td>
+                            <td class="col-2" style="border: 1px solid darkgray;">@progress.student_name</td>
                             <td class="col-2" style="border: 1px solid darkgray;">@progress.elapsed_time 분</td>
                             <td class="@(progress.is_enroll ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
                                 <i class="@((progress.is_enroll) ? "oi oi-circle-check" : "oi oi-x")"></i>

@@ -147,8 +147,8 @@
     //기본 설정은 WriteTab
     private bool isWriteTabSelected = true;
 
-    private List<AssignmentMaterialUrl>? attachments = new List<AssignmentMaterialUrl>();
-    private List<AssignmentMaterialUrl> excludeAttachments = new List<AssignmentMaterialUrl>();
+    private List<AssignmentMaterialAttachment>? attachments = new List<AssignmentMaterialAttachment>();
+    private List<AssignmentMaterialAttachment> excludeAttachments = new List<AssignmentMaterialAttachment>();
     private List<IBrowserFile> uploadFileList = new List<IBrowserFile>();
 
     protected override async Task OnParametersSetAsync() // OninitializedAsync()를 대체함
@@ -169,7 +169,7 @@
             LoadAttachments();
         }
         else if (new Regex("/classroom/[0-9]+/assignment/editor").IsMatch(uri)){
-            Console.WriteLine("강의자료 게시");
+            Console.WriteLine("과제 게시");
             type = 2;
         }
     }
@@ -206,9 +206,9 @@
             await Http.PutAsync($"api/assignment/{RoomId}/modifydb/{AssignmentId}", httpContent);
             // 원래 첨부파일에서 삭제하는게 있을 때
             if (excludeAttachments.Count >0) {
-                foreach(AssignmentMaterialUrl excludeAttachment in excludeAttachments) {
+                foreach(AssignmentMaterialAttachment excludeAttachment in excludeAttachments) {
                     Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
-                    Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
+                    Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/AttachmentId/{excludeAttachment.attachment_id}");
                 }               
             }
         } else {  //게시글 등록
@@ -240,11 +240,11 @@
     }
 
     private async void LoadAttachments() {
-        attachments = await Http.GetFromJsonAsync<List<AssignmentMaterialUrl>>($"api/assignment/attachments?room_id={RoomId}&assignment_id={AssignmentId}");
+        attachments = await Http.GetFromJsonAsync<List<AssignmentMaterialAttachment>>($"api/assignment/attachments?room_id={RoomId}&assignment_id={AssignmentId}");
         StateHasChanged();
     }
 
-    private async void excludeFile(AssignmentMaterialUrl attachment) {
+    private async void excludeFile(AssignmentMaterialAttachment attachment) {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "해당 파일을 첨부파일에서 삭제하시겠습니까?", "삭제 후 등록하려면 다시 등록해야합니다.", "삭제");
         if (confirmed) {
             attachments.Remove(attachment);

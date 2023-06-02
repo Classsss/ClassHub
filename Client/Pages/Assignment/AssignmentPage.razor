@@ -149,9 +149,9 @@
     public int AssignmentId { get; set; }
 
     private List<IBrowserFile> uploadFileList = new List<IBrowserFile>();
-    private List<AssignmentMaterialUrl>? assignmentAttachments = new List<AssignmentMaterialUrl>();
-    private List<AssignmentSubmitUrl>? submitAttachments = new List<AssignmentSubmitUrl>();
-    private List<AssignmentSubmitUrl> excludeAttachments = new List<AssignmentSubmitUrl>();
+    private List<AssignmentMaterialAttachment>? assignmentAttachments = new List<AssignmentMaterialAttachment>();
+    private List<AssignmentSubmitAttachment>? submitAttachments = new List<AssignmentSubmitAttachment>();
+    private List<AssignmentSubmitAttachment> excludeAttachments = new List<AssignmentSubmitAttachment>();
     private Models.Assignment assignment = new Models.Assignment();
     private AssignmentSubmit assignmentSubmit = new AssignmentSubmit();
     private string role;
@@ -171,8 +171,7 @@
     }
 
     // 뒤로 돌아간다.
-    private void GoBack() 
-    {
+    private void GoBack() {
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 
@@ -195,8 +194,8 @@
 
     // Attachments 불러오기
     private async void LoadAttachments() {
-        assignmentAttachments = await Http.GetFromJsonAsync<List<AssignmentMaterialUrl>>($"api/assignment/attachments?room_id={RoomId}&assignment_id={AssignmentId}");
-        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitUrl>>($"api/assignmentsubmit/attachments?room_id={RoomId}&submit_id={assignmentSubmit.submit_id}");
+        assignmentAttachments = await Http.GetFromJsonAsync<List<AssignmentMaterialAttachment>>($"api/assignment/attachments?room_id={RoomId}&assignment_id={AssignmentId}");
+        submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={RoomId}&submit_id={assignmentSubmit.submit_id}");
         StateHasChanged();
     }
 
@@ -208,7 +207,7 @@
     }
 
     // 첨부파일에서 제외한다.(학생용)
-    private async void excludeFile(AssignmentSubmitUrl attachment) {
+    private async void excludeFile(AssignmentSubmitAttachment attachment) {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "해당 파일을 첨부파일에서 삭제하시겠습니까?", "삭제 후 등록하려면 다시 등록해야합니다.", "삭제");
         if (confirmed) {
             submitAttachments.Remove(attachment);
@@ -228,6 +227,7 @@
                 assignment_id = AssignmentId,
                 room_id = RoomId,
                 student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                student_name = await UserInfo.GetUserNameAsync(JSRuntime),
                 submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
                 score = 0,
                 message = ""
@@ -266,6 +266,7 @@
                   assignment_id = assignmentSubmit.submit_id,
                   room_id = RoomId,
                   student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                  student_name = await UserInfo.GetUserNameAsync(JSRuntime),
                   submit_date = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")),
                   score = assignmentSubmit.score,
                   message = ""
@@ -275,9 +276,9 @@
         await Http.PutAsync($"/api/assignmentsubmit/{RoomId}/modifydb/{assignmentSubmit.submit_id}", httpContent);
         // 원래 첨부파일에서 삭제하는게 있을 때
         if (excludeAttachments.Count > 0) {
-            foreach (AssignmentSubmitUrl excludeAttachment in excludeAttachments) {
+            foreach (AssignmentSubmitAttachment excludeAttachment in excludeAttachments) {
                 Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removeblob/{AssignmentId}/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
-                await Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/filename/{excludeAttachment.file_name}");
+                await Http.DeleteAsync($"api/assignmentsubmit/{RoomId}/removedb/submitid/{assignmentSubmit.submit_id}/AttachmentId/{excludeAttachment.attachment_id}");
             }
         }
 

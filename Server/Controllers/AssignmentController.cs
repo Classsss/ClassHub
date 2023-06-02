@@ -65,17 +65,17 @@ namespace ClassHub.Server.Controllers {
 
         // 과제 첨부파일 목록을 불러옵니다.
         [HttpGet("attachments")]
-        public List<AssignmentMaterialUrl> GetAssignmentAttachments([FromQuery] int room_id, [FromQuery] int assignment_id) {
+        public List<AssignmentMaterialAttachment> GetAssignmentAttachments([FromQuery] int room_id, [FromQuery] int assignment_id) {
 
             using var connection = new NpgsqlConnection(connectionString);
-            List<AssignmentMaterialUrl> attachments = new List<AssignmentMaterialUrl>();
+            List<AssignmentMaterialAttachment> attachments = new List<AssignmentMaterialAttachment>();
             
-            string query = "SELECT * FROM assignmentmaterialurl WHERE assignment_id = @assignment_id;";
+            string query = "SELECT * FROM assignmentmaterialattachment WHERE assignment_id = @assignment_id;";
             var parameters = new DynamicParameters();
             parameters.Add("assignment_id", assignment_id);
-            var Attachments = connection.Query<AssignmentMaterialUrl>(query, parameters);
+            var Attachments = connection.Query<AssignmentMaterialAttachment>(query, parameters);
 
-            foreach (AssignmentMaterialUrl Attachment in Attachments) {
+            foreach (AssignmentMaterialAttachment Attachment in Attachments) {
                 attachments.Add(Attachment);
             }
             return attachments;
@@ -192,7 +192,7 @@ namespace ClassHub.Server.Controllers {
 
                 using (var transaction = connection.BeginTransaction()) {
                     try {
-                        var insertQuery = "INSERT INTO assignmentmaterialurl (assignment_id, file_name, file_url, update, file_size) " +
+                        var insertQuery = "INSERT INTO assignmentmaterialattachment (assignment_id, file_name, file_url, update, file_size) " +
                            "VALUES (@assignment_id, @file_name, @file_url,@update,@file_size);";
                         var parameters = new DynamicParameters();
                         parameters.Add("assignment_id", assignment_id);
@@ -221,7 +221,7 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
 
             // 과제의 파일url db 삭제
-            var deleteQuery = "DELETE FROM assignmentmaterialurl WHERE assignment_id = @assignment_id";
+            var deleteQuery = "DELETE FROM assignmentmaterialattachment WHERE assignment_id = @assignment_id";
             var parameters = new DynamicParameters();
             parameters.Add("room_id", RoomId);
             parameters.Add("assignment_id", AssignmentId);
@@ -231,7 +231,7 @@ namespace ClassHub.Server.Controllers {
             var getQuery = "SELECT submit_id FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id";
             var submit_ids = connection.Query<int>(getQuery, parameters);
             foreach(int submit_id in submit_ids) {
-                deleteQuery = "DELETE FROM assignmentsubmiturl WHERE submit_id = @submit_id";
+                deleteQuery = "DELETE FROM assignmentsubmitattachment WHERE submit_id = @submit_id";
                 var parametersSubmit = new DynamicParameters();
                 parametersSubmit.Add("submit_id", submit_id);
                 connection.Execute(deleteQuery, parametersSubmit);
@@ -249,15 +249,15 @@ namespace ClassHub.Server.Controllers {
         }
 
         // 특정 과제 첨부파일의 url db를 삭제합니다
-        [HttpDelete("{RoomId}/removedb/{AssignmentId}/filename/{*FileName}")]
-        public async Task removeAssignmentUrlDB(int RoomId, int AssignmentId, string FileName) {
+        [HttpDelete("{RoomId}/removedb/{AssignmentId}/AttachmentId/{AttachmentId}")]
+        public async Task removeAssignmentUrlDB(int RoomId, int AssignmentId, int AttachmentId) {
             using var connection = new NpgsqlConnection(connectionString);
 
             // 과제의 파일url db 삭제
-            var deleteQuery = "DELETE FROM assignmentmaterialurl WHERE assignment_id = @assignment_id AND file_name = @file_name";
+            var deleteQuery = "DELETE FROM assignmentmaterialattachment WHERE assignment_id = @assignment_id AND attachment_id = @attachment_id";
             var parameters = new DynamicParameters();
             parameters.Add("assignment_id", AssignmentId);
-            parameters.Add("file_name", FileName);
+            parameters.Add("attachment_id", AttachmentId);
             connection.Execute(deleteQuery, parameters);
         }
 

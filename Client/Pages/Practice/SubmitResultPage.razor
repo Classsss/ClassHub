@@ -38,6 +38,7 @@
         <tr>
             @if (role == "professor") {
                 <th style="border: 1px solid darkgray;">학번</th>
+                <th style="border: 1px solid darkgray;">이름</th>
             }
             <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />제출 번호</th>
             <th style="border: 1px solid darkgray;"><i class="bi bi-check-circle"></i>결과</th>
@@ -58,6 +59,7 @@
                 <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
                     @if (role == "professor") {
                         <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
+                        <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_name</td>
                     }
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_id</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">
@@ -101,7 +103,7 @@
                         }
                     </td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.mem_usage kb</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.exec_time ms</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.exec_time.ToString("0.00") ms</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.language</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
                     <td style="border: 1px solid darkgray; vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
@@ -131,8 +133,8 @@
     [Parameter]
     public EventCallback<string> OnSortOptionChanged { get; set; }
 
-    private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
-
+    //private const string CLASSHUB_CODESUBMIT_REALTIME = "https://classhub.azurewebsites.net/realtimesubmithub";
+    private const string CLASSHUB_CODESUBMIT_REALTIME = "https://localhost:7182/realtimesubmithub";
     private List<CodeSubmit> submitList = new List<CodeSubmit>();
     private string role;
     private int student_id;
