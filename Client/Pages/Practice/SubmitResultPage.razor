@@ -11,118 +11,117 @@
 @inject Blazored.Modal.Services.IModalService ModalService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@layout MainLayout
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <BackButton />
 
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <div class="text-bg-light p-3" style="padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
     <div style="display: flex; align-items: center;">
-          @if (role == "professor") {
-        <select class="form-select" aria-label="Default select example" @bind="sortKey" style="display: inline-block; width: auto;">
-            @foreach (var option in SortOptions) {
-                <option value="@option.Value">@option.Label</option>
-            }
-        </select>
-         }
-        <h3 style="margin: 0 auto;">
-            @(PracticeId)번 실습 제출 내역
-        </h3>
         @if (role == "professor") {
+            <select class="form-select" aria-label="Default select example" @bind="sortKey" style="display: inline-block; width: auto;">
+                @foreach (var option in SortOptions) {
+                    <option value="@option.Value">@option.Label</option>
+                }
+            </select>
+        }
+        <h3 style="margin: 0 auto;">
+            실습 제출 내역
+        </h3>
+          @if (role == "professor") {
         <SortDropdown SelectedSortKey="@sortKey" OnSortOptionChanged="@((string value) => sortKey = value)" />
         }
     </div>
 </div>
-<table class="table">
-    <thead>
-        <tr>
-            @if (role == "professor") {
-                <th style="border: 1px solid darkgray;">학번</th>
-                <th style="border: 1px solid darkgray;">이름</th>
-            }
-            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />제출 번호</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-check-circle"></i>결과</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-memory"></i>메모리</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-hourglass-bottom"></i>시간</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-filetype-css"></i>언어</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-clock-history"></i>제출 시간</th>
-            <th style="border: 1px solid darkgray;"><i class="bi bi-code"></i>코드 확인</th>
+<table class="table table-striped table-hover" style="text-align: center;">
+    <thead class="table-light">
+            <tr>
+             @if (role == "professor") {
+                <th>학번/이름</th>
+             }
+            <th>제출 번호</th>
+            <th>메모리</th>
+            <th>시간</th>
+            <th>언어</th>
+            <th>제출 시간</th>
+            <th>코드 확인</th>
+            <th>제출 시간</th>
             @if (role == "student") {
-                <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>GPT조언</th>
+                <th>GPT조언</th>
             }
         </tr>
     </thead>
-
-    <tbody>
-        @if (submitList != null) {
-            @foreach (CodeSubmit submit in submitList) {
-                <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
-                    @if (role == "professor") {
-                        <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
-                        <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_name</td>
-                    }
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_id</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">
-                        @if (submit.status == "Accepted") {
-                        <td style="color: green;">맞았습니다.</td>
-                        } else if (submit.status == "Pending") {
-                        <td style="color: gray;">채점 준비 중</td>
-                        } else if (submit.status.Contains("%")) {
-                        <td style="color: black;">@submit.status</td>
-                        } else {
-                        <td style="color: red;">
-                                @{
-                                    switch (submit.status) {
-                                        case "WrongAnswer":
-                                            @("틀렸습니다.")
-                                            break;
-                                        case "CompileError":
-                                            @("컴파일 에러.")
-                                            break;
-                                        case "RuntimeError":
-                                            @("런타임 에러.")
-                                            break;
-                                        case "TimeLimitExceeded":
-                                            @("시간 초과")
-                                            break;
-                                        case "MemoryLimitExceeded":
-                                            @("메모리 초과")
-                                            break;
-                                        case "PresentationError":
-                                            @("출력 형식 오류")
-                                            break;
-                                        case "OutputLimitExceeded":
-                                            @("출력 한도 초과")
-                                            break;
-                                        case "JudgementFailed":
-                                            @("채점 실패")
-                                            break;
-                                    }
-                                }
-                        </td>
+        <tbody>
+            @if (submitList != null) {
+                @foreach (CodeSubmit submit in submitList) {
+                    <tr style="vertical-align: middle; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
+                        @if (role == "professor") {
+                            <td style="vertical-align: middle;;">@submit.student_id</td>
+                            <td style="vertical-align: middle;">@submit.student_name</td>
                         }
-                    </td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.mem_usage kb</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.exec_time.ToString("0.00") ms</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.language</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
-                    <td style="border: 1px solid darkgray; vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
-                    @if (role == "student") {
-                        <td style="vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
-                    }
+                        <td style="vertical-align: middle;">@submit.submit_id</td>
+                        <td style="vertical-align: middle;">
+                            @if (submit.status == "Accepted") {
+                            <td style="color: green;">맞았습니다.</td>
+                            } else if (submit.status == "Pending") {
+                            <td style="color: gray;">채점 준비 중</td>
+                            } else if (submit.status.Contains("%")) {
+                            <td style="color: black;">@submit.status</td>
+                            } else {
+                            <td style="color: red;">
+                                    @{
+                                        switch (submit.status) {
+                                            case "WrongAnswer":
+                                                @("틀렸습니다.")
+                                                break;
+                                            case "CompileError":
+                                                @("컴파일 에러.")
+                                                break;
+                                            case "RuntimeError":
+                                                @("런타임 에러.")
+                                                break;
+                                            case "TimeLimitExceeded":
+                                                @("시간 초과")
+                                                break;
+                                            case "MemoryLimitExceeded":
+                                                @("메모리 초과")
+                                                break;
+                                            case "PresentationError":
+                                                @("출력 형식 오류")
+                                                break;
+                                            case "OutputLimitExceeded":
+                                                @("출력 한도 초과")
+                                                break;
+                                            case "JudgementFailed":
+                                                @("채점 실패")
+                                                break;
+                                        }
+                                    }
+                            </td>
+                            }
+                        </td>
+                        <td style="vertical-align: middle;">@submit.mem_usage kb</td>
+                        <td style="vertical-align: middle;">@submit.exec_time.ToString("0.00") ms</td>
+                        <td style="vertical-align: middle;">@submit.language</td>
+                        <td style="vertical-align: middle;">@submit.submit_date</td>
+                        <td style="border: 1px solid darkgray; vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowCode(submit.code)">제출 코드 확인</button></td>
+                        @if (role == "student") {
+                            <td style="vertical-align: middle;"><button class="btn btn-outline-dark btn-sm" @onclick="() => ShowAdvice(submit.code)">GPT의 조언</button></td>
+                        }
+                    </tr>
+                }
+            } else {
+                <tr>
+                    <td colspan="8">제출한 내역이 없습니다.</td>
                 </tr>
-
             }
-        } else {
-            <tr>
-                <td colspan="8">제출한 내역이 없습니다.</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-
-
+        </tbody>
+    </table>
+}
 
 @code {
 
@@ -140,7 +139,7 @@
     private int student_id;
     private string sortKey;
     HubConnection connection;
-
+    bool dataLoaded = false;
     // 정렬 기준
     private readonly List<(string Value, string Label)> SortOptions = new List<(string Value, string Label)>
     {
@@ -178,6 +177,7 @@
         } else {
             submitList = await Http.GetFromJsonAsync<List<CodeSubmit>>($"api/CodeSubmit/professor/room_id/{RoomId}/practice_id/{PracticeId}");
         }
+        dataLoaded = true;
         SortBySubmission();
     }
 

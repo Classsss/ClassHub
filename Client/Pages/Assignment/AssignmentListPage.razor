@@ -3,9 +3,11 @@
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 @using ClassHub.Client.Models
-
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <SubmissionList Title="과제" Role="@role" Submissions="@Assignments" />
-
+}
 <!--과제 현황 리스트 게시판-->
 @code {
     [Parameter]
@@ -13,7 +15,7 @@
 
     public List<Submission> Assignments { get; set; } = new List<Submission>();
     private string role;
-
+    bool dataLoaded = false;
     // 해당 강의실의 과제들을 불러온다.
     protected override async Task OnInitializedAsync() {
         role = await UserInfo.GetRoleAsync(JSRuntime);
@@ -22,7 +24,7 @@
         } else {
             Assignments = await Http.GetFromJsonAsync<List<Submission>>($"api/assignmentlist/professor/room_id/{RoomId}");
         }
-
+        dataLoaded = true;
         StateHasChanged();
     }
 
