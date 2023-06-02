@@ -1,0 +1,103 @@
+﻿@page "/classroom/{roomid:int}/exam/{examid:int}"
+@layout MainLayout
+@using ClassHub.Client.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<BackButton />
+<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
+    <h1>
+        <span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
+        @examInfo.Title
+    </h1>
+</div>
+<div>
+    <div style="display: flex; align-items: center; justify-content: space-between; ">
+        <div style="display: flex; align-items: center;">
+            <div style="margin-right: 50px; display: flex; align-items: center; height: 100%;">
+                <p style="margin: 0;">작성자: @examInfo.Author</p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div style="margin-right: 20px;">
+                <div>시작일: @examInfo.StartDate.ToString("yyyy.MM.dd HH:mm")</div>
+                <div>마감일: @examInfo.EndDate.ToString("yyyy.MM.dd HH:mm")</div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr style="margin-top: 0; border: 0; border-top: solid 1px grey;">
+<div class="d-flex align-items-center justify-content-between mb-2" style="margin-top: 1em;">
+    <AuthorizeView Roles="professor">
+        <div>
+            <button class="btn btn-warning" @onclick="Modify">수정</button>
+            <button class="btn btn-warning" @onclick="Delete">삭제</button>
+            <button class="btn btn-warning" @onclick="ShowSubmitPage">시험 제출 내역</button>
+        </div>
+    </AuthorizeView>
+    <AuthorizeView Roles="student">
+        <div>
+            <button class="btn btn-primary" @onclick="StartExam">시험 시작</button>
+        </div>
+    </AuthorizeView>
+    <button class="btn btn-primary" @onclick="GoBack">목록</button>
+</div>
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int ExamId { get; set; }
+
+    private Exam examInfo = new Exam();
+
+    private string role = string.Empty;
+
+    protected override async Task OnInitializedAsync() {
+        // db에서 Exam 모델을 받아온다.
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        examInfo = await Http.GetFromJsonAsync<Models.Exam>($"api/exam/room_id/{RoomId}/exam_id/{ExamId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        //assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+    }
+
+    private async Task Modify() {
+
+    }
+
+    private async Task Delete() {
+
+    }
+
+    private async Task ShowSubmitPage() {
+
+    }
+
+    private async Task StartExam() {
+        NavigationManager.NavigateTo(NavigationManager.Uri + $"/start");
+
+        DateTime Now = DateTime.Now;
+
+        // 이미 종료
+        if (Now > examInfo.EndDate) {
+            await JSRuntime.InvokeVoidAsync("alert", "이미 종료된 시험입니다.");
+            return;
+        }
+        // 예정
+        else if (Now < examInfo.StartDate) {
+            await JSRuntime.InvokeVoidAsync("alert", "아직 시작할 수 없는 시험입니다.");
+            return;
+        }
+        // 진행중
+        else if (examInfo.StartDate <= Now && Now <= examInfo.EndDate) {
+            // 시험 페이지로 이동
+            NavigationManager.NavigateTo(NavigationManager.Uri + $"/start");
+        }
+    }
+
+    // 뒤로 돌아간다.
+    private void GoBack() {
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+}
