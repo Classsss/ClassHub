@@ -1,16 +1,17 @@
+@using ClassHub.Client.Shared.Modal;
 @using ClassHub.Shared;
 @using System.Text.RegularExpressions;
 @inherits LayoutComponentBase
-@inject IJSRuntime JSRuntime
 @inject AuthenticationService AuthService
-@inject Blazored.Modal.Services.IModalService ModalService
 @inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject IModalService ModalService
 @inject NavigationManager NavigationManager
-@inject SSOAuthenticationStateProvider authProvider
 @inject NavMenuTitleService NavMenuTitleService
+@inject SSOAuthenticationStateProvider authProvider
 
 <div class="page">
-    @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri) {
+    @if(NavigationManager.Uri.Split('?')[0] != NavigationManager.BaseUri && NavigationManager.Uri.IndexOf(NavigationManager.BaseUri + "batcheditor") == -1) {
         <div class="sidebar">
             <NavMenu />
         </div>

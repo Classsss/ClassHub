@@ -95,6 +95,12 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    <div id="loadingBar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+        <div class="d-flex justify-content-center mt-5">
+            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status" />
+        </div>
+    </div>
+
     <!--Text Editor-->
     <script src="lib/quill/dist/quill.js"></script>
     <script src="_content/Blazored.TextEditor/quill-blot-formatter.min.js"></script>
@@ -105,12 +111,29 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="ResizeEditor.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
-    
+
     <!--첨부파일 관련-->
     <script>
         window.resetInputFile = (inputElement) => {
             inputElement.value = '';
         }
+    </script>
+
+    <!--로딩바 관련-->
+    <script>
+        window.showLoadingBar = () => {
+            var loadingBar = document.getElementById("loadingBar");
+            if (loadingBar) {
+                loadingBar.style.display = "block";
+            }
+        };
+
+        window.hideLoadingBar = () => {
+            var loadingBar = document.getElementById("loadingBar");
+            if (loadingBar) {
+                loadingBar.style.display = "none";
+            }
+        };
     </script>
 </body>
 

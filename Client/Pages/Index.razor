@@ -1,12 +1,14 @@
 ﻿@page "/"
 @layout MainLayout
 @inject AuthenticationService AuthService
+@inject IModalService ModalService
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @inject NavMenuTitleService NavMenuTitleService
 @inject SSOAuthenticationStateProvider authProvider
 @using ClassHub.Client.Models;
+@using ClassHub.Client.Shared.Modal;
 @using ClassHub.Shared;
 @using Microsoft.AspNetCore.Components.Authorization;
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
@@ -71,6 +73,11 @@
                 <Timetable ClassRoomList="classRoomList" />
             </div>
             <div class="col-lg-3 col-12">
+                <div class="row mb-4">
+                    <AuthorizeView Roles="professor">
+                        <button class="btn btn-success" @onclick="OpenBatchPostingList">일괄 게시</button>
+                    </AuthorizeView>
+                </div>
                 <div class="row">
                     <h3 class="text-center col-12">알림 목록</h3>
                     @if(notificationList.Count == 0) {
@@ -153,7 +160,7 @@
             try {
                 string role = await UserInfo.GetRoleAsync(JSRuntime);
                 Console.WriteLine($"role: {role}");
-                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches?instructor_id={id}&accessToken={accessToken}");
+                if(role == "professor") classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/teaches/detail?instructor_id={id}&accessToken={accessToken}");
                 else classRoomList = await Http.GetFromJsonAsync<List<ClassRoomDetail>>($"api/classroom/takes?student_id={id}&accessToken={accessToken}");
 
                 Console.WriteLine($"classRoomListCount: {classRoomList.Count}");
@@ -184,5 +191,12 @@
 
     private void GoTo(string uri) {
         NavigationManager.NavigateTo(NavigationManager.BaseUri + uri);
+    }
+
+    private async Task OpenBatchPostingList() {
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Small };
+        var modalReference = ModalService.Show<BatchPostingModal>("일괄 게시", modalOptions);
+
+        var result = await modalReference.Result;
     }
 }
