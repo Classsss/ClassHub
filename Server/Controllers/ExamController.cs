@@ -178,5 +178,46 @@ namespace ClassHub.Server.Controllers {
 
             return Ok(exam.exam_id);
         }
+
+        // 시험 삭제
+        [HttpDelete("{room_id}/remove/{exam_id}")]
+        public async Task RemoveExam(int room_id, int exam_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = string.Empty;
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("exam_id", exam_id);
+
+            // 객관식 문제들의 problem_id들을 찾는다.
+            query = "SELECT problem_id FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
+            var problem_ids = await connection.QueryAsync<int>(query, parameters);
+
+            // 객관식 보기들 삭제
+            foreach (var problem_id in problem_ids) {
+                query = "DELETE FROM MultipleChoice WHERE problem_id = @problem_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var parametersMultipleChoice = new DynamicParameters();
+                parametersMultipleChoice.Add("problem_id", problem_id);
+                parametersMultipleChoice.Add("exam_id", exam_id);
+                parametersMultipleChoice.Add("room_id", room_id);
+                await connection.ExecuteAsync(query, parametersMultipleChoice);
+            }
+
+            // 객관식 문제 삭제
+            query = "DELETE FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
+            await connection.ExecuteAsync(query, parameters);
+
+            // 단답형 문제 삭제
+            query = "DELETE FROM ShortAnswerProblem WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
+            await connection.ExecuteAsync(query, parameters);
+
+            // 코드형 문제 삭제
+            query = "DELETE FROM CodingExamProblem WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
+            await connection.ExecuteAsync(query, parameters);
+
+            // 시험 데이터 삭제
+            query = "DELETE FROM Exam WHERE room_id = @room_id AND exam_id = @exam_id";
+            await connection.ExecuteAsync(query, parameters);
+        }
     }
 }
