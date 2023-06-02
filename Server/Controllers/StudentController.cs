@@ -27,7 +27,7 @@ namespace ClassHub.Server.Controllers {
 
 
         // 해당 강의실의 학생들의 정보를 불러온다.
-        [HttpGet("/{room_id}")]
+        [HttpGet("{room_id}")]
         public List<Student> GetStudents(int room_id) {
 
             using var connection = new NpgsqlConnection(connectionString);
