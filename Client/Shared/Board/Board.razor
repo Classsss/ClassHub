@@ -17,6 +17,26 @@
     table {
         font-size: calc(1vw);
     }
+
+    th, td {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .mobile-date {
+        display: none;
+    }
+
+    @@media (max-width: 640.98px) {
+        .desktop-date, .view-count{
+            display: none;
+        }
+
+        .mobile-date {
+            display: inline;
+        }
+    }
 </style>
 
 <h3>@Title</h3>
@@ -36,10 +56,10 @@
             {
                 <th style="width: 10%;">주차</th>
             }
-            <th style="width: 38%;">제목</th>
-            <th style="width: 14%;">작성자</th>
-            <th style="width: 14%;">게시일</th>
-            <th style="width: 14%;">조회</th>
+            <th style="width: 50%;">제목</th>
+            <th style="width: 10%;">작성자</th>
+            <th style="width: 10%;">게시일</th>
+            <th class="view-count" style="width: 10%;">조회</th>
         </tr>
     </thead>
     <tbody>
@@ -54,8 +74,11 @@
                 }
                 <td class="board-title">@content.title</td>
                 <td>@content.author</td>
-                <td>@content.publish_date.ToString("yyyy.MM.dd")</td>
-                <td style="text-indent : 7px;">@content.view_count</td>
+                <td class="publish-date">
+                    <span class="mobile-date">@content.publish_date.ToString("MM.dd")</span>
+                    <span class="desktop-date">@content.publish_date.ToString("yyyy.MM.dd")</span>
+                </td>
+                <td class="view-count" style="text-indent : 7px;">@content.view_count</td>
             </tr>
         }
     </tbody>
