@@ -76,16 +76,30 @@
     public List<Models.Lecture> lectures { get; set; }
     [Parameter]
     public int RoomId { get; set; }
+    [Parameter]
+    public List<Student> students { get; set; }
 
-    public List<Student> students = new List<Student>();
+    List<List<bool>> enrolledList = new List<List<bool>>();
+    bool dataLoaded = false;
+
     protected override async Task OnInitializedAsync() {
-        students = await Http.GetFromJsonAsync<List<Student>>($"/api/student/{RoomId}");
-    }
+        for (int i = 0; i < students.Count; i++) {
+            var studentEnrollment = new List<bool>();
+            for (int j = 0; j < lectures.Count; j++) {
+                bool is_enroll = await IsEnrolled(students[i], lectures[j]);
+
+                studentEnrollment.Add(is_enroll);
+            }
+            enrolledList.Add(studentEnrollment);
+        }
+        dataLoaded = true;
+    } 
 
     public async Task<bool> IsEnrolled(Student student, Models.Lecture lecture) {
-        bool is_enrolled = await Http.GetFromJsonAsync<bool>($"api/lecture/isenrolled/room_id/{RoomId}/lecture_id/{lecture.LectureId}/student_id/{student.student_id}/student_name/{student.name}");
+        bool is_enrolled = await Http.GetFromJsonAsync<bool>($"api/lecture/isenrolled/room_id/{RoomId}/lecture_id/{lecture.LectureId}/student_id/{student.student_id}");
         return is_enrolled;
     }
+
     // 동영상 강의 등록창을 종료한다.
     private async Task HandleClose(){
         await ModalInstance.CloseAsync();
