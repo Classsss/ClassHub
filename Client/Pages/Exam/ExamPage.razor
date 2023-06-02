@@ -66,7 +66,13 @@
     }
 
     private async Task Delete() {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("showConfirm", "시험을 삭제하시겠습니까?", "삭제 후에는 복구할 수 없습니다.", "삭제");
+        if (confirmed) {
+            await Http.DeleteAsync($"api/exam/{RoomId}/remove/{ExamId}");
+            await JSRuntime.InvokeVoidAsync("alert", "삭제 완료하였습니다!");
 
+            GoBack();
+        }
     }
 
     private async Task ShowSubmitPage() {
