@@ -10,32 +10,30 @@
 
 <Modal>
     <ModalBody>
-        <table class="table">
-            <thead>
+        <table class="table table-striped table-hover" style="text-align: center;">
+            <thead class="table-light">
                 <tr>
-                    <th class="col-2" style="border: 1px solid darkgray;">학번</th>
-                    <th class="col-2" style="border: 1px solid darkgray;">이름</th>
-                    <th class="col-2" style="border: 1px solid darkgray;">수강 시간</th>
-                    <th class="col-1" style="border: 1px solid darkgray;">수강 상태</th>
+                    <th>학번/이름</th>
+                    @foreach (var item in lectures.GroupBy(x => new { x.Week, x.Chapter })) {
+                    <th>@(" " + item.Key.Week)주차 @(item.Key.Chapter)차시</th>
+                    }
                 </tr>
             </thead>
             <tbody>
-                @if (lectureProgressList != null) {
-                    @foreach (LectureProgress progress in lectureProgressList) {
-                        <tr>
-                            <td class="col-2" style="border: 1px solid darkgray;">@progress.student_id</td>
-                            <td class="col-2" style="border: 1px solid darkgray;">@progress.student_name</td>
-                            <td class="col-2" style="border: 1px solid darkgray;">@progress.elapsed_time 분</td>
-                            <td class="@(progress.is_enroll ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
-                                <i class="@((progress.is_enroll) ? "oi oi-circle-check" : "oi oi-x")"></i>
-                                @(progress.is_enroll ? "수강" : "미수강")
+                @foreach (Student student in students) {
+                    <tr>
+                        <td style="vertical-align: middle;">@student.student_id<br />@student.name</td>
+                        @foreach (var item in lectures) {
+                            bool is_enrolled = IsEnrolled(student, item).Result;
+                            <td class="@((is_enrolled) ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
+                                <i class="@((is_enrolled) ? "oi oi-circle-check" : "oi oi-x")"></i>
+                                @(is_enrolled ? "수강" : "미수강")
                             </td>
-                        </tr>
-                    }
-                }
+                        }
+                    </tr>
+                } 
             </tbody>
         </table>
-
     </ModalBody>
     <ModalFooter>
         <div style="margin-top: 10px;">
@@ -44,6 +42,17 @@
     </ModalFooter>
 </Modal>
 
+<style>
+    .enrolled {
+        background-color: #E7F0FD !important;
+        color: #1659EA !important;
+    }
+
+    .not-enrolled {
+        background-color: #FCFFE5 !important;
+        color: #C2B20C !important;
+    }
+</style>
 <style>
     .enrolled {
         border: 1px solid darkgray;
@@ -60,17 +69,20 @@
 
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
-    [Parameter] public Models.Lecture lecture { get; set; }
+    [Parameter] 
+    public List<Models.Lecture> lectures { get; set; }
+    [Parameter]
+    public int RoomId { get; set; }
 
-    public List<LectureProgress> lectureProgressList;
+    public List<Student> students = new List<Student>();
     protected override async Task OnInitializedAsync() {
-        var result = await Http.GetAsync($"api/lecture/progress/{lecture.LectureId}");
-        lectureProgressList = JsonSerializer.Deserialize<List<LectureProgress>>(await result.Content.ReadAsStringAsync());
-        lectureProgressList = lectureProgressList.OrderByDescending(a => a.is_enroll == true).ThenBy(a => a.is_enroll).ToList();
-      
-
+        students = await Http.GetFromJsonAsync<List<Student>>($"/api/student/{RoomId}");
     }
 
+    public async Task<bool> IsEnrolled(Student student, Models.Lecture lecture) {
+        bool is_enrolled = await Http.GetFromJsonAsync<bool>($"api/lecture/isenrolled/room_id/{RoomId}/lecture_id/{lecture.LectureId}/student_id/{student.student_id}/student_name/{student.name}");
+        return is_enrolled;
+    }
     // 동영상 강의 등록창을 종료한다.
     private async Task HandleClose(){
         await ModalInstance.CloseAsync();

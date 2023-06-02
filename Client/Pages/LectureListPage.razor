@@ -15,6 +15,7 @@
     <div>
     @if (role == "professor") {
             <button class="btn btn-success" @onclick=" ()=>ShowEnrollPage()">강의 등록</button>
+            <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowProgressPage())">강의 수강 내역</button>
     }   
     </div>
 </div>
@@ -52,7 +53,6 @@
                             </td>
                             <td colspan="2">
                                 <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowEditPage(subItem))">강의 수정</button>
-                                <button class="btn btn-outline-dark btn-sm" style="margin-left: 5px;" @onclick="@(()=>ShowProgressPage(subItem))">강의 수강 내역</button>
                             </td>
                         </tr>
                     }
@@ -168,9 +168,10 @@
     }
 
     // 동영상 강의 시청 현황페이지를 띄운다.
-    private async Task ShowProgressPage(Lecture selectedLecture) {
+    private async Task ShowProgressPage() {
         var parameters = new ModalParameters();
-        parameters.Add("lecture", selectedLecture);
+        parameters.Add("lectures", lectures);
+        parameters.Add("RoomId", RoomId);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge };
         var modalReference = ModalService.Show<LectureProgressModal>("동영상 강의 시청 내역", parameters, modalOptions);
         var result = await modalReference.Result;

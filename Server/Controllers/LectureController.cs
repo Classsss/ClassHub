@@ -9,7 +9,7 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
-
+using System.Diagnostics.Eventing.Reader;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -228,6 +228,23 @@ namespace ClassHub.Server.Controllers {
             List<LectureProgress> lectureProgressList = connection.Query<LectureProgress>(query, parametersProgress).ToList();
 
             return lectureProgressList;
+        }
+
+        // 학생의 해당 강의가 enrolled인지 확인한다
+        [HttpGet("isenrolled/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}")]
+        public bool CheckLectureProgress(int room_id, int lecture_id, int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "SELECT * FROM lectureprogress WHERE lecture_id = @lecture_id AND student_id = @student_id;";
+            var parametersProgress = new DynamicParameters();
+            parametersProgress.Add("lecture_id", lecture_id);
+            parametersProgress.Add("student_id", student_id);
+            var lectureProgress = connection.QuerySingleOrDefault<LectureProgress>(query, parametersProgress);
+
+            if (lectureProgress == null || lectureProgress.is_enroll == false) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
     }
