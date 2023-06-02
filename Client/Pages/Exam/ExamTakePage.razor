@@ -2,11 +2,14 @@
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
 @using System.Timers;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
 @implements IDisposable
 
 @switch(problem) {
     case MultipleChoiceProblem multipleChoiceProblem:
-        <MultipleChoiceDisplay Problem="@multipleChoiceProblem"  IsRandomChoice="@isRandomChoice" />
+        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" IsRandomChoice="@paramIsRandomChoice" />
         break;
     case ShortAnswerProblem shortAnswerProblem:
         <ShortAnswerDisplay Problem="@shortAnswerProblem" />
@@ -19,7 +22,7 @@
 <div class="container">
     <div class="row justify-content-center align-items-center">
         <div class="col text-center">
-            <button class="btn btn-primary @(((currentProblemIndex <= 0) || isBackToPreviousProblem == false) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+            <button class="btn btn-primary @(((currentProblemIndex <= 0) || paramIsBackToPreviousProblem == false) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
         </div>
         <div class="col text-center">
             <p>@(currentProblemIndex+1) / @(problems.Count)</p>
@@ -45,55 +48,32 @@
     private List<ExamProblem> problems = new List<ExamProblem>();
     private ExamProblem problem = new ExamProblem();
 
-    private bool isRandomChoice;
-    private bool isBackToPreviousProblem;
+    private bool paramIsRandomChoice;
+    private bool paramIsBackToPreviousProblem;
 
     private string TimeLeft { get; set; } = string.Empty;
     private Timer? timeLeftUpdateTimer;
 
-    protected override async void OnInitialized() {
-        examInfo = new Exam {
-            Id = 1,
-            StartDate = DateTime.Today.AddDays(-1),
-            EndDate = DateTime.Today.AddDays(1),
-            IsRandomProblem = true,
-            IsRandomChoice = true,
-            IsShowTimeLimit = true,
-            IsBackToPreviousProblem = false
-        };
+    private string role = string.Empty;
 
-        isRandomChoice = examInfo.IsRandomChoice;
-        isBackToPreviousProblem = examInfo.IsBackToPreviousProblem;
+    protected override async Task OnInitializedAsync() {
+        // db에서 Exam 모델을 받아온다.
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        examInfo = await Http.GetFromJsonAsync<Models.Exam>($"api/exam/room_id/{RoomId}/exam_id/{ExamId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        //assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
 
-        problems = new List<ExamProblem> {
-            new MultipleChoiceProblem {
-                ProblemId = 1,
-                Description = "What is the capital city of France?",
-                Questions = new string[] { "London", "Paris", "Berlin", "Madrid" },
-            },
-            new ShortAnswerProblem {
-                ProblemId = 2,
-                Description = "무엇이 의미 있는 삶인가? (10자 이내)"
-            },
-            new CodingProblem {
-                ProblemId = 3,
-                Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
-                Example = @"int a, b;
-int ans;
-Console.WriteLine(ans);",
-            }
-        };
+        paramIsRandomChoice = examInfo.IsRandomChoice;
+        paramIsBackToPreviousProblem = examInfo.IsBackToPreviousProblem;
+        problems = examInfo.Problems;
 
         // 문제 순서 무작위 셔플
-        var rnd = new Random();
-        problems = problems.OrderBy(item => rnd.Next()).ToList();
+        if (examInfo.IsRandomProblem) {
+            var rnd = new Random();
+            problems = problems.OrderBy(item => rnd.Next()).ToList();
+        }
 
         currentProblemIndex = 0;
         problem = problems[currentProblemIndex];
-
-        // 테스트를 위해 시험 시간 조작
-        examInfo.StartDate = DateTime.Now.AddMinutes(-2);
-        examInfo.EndDate = DateTime.Now.AddMinutes(2);
 
         // 초기 시간 저장
         // 남은 시간 계산
