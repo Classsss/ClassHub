@@ -42,7 +42,7 @@
         @foreach (var content in pagedContents)
         {
             <tr class="board-row" @onclick="@(() => ShowContents(content))" style="cursor:pointer;">
-                <td style="text-indent : 7px;">@content.content_id</td>
+                <td style="text-indent : 7px;">@(Contents.Count - Contents.IndexOf(content))</td>
                 @if (Title == "강의자료")
                 {
                     var lectureMaterial = content as LectureMaterialContent;
