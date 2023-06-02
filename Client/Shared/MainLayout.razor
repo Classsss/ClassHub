@@ -32,17 +32,17 @@
                 </div>
             </div>
 
-            <a class="oi oi-bell" aria-hidden="true" @onclick="OpenNotificationList"></a>
-            <a class="oi oi-task" aria-hidden="true" @onclick="OpenToDoList"></a>
-            <a class="oi oi-envelope-closed" aria-hidden="true"></a>
+            <a class="oi oi-bell Icon" aria-hidden="true" @onclick="OpenNotificationList"></a>
+            <a class="oi oi-task Icon" aria-hidden="true" @onclick="OpenToDoList"></a>
+            <a class="oi oi-envelope-closed Icon" aria-hidden="true" ></a>
 
             @if (userRole == "student") {
-                <a>@(userName) 학생</a>
+                <a class="title-name">@(userName) 학생</a>
             } else if (userRole == "professor") {
-                <a>@(userName) 교수</a>
+                <a class="title-name">@(userName) 교수</a>
             }
             
-            <a class="oi oi-account-logout" aria-hiddn="true" style="transform: scaleY(-1); text-decoration: none; " href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self"></a>
+            <a class="oi oi-account-logout" aria-hiddn="true" style="transform: scaleY(-1); text-decoration: none;" href="@(NavigationManager.BaseUri + "login")" @onclick="Logout" target="_self"></a>
 
         </div>
         <article class="content px-4">

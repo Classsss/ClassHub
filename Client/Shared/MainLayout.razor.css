@@ -42,6 +42,10 @@ main {
         text-overflow: ellipsis;
     }
 
+.title-name {
+    color: black;
+}
+
 @media (max-width: 640.98px) {
     .top-row:not(.auth) {
 
@@ -55,13 +59,18 @@ main {
         margin-left: 0;
     }
     .left-time{
-        display : none;
+        display: none;
     }
     .NavTitle{
-        font-size : 16px;
+        font-size: 16px;
     }
     .Icon{
-        margin-right : 20px;
+        margin-right: 8px;
+        text-align: center;
+    }
+    .title-name{
+        margin-right: 8px;
+        color: black; 
     }
 }
 
