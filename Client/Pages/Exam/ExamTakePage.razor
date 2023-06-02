@@ -22,7 +22,7 @@
 <div class="container">
     <div class="row justify-content-center align-items-center">
         <div class="col text-center">
-            <button class="btn btn-primary @(((currentProblemIndex <= 0) || paramIsBackToPreviousProblem == false) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+            <button class="btn btn-primary @((paramIsBackToPreviousProblem == false || currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
         </div>
         <div class="col text-center">
             <p>@(currentProblemIndex+1) / @(problems.Count)</p>
