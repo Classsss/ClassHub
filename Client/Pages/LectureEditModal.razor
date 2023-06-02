@@ -1,0 +1,136 @@
+﻿@using System
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using ClassHub.Client.Models;
+@using System.Text.Json;
+@using System.Text;
+@using System.Net.Http.Json
+
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+<Modal>
+    <ModalBody>
+        <div class="form-group">
+            <label for="weekPicker">주차 선택</label>
+            <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=false />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="title">강의 제목:</label>
+            <input type="text" class="form-control" id="title" name="title" required @bind="lecture.Title" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="contents">강의 설명:</label>
+            <textarea class="form-control" id="contents" name="contents" rows="5" required @bind="lecture.Description"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="startTime">시작 일:</label>
+            <input type="datetime-local"
+                   max="2023-06-21T21:00"
+                   min="2023-05-26T12:30"
+                   @bind="lecture.StartDate"
+                   class="form-control" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="endTime">종료 일:</label>
+            <input type="datetime-local"
+                   max="2023-06-21T21:00"
+                   min="2023-05-26T12:30"
+                   @bind="lecture.EndDate"
+                   class="form-control" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <DragDropUpload @bind-droppedFiles="file" IsMultiple=false />
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <div style="margin-top: 10px;">
+            <button class="btn btn-success" @onclick="HandleModify">수정</button>
+            <button class="btn btn-danger" @onclick="HandleDelete">삭제</button>
+            <button class="btn btn-success" @onclick="HandleClose">닫기</button>
+        </div>
+    </ModalFooter>
+</Modal>
+
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public Lecture lecture { get; set; }
+
+    public List<int> selectedWeek = new List<int> { };
+
+    private List<IBrowserFile> file = new List<IBrowserFile>();
+    protected async override void OnInitialized() {
+        lecture.StartDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+        lecture.EndDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
+    }
+
+    protected override async Task OnInitializedAsync() {
+        selectedWeek.Add(lecture.Week);    
+    }
+
+    // 주차 고르기
+    private async Task OnWeekChanged(List<int> week) {
+        selectedWeek = week;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    // 동영상 강의를 수정한다.
+    private async Task HandleModify() {
+        // 서버와 통신해 db를 수정
+        string jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Lecture {
+                room_id = lecture.RoomId,
+                week = selectedWeek[0],
+                lecture_id = lecture.LectureId,
+                title = lecture.Title,
+                contents = lecture.Description,
+                start_date = lecture.StartDate,
+                end_date = lecture.EndDate,
+                video_url = lecture.VideoUrl,
+                learning_time = lecture.RequireLearningTime
+        });
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        await Http.PutAsync($"api/lecture/{lecture.RoomId}/modifydb/{lecture.LectureId}", httpContent);
+ 
+        // 동영상 파일까지 수정할 때
+        if (file.Count > 0) {
+            var content = new MultipartFormDataContent();
+            var buffer = new byte[file[0].Size];
+            await file[0].OpenReadStream().ReadAsync(buffer);
+            content.Add(new ByteArrayContent(buffer), "files", $"{lecture.RoomId}/{lecture.LectureId}/{file[0].Name}");
+            await Http.PutAsync($"api/lecture/{lecture.RoomId}/insertnone/{lecture.LectureId}",null);
+            Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
+            Http.PostAsync($"api/lecture/{lecture.RoomId}/upload/{lecture.LectureId}", content);
+        }
+        await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 10초정도 소모됩니다.");
+        await ModalInstance.CloseAsync(ModalResult.Ok());
+    }
+
+    // 동영상 강의를 삭제한다.
+    private async Task HandleDelete() {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "정말로 삭제하시겠습니까?");
+        if (confirmed) {
+            // 서버와 연결해서 삭제 작업 수행
+            await Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removedb/{lecture.LectureId}");
+            Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
+            await JSRuntime.InvokeVoidAsync("alert", "삭제 완료하였습니다!");
+            await ModalInstance.CloseAsync(ModalResult.Ok());
+        } 
+    }
+
+    // 동영상 강의 수정창을 종료한다.
+    private async Task HandleClose(){
+        await ModalInstance.CloseAsync(ModalResult.Cancel());
+    }
+
+}
+
+
+ 
