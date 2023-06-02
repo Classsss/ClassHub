@@ -19,7 +19,7 @@
         /// <summary>제출일</summary>
         public DateTime? SubmissionDate { get; set; }
         /// <summary>제출일</summary>
-        public int TotalSubmitters { get; set; }
+        public int? TotalSubmitters { get; set; }
     }
 
     /// <summary>

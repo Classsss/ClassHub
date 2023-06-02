@@ -2,7 +2,6 @@ using Azure.Identity;
 using ClassHub.Server.Controllers;
 using ClassHub.Server.Middleware;
 using Microsoft.Extensions.Azure;
-
 namespace ClassHub {
     public class Program {
         public static void Main(string[] args) {
@@ -46,6 +45,7 @@ namespace ClassHub {
             app.MapControllers();
             app.MapFallbackToFile("index.html");
             app.MapHub<RealTimeSubmitHubController>("/realtimesubmithub");
+            app.MapHub<LectureHubController>("/lecturehub");
             app.Run();
         }
     }

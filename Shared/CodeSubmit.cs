@@ -9,6 +9,7 @@
         public DateTime submit_date { get; set; }
         public string status { get; set; }
         public int student_id { get; set; }
+        public string student_name { get; set; }
         public double exec_time { get; set; }      
         public long mem_usage { get; set; }             
         public string code { get; set; }
