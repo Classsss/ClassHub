@@ -1,4 +1,10 @@
-﻿namespace ClassHub.Client.Models {
+﻿using System.Text.Json.Serialization;
+
+namespace ClassHub.Client.Models {
+    [JsonDerivedType(typeof(ExamProblem), typeDiscriminator: "base")]
+    [JsonDerivedType(typeof(MultipleChoiceProblem), typeDiscriminator: "multipleChoice")]
+    [JsonDerivedType(typeof(ShortAnswerProblem), typeDiscriminator: "shortAnswer")]
+    [JsonDerivedType(typeof(CodingProblem), typeDiscriminator: "coding")]
     public class ExamProblem {
         // 문제 ID
         public int ProblemId { get; set; } = -1;
