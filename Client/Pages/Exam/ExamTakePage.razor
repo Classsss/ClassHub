@@ -33,7 +33,7 @@
             }
         </div>
         <div class="col text-center">
-            <button class="btn btn-primary" @onclick="(currentProblemIndex == problems.Count - 1) ? (Action)FinishExam : (Action)NextProblem">
+            <button class="btn btn-primary" @onclick="NextOrSubmit">
                 @((currentProblemIndex == problems.Count - 1) ? "응시 완료" : "다음 문제")
             </button>
         </div>
@@ -97,6 +97,16 @@
 
         // 타이머 시작
         timeLeftUpdateTimer.Start();
+    }
+
+    private async Task NextOrSubmit() {
+        if (currentProblemIndex == problems.Count - 1) {
+            Console.WriteLine("시험 제출");
+            await SubmitExam();
+        } else {
+            Console.WriteLine("다음 문제");
+            NextProblem();
+        }
     }
 
     private void NextProblem() {
