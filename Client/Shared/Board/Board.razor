@@ -36,12 +36,26 @@
     }
 
     @@media (max-width: 640.98px) {
-        .desktop-date, .view-count{
+        table {
+        font-size: calc(1vw);
+        }
+
+        .desktop-date, .view-count, .desktop-submit {
             display: none;
         }
 
         .mobile-date {
             display: inline;
+        }
+    }
+
+    @@media (min-width: 640.98px) {
+        table {
+            font-size: 14px;
+        }
+
+        .mobile-submit {
+            display: none;
         }
     }
 </style>
@@ -54,6 +68,14 @@
     <WeekPicker weekValue="@selectedWeek" ValueChanged="OnWeekChanged" allowMultipleSelection=true />
     <br />
 }
+
+<AuthorizeView Roles="professor">
+    <br />
+    <div class="mobile-submit col-12">
+        <button class="btn btn-sm btn-success float-end" @onclick="Submit">등록</button>
+        <br />
+    </div>
+</AuthorizeView>
 
 <table class="table table-striped">
     <thead>
@@ -93,8 +115,9 @@
 
 <AuthorizeView Roles="professor">
     <div class="row">
-        <div class="col-12">
+        <div class="desktop-submit col-12">
             <button class="btn btn-success float-end" @onclick="Submit">등록</button>
+            <br />
         </div>
     </div>
 </AuthorizeView>
