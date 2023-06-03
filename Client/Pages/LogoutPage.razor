@@ -26,13 +26,14 @@
             NavigationManager.NavigateTo(NavigationManager.BaseUri + "login");
 
             errorMessage = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "errorMessage");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "errorMessage");
 
             if (errorMessage != null)
             {
                 await JSRuntime.InvokeVoidAsync("alert", errorMessage);
-                await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "errorMessage");
+                
             } else {
-                await JSRuntime.InvokeVoidAsync("alert", "로그아웃 되었습니다.");
+                //await JSRuntime.InvokeVoidAsync("alert", "로그아웃 되었습니다.");
             }
         }
         
