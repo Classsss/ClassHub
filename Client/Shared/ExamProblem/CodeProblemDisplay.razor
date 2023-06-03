@@ -1,6 +1,5 @@
 ﻿@inherits CodeProblemDisplayBase
-
-
+@implements IAsyncDisposable
 
 <div class="d-flex flex-column align-items-center justify-content-center border p-3 rounded">
     <div class="text-center mb-3">
@@ -21,10 +20,14 @@
 @code {
     private MonacoEditor? MonacoEditorReference;
 
-    public async Task<string> GetCode() {
+    private async Task<string> GetCodeAsync() {
         if (MonacoEditorReference != null) {
             return await MonacoEditorReference.editor.GetValue();
         }
         else return "";
+    }
+
+    public async ValueTask DisposeAsync() {
+        Problem.StudentAnswer = await GetCodeAsync();
     }
 }
