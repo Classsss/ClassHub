@@ -48,12 +48,12 @@
             <div style="display: flex; align-items: center;">
                 <input type="number" @bind="hours" min="0" max="23" style="width: 40px;   height: 25px; margin-right: 0.5em;" /> 시간
                 <input type="number" @bind="minutes" min="0" max="59" style="width: 40px; height: 25px;margin-left: 0.5em; margin-right: 0.5em;" /> 분
-                <input type="number" @bind="seconds" min="1" max="59" style="width: 40px;  height: 25px; margin-left: 0.5em; margin-right: 0.5em;" /> 초
+                <input type="number" @bind="seconds" min="1" max="59"  style="width: 40px;  height: 25px; margin-left: 0.5em; margin-right: 0.5em;" /> 초
             </div>
 
         </div>
         <div class="form-group" style="margin-top: 10px;">
-            <DragDropUpload  @bind-droppedFiles="file" IsMultiple=false />
+                <DragDropUpload @bind-droppedFiles="file" IsMultiple=false  />
         </div>
     </ModalBody>
     <ModalFooter>
@@ -75,7 +75,7 @@
     private Models.Lecture lecture = new Models.Lecture();
     private int hours;
     private int minutes;
-    private int seconds;
+    private int seconds = 1;
 
     protected async override void OnInitialized() {
         lecture.StartDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
@@ -115,7 +115,7 @@
                 learning_time = (hours * 3600) + (minutes * 60) + seconds
         });
 
-         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         var responsedb = await Http.PostAsync($"api/lecture/{RoomId}/createdb", httpContent);
         string json = await responsedb.Content.ReadAsStringAsync();
         int lecture_id = JsonSerializer.Deserialize<int>(json);
@@ -136,11 +136,6 @@
         await ModalInstance.CloseAsync(ModalResult.Cancel());
     }
 
-    [JSInvokable]
-    public void SetVideoDuration(string duration) {
-        Console.WriteLine(duration);
-        StateHasChanged();
-    }
 }
 
 

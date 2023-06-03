@@ -13,29 +13,39 @@
         @if (!dataLoaded) {
             <LoadingBar />
         } else {
-        <table class="table table-striped table-hover" style="text-align: center;">
-            <thead class="table-light">
-                <tr>
-                    <th style="width:10%">학번/이름</th>
-                    @foreach (var item in lectures) {
-                        <th>@(" " + item.Week)주차 @(item.Chapter)차시</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var (student, i) in students.Select((s, i) => (s, i))) {
-                    <tr>
-                        <td style="vertical-align: middle;">@student.student_id<br />@student.name</td>
-                        @foreach (var (lecture, j) in lectures.Select((l, j) => (l, j))) {
-                            <td class="@(enrolledList[i][j] ? "enrolled" : "not-enrolled")" style="font-weight:bold; width:10%;">
-                                <i class="@(enrolledList[i][j] ? "oi oi-circle-check" : "oi oi-x")"></i>
-                                @(enrolledList[i][j] ? "수강" : "미수강")
-                            </td>
+            <div style="overflow: auto;">
+                <table class="table table-striped table-hover" style="text-align: center; table-layout: fixed; width: 100%;">
+                    <colgroup>
+                        <col style="width: 100px;">
+                        @foreach (var item in lectures) {
+                            <col style="width: 100px;">
                         }
-                    </tr>
-                }
-            </tbody>
-        </table>
+                    </colgroup>
+                    <thead class="table-light">
+                        <tr>
+                            <th>학번/이름</th>
+                            @foreach (var item in lectures) {
+                                <th>@(" " + item.Week)주차 @(item.Chapter)차시</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var (student, i) in students.Select((s, i) => (s, i))) {
+                            <tr>
+                                <td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@student.student_id<br />@student.name</td>
+                                @foreach (var (lecture, j) in lectures.Select((l, j) => (l, j))) {
+                                    <td class="@(enrolledList[i][j] ? "enrolled" : "not-enrolled")" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <div class="cell-content">
+                                            <i class="@(enrolledList[i][j] ? "oi oi-circle-check" : "oi oi-x")"></i>
+                                            @(enrolledList[i][j] ? "수강" : "미수강")
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </ModalBody>
     <ModalFooter>

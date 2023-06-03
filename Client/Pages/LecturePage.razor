@@ -89,15 +89,13 @@
     private bool IsPrevDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter - 1) == null;
     private bool IsNextDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter + 1) == null;
 
-    //const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://classhub.azurewebsites.net/lecturehub";
-    const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://localhost:7182/lecturehub";
-
+    const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://classhub.azurewebsites.net/lecturehub";
 
     protected async override void OnInitialized(){   
         role = await UserInfo.GetRoleAsync(JSRuntime);
         await CheckExistProgress();
         SetSignalRConnection();
-        dataLoaded = true;
+
     }
 
     protected override async Task OnInitializedAsync() {
@@ -110,6 +108,7 @@
         } 
         // signalR 연결 끊는 함수를 등록한다
         NavigationManager.LocationChanged += HandleLocationChanged;
+        dataLoaded = true;
     }
 
     protected async Task CheckExistProgress() {
