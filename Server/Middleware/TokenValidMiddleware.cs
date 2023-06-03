@@ -22,7 +22,7 @@ namespace ClassHub.Server.Middleware
 
                 if (!response.Result) {
                     context.Response.StatusCode = 401; // Unauthorized
-                    await context.Response.WriteAsync(response.Message);
+                    await context.Response.WriteAsync(response.Code.ToString());
                     return;
                 }
             }
@@ -34,7 +34,7 @@ namespace ClassHub.Server.Middleware
             Console.WriteLine("토큰 검증 함수 실행");
 
             var client = new HttpClient();
-            var url = $"https://classhubsso.azurewebsites.net/api/token/verify?user_id={id}&accessToken={accessToken}";
+            var url = $"https://localhost:7119/api/token/verify?user_id={id}&accessToken={accessToken}";
             var response = await client.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
             var result = Newtonsoft.Json.JsonConvert.DeserializeObject<ValifyResponse>(content);
@@ -45,6 +45,7 @@ namespace ClassHub.Server.Middleware
 
         public class ValifyResponse {
             public bool Result { get; set; }
+            public int Code { get; set; }
             public string Message { get; set; }
         }
     }

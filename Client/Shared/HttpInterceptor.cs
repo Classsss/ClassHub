@@ -49,7 +49,21 @@ namespace ClassHub.Client.Shared {
             // 필요한 경우 navigationManager.NavigateTo("/logout") 등을 사용하여 로그아웃 처리 가능
             if (response.StatusCode == HttpStatusCode.Unauthorized) {
                 // 로그아웃 처리
-                string errorMessage = await response.Content.ReadAsStringAsync();
+                int errorCode = int.Parse(await response.Content.ReadAsStringAsync());
+
+                string errorMessage;
+                if (errorCode == -1) {
+                    errorMessage = "토큰이 만료되었습니다.";
+                }else if (errorCode == -2) {
+                    errorMessage = "중복 접속이 감지되었습니다.";
+                } else if (errorCode == -3) {
+                    errorMessage = "위변조된 사용자 ID입니다.";
+                } else if (errorCode == -4) {
+                    errorMessage = "위변조된 인증토큰입니다.";
+                } else {
+                    errorMessage = "예상치 못한 에러가 발생했습니다.";
+                }
+
                 await jsRuntime.InvokeVoidAsync("localStorage.setItem", "errorMessage", errorMessage);
                 navigationManager.NavigateTo("/logout");  
                 return;
