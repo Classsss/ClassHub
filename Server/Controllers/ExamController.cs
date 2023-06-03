@@ -182,6 +182,88 @@ namespace ClassHub.Server.Controllers {
             return Ok(exam.exam_id);
         }
 
+        // 과제 db를 수정합니다
+        [HttpPut("modify")]
+        public async Task ModifyExam([FromBody] Shared.ExamContainer examContainer) {
+            Shared.Exam newExam = examContainer.Exam;
+            List<Shared.MultipleChoiceProblemContainer> multipleChoiceProblemContainers = examContainer.MultipleChoiceProblemContainers;
+            List<Shared.ShortAnswerProblem> shortAnswerProblems = examContainer.ShortAnswerProblems;
+            List<Shared.CodingExamProblem> codingExamProblems = examContainer.CodingExamProblems;
+
+            using var connection = new NpgsqlConnection(connectionString);
+
+            // Exam 업데이트
+            string query = "UPDATE Exam SET exam_id = @exam_id, room_id = @room_id, week = @week, title = @title, author = @author, start_date = @start_date, end_date = @end_date, is_random_problem = @is_random_problem, is_random_choice = @is_random_choice, is_show_time_limit = @is_show_time_limit, is_back_to_previous_problem = @is_back_to_previous_problem WHERE room_id = @room_id AND exam_id = @exam_id";
+            var examParameters = new DynamicParameters();
+            examParameters.Add("exam_id : " + newExam.exam_id);
+            examParameters.Add("room_id", newExam.room_id);
+            examParameters.Add("week", newExam.week);
+            examParameters.Add("title", newExam.title);
+            examParameters.Add("author", newExam.author);
+            examParameters.Add("start_date", newExam.start_date);
+            examParameters.Add("end_date", newExam.end_date);
+            examParameters.Add("is_random_problem", newExam.is_random_problem);
+            examParameters.Add("is_random_choice", newExam.is_random_choice);
+            examParameters.Add("is_show_time_limit", newExam.is_show_time_limit);
+            examParameters.Add("is_back_to_previous_problem", newExam.is_back_to_previous_problem);
+            await connection.ExecuteAsync(query, examParameters);
+
+            // 객관식 문제 업데이트
+            foreach (var container in multipleChoiceProblemContainers) {
+                Shared.MultipleChoiceProblem newProblem = container.MultipleChoiceProblem;
+                query = "UPDATE MultipleChoiceProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var multipleChoiceProblemparameters = new DynamicParameters();
+                multipleChoiceProblemparameters.Add("description", newProblem.description);
+                multipleChoiceProblemparameters.Add("answer", newProblem.answer);
+                multipleChoiceProblemparameters.Add("score", newProblem.score);
+                multipleChoiceProblemparameters.Add("exam_id", newExam.exam_id);
+                multipleChoiceProblemparameters.Add("problem_id", newProblem.problem_id);
+                multipleChoiceProblemparameters.Add("room_id", newExam.room_id);
+                await connection.ExecuteAsync(query, multipleChoiceProblemparameters);
+
+                // 객관식 문제에 대한 보기 업데이트
+                List<Shared.MultipleChoice> multipleChoices = container.MultipleChoices;
+                foreach (var newChoice in multipleChoices) {
+                    Console.WriteLine("보기 : "  + newChoice.description);
+                    query = "UPDATE MultipleChoice SET description = @description WHERE exam_id = @exam_id AND problem_id = @problem_id AND choice_id = @choice_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    var multipleChoiceParameters = new DynamicParameters();
+                    multipleChoiceParameters.Add("description", newChoice.description);
+                    multipleChoiceParameters.Add("exam_id", newExam.exam_id);
+                    multipleChoiceParameters.Add("problem_id", newProblem.problem_id);
+                    multipleChoiceParameters.Add("choice_id", newChoice.choice_id);
+                    multipleChoiceParameters.Add("room_id", newExam.room_id);
+                    await connection.ExecuteAsync(query, multipleChoiceParameters);
+                }
+            }
+
+            // 단답형 문제 업데이트
+            foreach (var newProblem in shortAnswerProblems) {
+                query = "UPDATE ShortAnswerProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var shortAnswerProblemParameters = new DynamicParameters();
+                shortAnswerProblemParameters.Add("description", newProblem.description);
+                shortAnswerProblemParameters.Add("answer", newProblem.answer);
+                shortAnswerProblemParameters.Add("score", newProblem.score);
+                shortAnswerProblemParameters.Add("exam_id", newExam.exam_id);
+                shortAnswerProblemParameters.Add("problem_id", newProblem.problem_id);
+                shortAnswerProblemParameters.Add("room_id", newExam.room_id);
+                await connection.ExecuteAsync(query, shortAnswerProblemParameters);
+            }
+
+            // 코드형 문제 업데이트
+            foreach (var newProblem in codingExamProblems) {
+                query = "UPDATE CodingExamProblem SET description = @description, example_code = @example_code, answer_code = @answer_code, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var codingExamProblemParameters = new DynamicParameters();
+                codingExamProblemParameters.Add("description", newProblem.description);
+                codingExamProblemParameters.Add("example_code", newProblem.example_code);
+                codingExamProblemParameters.Add("answer_code", newProblem.answer_code);
+                codingExamProblemParameters.Add("score", newProblem.score);
+                codingExamProblemParameters.Add("exam_id", newExam.exam_id);
+                codingExamProblemParameters.Add("problem_id", newProblem.problem_id);
+                codingExamProblemParameters.Add("room_id", newExam.room_id);
+                await connection.ExecuteAsync(query, codingExamProblemParameters);
+            }
+        }
+
         // 시험 삭제
         [HttpDelete("{room_id}/remove/{exam_id}")]
         public async Task RemoveExam(int room_id, int exam_id) {
