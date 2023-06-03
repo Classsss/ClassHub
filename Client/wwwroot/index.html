@@ -78,6 +78,20 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <!-- 영상 길이 구하기-->
+    <script>
+        window.getVideoDuration = function (videoPath) {
+            var video = document.createElement('video');
+            video.src = videoPath;
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function () {
+                var duration = video.duration;
+                console.log(duration);
+                DotNet.invokeMethodAsync('YourAssemblyName', 'SetVideoDuration', duration.toString());
+            };
+        };
+    </script>
 </head>
 
 <body>

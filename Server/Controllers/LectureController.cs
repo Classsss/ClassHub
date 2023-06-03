@@ -183,11 +183,6 @@ namespace ClassHub.Server.Controllers {
             await Console.Out.WriteLineAsync("sasBuild and getTime Success!");
 
             BlobDownloadInfo downloadInfo = await blobClienturl.DownloadAsync();
-
-            var ffProbe = new NReco.VideoInfo.FFProbe();
-            var videoInfo = ffProbe.GetMediaInfo(downloadUrl);
-            int seconds = (int)videoInfo.Duration.TotalSeconds;
-
             using var connection = new NpgsqlConnection(connectionString);
 
             string query = "UPDATE lecture SET video_url = @video_url, learning_time = @learning_time WHERE room_id = @room_id AND lecture_id = @lecture_id ";
@@ -195,7 +190,7 @@ namespace ClassHub.Server.Controllers {
             parametersUpdate.Add("room_id", RoomId);
             parametersUpdate.Add("lecture_id", LectureId);
             parametersUpdate.Add("video_url", encodedUrl);
-            parametersUpdate.Add("learning_time", seconds);
+            parametersUpdate.Add("learning_time", 30);
             connection.Execute(query, parametersUpdate);
 
             await Console.Out.WriteLineAsync("db update Success!");
