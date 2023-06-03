@@ -73,10 +73,10 @@
     // 채점창을 띄운다.
     private async Task ShowJudgeModal(ExamSubmit examSubmit) {
         var parameters = new ModalParameters();
-        parameters.Add("assignmentSubmit", examSubmit);
+        parameters.Add("ExamSubmit", examSubmit);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Large, DisableBackgroundCancel = true };
-        //var modalReference = ModalService.Show<AssignmentSubmitJudgeModal>("과제 채점", parameters, modalOptions);
-        //var result = await modalReference.Result;
-        //if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
+        var modalReference = ModalService.Show<ExamJudgeModal>("시험 채점", parameters, modalOptions);
+        var result = await modalReference.Result;
+        if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
     }
 }
