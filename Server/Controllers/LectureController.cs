@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
+﻿using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
@@ -13,7 +12,6 @@ using Azure.Storage.Blobs.Models;
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-
     public class LectureController : ControllerBase {
         const string host = "classdb.postgres.database.azure.com";
         const string username = "byungmeo";
@@ -21,8 +19,13 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
-        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly SecretClient _secretClient;
+
+        public LectureController(BlobServiceClient blobServiceClient, SecretClient secretClient) {
+            _blobServiceClient = blobServiceClient;
+            _secretClient = secretClient;
+        }
 
         // 동영상 강의 db를 생성한다
         [HttpPost("{RoomId}/createdb")]
@@ -91,11 +94,7 @@ namespace ClassHub.Server.Controllers {
         [HttpDelete("{RoomId}/removeblob/{LectureId}")]
         public async Task removeLectureBlobFile(int RoomId, int LectureId) {
             // blob의 파일 삭제
-            var blobServiceClient = new BlobServiceClient(
-            new Uri("https://classhubfilestorage.blob.core.windows.net"),
-            new DefaultAzureCredential()
-            );
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecture");
+            BlobContainerClient containerClient =_blobServiceClient.GetBlobContainerClient("lecture");
             string folderPath = $"{RoomId}/{LectureId}";
             List<BlobClient> blobClients = containerClient.GetBlobs(prefix: folderPath)
                 .Select(blobItem => containerClient.GetBlobClient(blobItem.Name))
@@ -123,13 +122,8 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("{RoomId}/upload/{LectureId}")]
         public async Task<IActionResult> UploadLectureFiles(int RoomId, int LectureId, List<IFormFile> files) {
 
-            // blob 업로드하는 작업
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(blobStorageUri),
-                new DefaultAzureCredential()
-            );
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecture");
 
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("lecture");
             using (var memoryStream = new MemoryStream()) {
                 await files[0].CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
@@ -142,22 +136,17 @@ namespace ClassHub.Server.Controllers {
 
             await Console.Out.WriteLineAsync("Blob Upload Success!");
 
-          
+
             // url를 구한다
 
-            var secretClient = new SecretClient(
-            vaultUri: new Uri(vaultStorageUri),
-            credential: new DefaultAzureCredential()
-            );
             string secretName = "StorageAccountKey";
-            KeyVaultSecret secret = secretClient.GetSecret(secretName);
+            KeyVaultSecret secret = _secretClient.GetSecret(secretName);
             var storageAccountKey = secret.Value;
 
             BlobClient blobClienturl = containerClient.GetBlobClient(files[0].FileName);
 
             // Blob에서 동영상 파일 읽어오기
-          
-
+            // url을 구한다.
             BlobSasBuilder sasBuilder = new BlobSasBuilder() {
                 BlobContainerName = containerClient.Name,
                 BlobName = blobClienturl.Name,
@@ -184,6 +173,7 @@ namespace ClassHub.Server.Controllers {
             parametersUpdate.Add("room_id", RoomId);
             parametersUpdate.Add("lecture_id", LectureId);
             parametersUpdate.Add("video_url", encodedUrl);
+
             connection.Execute(query, parametersUpdate);
 
             await Console.Out.WriteLineAsync("db update Success!");
@@ -242,7 +232,6 @@ namespace ClassHub.Server.Controllers {
 
     }
 
-
     public class LectureHubController : Hub {
         const string host = "classdb.postgres.database.azure.com";
         const string username = "byungmeo";
@@ -254,7 +243,6 @@ namespace ClassHub.Server.Controllers {
 
         // 1분마다 강의수강기록을 업데이트한다.
         public async Task UpdateLectureProgressWatcher(int lecture_id,int student_id) {
-
             string connectionId = Context.ConnectionId;
             Console.WriteLine(connectionId);
             using var connection = new NpgsqlConnection(connectionString);
