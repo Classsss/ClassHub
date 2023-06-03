@@ -837,7 +837,7 @@ namespace ClassHub.Server.Controllers {
 
             foreach (var i in exam) {
                 DateTime semester_startDate = new DateTime(2023, 3, 2);
-                TimeSpan duration = i.startDate - semester_startDate;
+                TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
                 attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = "미완료", DetailLink = "링크" });
             }
 
@@ -863,7 +863,7 @@ namespace ClassHub.Server.Controllers {
 
             foreach (var i in assignment) {
                 DateTime semester_startDate = new DateTime(2023, 3, 2);
-                TimeSpan duration = i.startDate - semester_startDate;
+                TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
                 attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = "미완료", DetailLink = "링크" });
             }
 
