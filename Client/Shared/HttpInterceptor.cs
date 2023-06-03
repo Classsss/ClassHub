@@ -49,7 +49,8 @@ namespace ClassHub.Client.Shared {
             // 필요한 경우 navigationManager.NavigateTo("/logout") 등을 사용하여 로그아웃 처리 가능
             if (response.StatusCode == HttpStatusCode.Unauthorized) {
                 // 로그아웃 처리
-                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "errorMessage", "만료된 세션입니다.");
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                await jsRuntime.InvokeVoidAsync("localStorage.setItem", "errorMessage", errorMessage);
                 navigationManager.NavigateTo("/logout");  
                 return;
             }
