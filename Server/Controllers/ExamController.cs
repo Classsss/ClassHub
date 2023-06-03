@@ -26,16 +26,17 @@ namespace ClassHub.Server.Controllers {
             var parametersExam = new DynamicParameters();
             parametersExam.Add("room_id", room_id);
             parametersExam.Add("exam_id", exam_id);
-            dbExam = (await connection.QueryAsync<Shared.Exam>(query, parametersExam)).FirstOrDefault();
+            dbExam = await connection.QuerySingleAsync<Shared.Exam>(query, parametersExam);
 
-            // TODO : 시험 제출 내역이 있는지 check
-            //query = "SELECT  COUNT(*) FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
-            //var parametersSubmit = new DynamicParameters();
-            //parametersSubmit.Add("room_id", dbExam.room_id);
-            //parametersSubmit.Add("assignment_id", dbExam.exam_id);
-            //parametersSubmit.Add("student_id", student_id);
-            //bool is_submit = true;
-            //if (connection.QueryFirstOrDefault<int>(query, parametersSubmit) == 0) { is_submit = false; }
+            // 해당 시험을 이 학생이 제출했는지 체크
+            query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id";
+            var submitParameters = new DynamicParameters();
+            submitParameters.Add("room_id", room_id);
+            submitParameters.Add("exam_id", exam_id);
+            submitParameters.Add("student_id", student_id);
+            int submitCount = await connection.QueryFirstOrDefaultAsync<int>(query, submitParameters);
+
+            bool isSubmitted = submitCount > 0 ? true : false;
 
             // Client.Models.Exam에 데이터를 채운다.
             Client.Models.Exam clientExam = new Client.Models.Exam {
@@ -44,6 +45,7 @@ namespace ClassHub.Server.Controllers {
                 Author = dbExam.author,
                 StartDate = dbExam.start_date,
                 EndDate = dbExam.end_date,
+                IsSubmitted = isSubmitted,
                 IsRandomProblem = dbExam.is_random_problem,
                 IsRandomChoice = dbExam.is_random_choice,
                 IsShowTimeLimit = dbExam.is_show_time_limit,
