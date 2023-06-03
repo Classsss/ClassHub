@@ -112,7 +112,7 @@
             Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
             Http.PostAsync($"api/lecture/{lecture.RoomId}/upload/{lecture.LectureId}", content);
         }
-        await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 10초정도 소모됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 몇 초 소모됩니다.");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 

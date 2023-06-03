@@ -126,7 +126,7 @@
         await file[0].OpenReadStream().ReadAsync(buffer);
         content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{lecture_id}/{file[0].Name}");
         var responsefile = Http.PostAsync($"api/lecture/{RoomId}/upload/{lecture_id}", content);
-        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 10여 초 후에 동영상 강의가 등록됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 몇 초 후에 동영상 강의가 등록됩니다.");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 

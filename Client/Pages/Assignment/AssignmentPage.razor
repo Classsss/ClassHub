@@ -252,7 +252,7 @@
         } 
         Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{SubmitId}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 완료하였습니다! 파일은 십여초 후에 등록됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 완료하였습니다! 파일은 몇 초 후에 등록됩니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 
@@ -295,7 +295,7 @@
         }
         Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 수정 완료하였습니다! 파일은 십여초 후에 수정됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "과제 수정 완료하였습니다! 파일은 몇 초 후에 수정됩니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
         
     }
