@@ -4,7 +4,6 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
-
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,8 +20,8 @@ namespace ClassHub.Server.Controllers {
                 using var connection = new NpgsqlConnection(connectionString);
                 string query;
 
-                Shared.CodeAssignment codeAssignment = new CodeAssignment(); // 실습 데이터
-                Shared.CodeProblem codeProblem = new Shared.CodeProblem();   // 문제 데이터
+                CodeAssignment codeAssignment = new CodeAssignment();       // 실습 데이터
+                Shared.CodeProblem codeProblem = new Shared.CodeProblem();  // 문제 데이터
 
                 List<string> examInput = new List<string>();                //예제 입력 리스트
                 List<string> examoutput = new List<string>();               //예제 출력 리스트
@@ -33,17 +32,17 @@ namespace ClassHub.Server.Controllers {
                 var parametersPractice = new DynamicParameters();
                 parametersPractice.Add("room_id", room_id);
                 parametersPractice.Add("practice_id", practice_id);
-                codeAssignment = connection.Query<CodeAssignment>(query,parametersPractice).FirstOrDefault();
+                codeAssignment = connection.QuerySingle<CodeAssignment>(query,parametersPractice);
 
                 // 문제 번호가 problem_id인 문제를 찾습니다.      
                 query = "SELECT * FROM codeproblem WHERE problem_id = @problem_id;";
                 var parametersProblem = new DynamicParameters();
                 parametersProblem.Add("problem_id", codeAssignment.problem_id);
-                codeProblem = connection.Query<Shared.CodeProblem>(query,parametersProblem).FirstOrDefault();
+                codeProblem = connection.QuerySingle<Shared.CodeProblem>(query,parametersProblem);
 
                 // 문제 번호가 problem_id인 예제 테스트케이스를 찾습니다
                 query = "SELECT * FROM exampletestcase WHERE problem_id = @problem_id;";
-                var exampleTestcases = connection.Query<Shared.ExampleTestcase>(query,parametersProblem);
+                var exampleTestcases = connection.Query<ExampleTestcase>(query,parametersProblem);
                 foreach (Shared.ExampleTestcase exampleTestcase in exampleTestcases){
                     examInput.Add(exampleTestcase.input);
                     examoutput.Add(exampleTestcase.output);
@@ -51,7 +50,7 @@ namespace ClassHub.Server.Controllers {
 
                 // 문제 번호가 problem_id인 실제 테스트케이스를 찾습니다
                 query = "SELECT * FROM testcase WHERE problem_id = @problem_id;";
-                var testcases = connection.Query<Shared.ExampleTestcase>(query, parametersProblem);
+                var testcases = connection.Query<ExampleTestcase>(query, parametersProblem);
                 foreach (Shared.ExampleTestcase testcase in testcases){
                     input.Add(testcase.input);
                 }
