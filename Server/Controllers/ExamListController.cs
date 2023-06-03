@@ -1,6 +1,5 @@
 ﻿using ClassHub.Client.Models;
 using Dapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
@@ -16,29 +15,45 @@ namespace ClassHub.Server.Controllers {
 
         // 해당 강의실에 올라온 과제 리스트를 보여준다.(학생용)
         [HttpGet("student/room_id/{room_id}/student_id/{student_id}")]
-        public List<Submission> GetPracticeList(int room_id, int student_id) {
+        public async Task<List<Submission>> GetPracticeList(int room_id, int student_id) {
             using var connection = new NpgsqlConnection(connectionString);
 
             // 시험 리스트
             List<Submission> examList = new List<Submission>();
 
             // 강의실 번호가 room_id인 실습들을 찾습니다.
-            string query = "SELECT * FROM exam WHERE room_id = @room_id;";
+            string query = "SELECT * FROM Exam WHERE room_id = @room_id;";
             var parameters = new DynamicParameters();
             parameters.Add("room_id", room_id);
-            var exams = connection.Query<Shared.Exam>(query, parameters);
-
-            // TODO : ExamSubmit이 정립되면 Exam 객체를 생성할때 해당 학생의 제출여부 수정 필요
+            var exams = await connection.QueryAsync<Shared.Exam>(query, parameters);
 
             foreach (Shared.Exam exam in exams) {
-                examList.Add(new Client.Models.Exam { Id = exam.exam_id, Title = exam.title, Author = exam.author, StartDate = exam.start_date, EndDate = exam.end_date, IsSubmitted = false, TotalSubmitters = 0 });
+                // 해당 시험을 이 학생이 제출했는지 체크
+                query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id";
+                var submitParameters = new DynamicParameters();
+                submitParameters.Add("room_id", room_id);
+                submitParameters.Add("exam_id", exam.exam_id);
+                submitParameters.Add("student_id", student_id);
+                int submitCount = await connection.QueryFirstOrDefaultAsync<int>(query, submitParameters);
+
+                bool isSubmitted = submitCount > 0 ? true : false;
+
+                examList.Add(new Client.Models.Exam { 
+                    Id = exam.exam_id, 
+                    Title = exam.title, 
+                    Author = exam.author, 
+                    StartDate = exam.start_date, 
+                    EndDate = exam.end_date, 
+                    IsSubmitted = isSubmitted, 
+                    TotalSubmitters = 0 
+                });
             }
             return examList;
         }
 
         // 해당 강의실에 올라온 시험 리스트를 보여준다.(교수용)
         [HttpGet("professor/room_id/{room_id}")]
-        public List<Submission> GetExamList(int room_id) {
+        public async Task<List<Submission>> GetExamList(int room_id) {
             using var connection = new NpgsqlConnection(connectionString);
 
             // 시험 리스트
@@ -48,12 +63,25 @@ namespace ClassHub.Server.Controllers {
             string query = "SELECT * FROM exam WHERE room_id = @room_id;";
             var parameters = new DynamicParameters();
             parameters.Add("room_id", room_id);
-            var exams = connection.Query<Shared.Exam>(query, parameters);
-
-            // TODO : ExamSubmit이 정립되면 제출한 학생이 몇명인지에 대한 정보를 Exam 객체를 생성할 때 포함해야함
+            var exams = await connection.QueryAsync<Shared.Exam>(query, parameters);
 
             foreach (Shared.Exam exam in exams) {
-                examList.Add(new Client.Models.Exam { Id = exam.exam_id, Title = exam.title, Author = exam.author, StartDate = exam.start_date, EndDate = exam.end_date, IsSubmitted = false, TotalSubmitters = 0 });
+                // 이 시험의 제출인원 계산
+                query = "SELECT COUNT(DISTINCT student_id) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id;";
+                var submitParameters = new DynamicParameters();
+                submitParameters.Add("room_id", room_id);
+                submitParameters.Add("exam_id", exam.exam_id);
+                int totalSubmitCount = await connection.QueryFirstOrDefaultAsync<int>(query, submitParameters);
+
+                examList.Add(new Client.Models.Exam {
+                    Id = exam.exam_id, 
+                    Title = exam.title, 
+                    Author = exam.author, 
+                    StartDate = exam.start_date, 
+                    EndDate = exam.end_date, 
+                    IsSubmitted = true, 
+                    TotalSubmitters = totalSubmitCount 
+                });
             }
             return examList;
         }
