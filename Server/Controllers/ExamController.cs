@@ -38,6 +38,13 @@ namespace ClassHub.Server.Controllers {
 
             bool isSubmitted = submitCount > 0 ? true : false;
 
+            // 이 시험의 제출인원 계산
+            query = "SELECT COUNT(DISTINCT student_id) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id;";
+            var submitCountParameters = new DynamicParameters();
+            submitCountParameters.Add("room_id", room_id);
+            submitCountParameters.Add("exam_id", exam_id);
+            int totalSubmitCount = await connection.QueryFirstOrDefaultAsync<int>(query, submitCountParameters);
+
             // Client.Models.Exam에 데이터를 채운다.
             Client.Models.Exam clientExam = new Client.Models.Exam {
                 Id = dbExam.exam_id,
@@ -46,6 +53,7 @@ namespace ClassHub.Server.Controllers {
                 StartDate = dbExam.start_date,
                 EndDate = dbExam.end_date,
                 IsSubmitted = isSubmitted,
+                TotalSubmitters = totalSubmitCount,
                 IsRandomProblem = dbExam.is_random_problem,
                 IsRandomChoice = dbExam.is_random_choice,
                 IsShowTimeLimit = dbExam.is_show_time_limit,
