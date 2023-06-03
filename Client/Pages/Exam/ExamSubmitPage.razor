@@ -1,0 +1,82 @@
+﻿@page "/classroom/{roomid:int}/exam/{examid:int}/submit"
+@using ClassHub.Shared
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using System.Collections.ObjectModel
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Collections.Specialized
+@using Microsoft.Extensions.Primitives
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject Blazored.Modal.Services.IModalService ModalService
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<BackButton />
+
+<div class="text-bg-light p-3" style="padding: 1rem; border-top: 2px solid black; border-bottom: 1px solid grey; text-align: center;">
+    <div style="display: flex; align-items: center;">
+        <h3 style="margin: 0 auto;">
+            과제 제출 내역
+        </h3>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-123"></i>학번</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-list-ol" />이름</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-check-lg"></i>점수</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-memory"></i>제출 날짜</th>
+            <th style="border: 1px solid darkgray;"><i class="bi bi-chat-dots"></i>채점 하기</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (submitList != null) {
+            @foreach (ExamSubmit submit in submitList) {
+                <tr style="border-bottom: 1px solid darkgray; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_id</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.student_name</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
+                        @submit.score
+                    </td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">@submit.submit_date</td>
+                    <td style="border: 1px solid darkgray; vertical-align: middle;">
+                        <button class="btn btn-outline-dark btn-sm" @onclick="() => ShowJudgeModal(submit)">채점 하기</button>
+                    </td>
+                </tr>
+            }
+        } else {
+            <tr>
+                <td colspan="8">제출한 내역이 없습니다.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int RoomId { get; set; }
+    [Parameter]
+    public int ExamId { get; set; }
+
+    private List<ExamSubmit> submitList = new List<ExamSubmit>();
+
+    // 초기화 할때 일단 내역을 보여준다.
+    protected override async Task OnInitializedAsync() {
+        submitList = await Http.GetFromJsonAsync<List<ExamSubmit>>($"api/examsubmit/room_id/{RoomId}/exam_id/{ExamId}");
+        submitList = submitList.OrderByDescending(a => a.student_id).ToList();
+        StateHasChanged();
+    }
+
+    // 채점창을 띄운다.
+    private async Task ShowJudgeModal(ExamSubmit examSubmit) {
+        var parameters = new ModalParameters();
+        parameters.Add("assignmentSubmit", examSubmit);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Large, DisableBackgroundCancel = true };
+        //var modalReference = ModalService.Show<AssignmentSubmitJudgeModal>("과제 채점", parameters, modalOptions);
+        //var result = await modalReference.Result;
+        //if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }
+    }
+}
