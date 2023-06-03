@@ -1,6 +1,8 @@
 ﻿@page "/classroom/{roomid:int}/exam/{examid:int}/start"
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
+@using System.Text.Json;
+@using System.Text;
 @using System.Timers;
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager

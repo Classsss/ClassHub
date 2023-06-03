@@ -129,8 +129,8 @@ namespace ClassHub.Server.Controllers {
             connection.Open();
             using (var transaction = connection.BeginTransaction()) {
                 try {
-                    string query = // 다음 exam_id 시퀀스를 가져옴.
-                        "SELECT nextval('exam_exam_id_seq');";
+                    // 다음 exam_id 시퀀스를 가져옴.
+                    string query = "SELECT nextval('exam_exam_id_seq');";
                     exam.exam_id = await connection.QuerySingleAsync<int>(sql: query, transaction: transaction);
 
                     query = "INSERT INTO Exam (exam_id, room_id, week, title, author, start_date, end_date, is_random_problem, is_random_choice, is_show_time_limit, is_back_to_previous_problem) VALUES (@exam_id, @room_id, @week, @title, @author, @start_date, @end_date, @is_random_problem, @is_random_choice , @is_show_time_limit, @is_back_to_previous_problem);";
