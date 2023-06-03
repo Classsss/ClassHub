@@ -123,11 +123,6 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("{RoomId}/upload/{LectureId}")]
         public async Task<IActionResult> UploadLectureFiles(int RoomId, int LectureId, List<IFormFile> files) {
 
-
-         
-           
-
-
             // blob 업로드하는 작업
             var blobServiceClient = new BlobServiceClient(
                 new Uri(blobStorageUri),
@@ -182,15 +177,13 @@ namespace ClassHub.Server.Controllers {
             Console.WriteLine(encodedUrl);
             await Console.Out.WriteLineAsync("sasBuild and getTime Success!");
 
-            BlobDownloadInfo downloadInfo = await blobClienturl.DownloadAsync();
             using var connection = new NpgsqlConnection(connectionString);
 
-            string query = "UPDATE lecture SET video_url = @video_url, learning_time = @learning_time WHERE room_id = @room_id AND lecture_id = @lecture_id ";
+            string query = "UPDATE lecture SET video_url = @video_url WHERE room_id = @room_id AND lecture_id = @lecture_id ";
             var parametersUpdate = new DynamicParameters();
             parametersUpdate.Add("room_id", RoomId);
             parametersUpdate.Add("lecture_id", LectureId);
             parametersUpdate.Add("video_url", encodedUrl);
-            parametersUpdate.Add("learning_time", 30);
             connection.Execute(query, parametersUpdate);
 
             await Console.Out.WriteLineAsync("db update Success!");
