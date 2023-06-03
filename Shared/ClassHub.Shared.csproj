@@ -11,7 +11,6 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="7.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NReco.VideoInfo.LT" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

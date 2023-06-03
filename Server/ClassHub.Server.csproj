@@ -18,7 +18,6 @@
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.6.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql" Version="7.0.2" />
-    <PackageReference Include="NReco.VideoInfo.LT" Version="1.2.0" />
   </ItemGroup>
 
 	
