@@ -205,7 +205,7 @@
                 };
 
                 // 추가하려는 보기와 동일한 보기가 이미 존재할 경우 반려
-                if (multipleChoices.Contains(choice)) {
+                if (multipleChoices.Find(c => c.Description == choice.Description) != null) {
                     await JSRuntime.InvokeVoidAsync("alert", "이미 존재하는 보기입니다.");
                 } 
                 // 보기 추가 가능
@@ -228,6 +228,17 @@
             string? choiceDesc = result.Data.ToString();
             if (choiceDesc != null) {
                 if (index != -1) {
+                    // 보기 내용을 바꾸지 않고 저장한 경우
+                    if (selectedChoice.Description == choiceDesc) {
+                        return;
+                    }
+
+                    // 수정하려는 보기와 동일한 보기가 이미 존재할 경우 반려
+                    if (multipleChoices.Find(c => c.Description == choiceDesc) != null) {
+                        await JSRuntime.InvokeVoidAsync("alert", "이미 존재하는 보기입니다.");
+                        return;
+                    }
+
                     multipleChoices[index] = new MultipleChoice {
                         ChoiceId = selectedChoice.ChoiceId,
                         Description = choiceDesc
