@@ -307,10 +307,10 @@
 
             case "ShortAnswerProblem":
                 ShortAnswerProblem shortAnswerProblem = new ShortAnswerProblem();
-                shortAnswerProblem.Answer = shortAnswer;
 
                 shortAnswerProblem.Description = description;
                 shortAnswerProblem.Score = score;
+                shortAnswerProblem.Answer = shortAnswer;
 
                 await ModalInstance.CloseAsync(ModalResult.Ok(shortAnswerProblem));
                 break;
@@ -318,11 +318,10 @@
             case "CodingProblem":
                 CodingProblem codingProblem = new CodingProblem();
 
-                codingProblem.Example = await ExampleCodeEditor.editor.GetValue();
-                codingProblem.Answer = await AnswerCodeEditor.editor.GetValue();
-
                 codingProblem.Description = description;
                 codingProblem.Score = score;
+                codingProblem.Example = await ExampleCodeEditor.editor.GetValue();
+                codingProblem.Answer = await AnswerCodeEditor.editor.GetValue();
 
                 await ModalInstance.CloseAsync(ModalResult.Ok(codingProblem));
                 break;
