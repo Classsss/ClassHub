@@ -1,4 +1,6 @@
-﻿@inject NavigationManager NavigationManager
+﻿@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @using ClassHub.Shared
 
 <div class="row">
@@ -13,9 +15,8 @@
 </div>
 <br />
 
-@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson })) {
-    if(--MaxCount < 0) break;
-    <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Lesson)차시</i>
+@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week })) {
+    <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차</i>
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle" style="text-align: center;">
             <thead style="font-size: 120%; font-weight: bold;">
@@ -120,24 +121,20 @@
     public int MaxCount { get; set; } = 10;
 
     //출결 항목 리스트
-    public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>
-    {
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "1주차 1차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의자료1", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의OT", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
+    public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>() { };
 
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "1주차 2차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "강의자료2", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "몸풀기 퀴즈", LearningType = "퀴즈", AttendProgress = "대상아님", DetailLink = "링크" },
+    protected override async void OnInitialized() {
+        int student_id = await UserInfo.GetUserIdAsync(JSRuntime);
+        var result = await Http.GetFromJsonAsync<List<AttendanceItem>>($"api/classroom/attendent?room_id={roomId}&student_id={student_id}");
 
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "2주차 1차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "강의자료3", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 실습", LearningType = "실습", AttendProgress = "미완료", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 과제", LearningType = "과제", AttendProgress = "완료", DetailLink = "링크" },
+        foreach(var i in result) {
+            var k = new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = i.LearningType, AttendProgress = i.AttendProgress, DetailLink = i.DetailLink };
 
-        new AttendanceItem { Week = 2, Lesson = 2, Title = "2주차 2차시 수업", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 2, Title = "강의자료4", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" }
-    };
+            attendanceStatus.Add(k);
+        }
+
+        StateHasChanged();
+    }
 
     //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
     string getClassForAttendanceStatus(string status) {
