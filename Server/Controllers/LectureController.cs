@@ -7,6 +7,7 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
+using Azure.Storage.Blobs.Models;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -52,7 +53,7 @@ namespace ClassHub.Server.Controllers {
 
         // 동영상 강의 db를 수정한다
         [HttpPut("{RoomId}/modifydb/{LectureId}")]
-        public async Task ModifyLectureDb(int room_id,int lecture_id, Shared.Lecture lecture) {
+        public async Task ModifyLectureDb(int room_id, int lecture_id, Shared.Lecture lecture) {
 
             using var connection = new NpgsqlConnection(connectionString);
             var modifyQuery = "Update lecture SET week = @week, title = @title, contents = @contents, start_date = @start_date, end_date = @end_date WHERE room_id = @room_id AND lecture_id = @lecture_id ";
@@ -107,12 +108,12 @@ namespace ClassHub.Server.Controllers {
         // 수정할때 blob을 임시로 none 삽입하는 작업
         [HttpPut("{RoomId}/insertnone/{LectureId}")]
         public async Task<IActionResult> ModifyLectureFiles(int RoomId, int LectureId) {
-            
+
             // url이 업데이트 되기 전까지는 잠시 보이지 않게 하기위해 none을 삽입
             using var connection = new NpgsqlConnection(connectionString);
             string query = "UPDATE lecture SET video_url = @video_url WHERE room_id = @room_id AND lecture_id = @lecture_id ";
             var parametersNone = new DynamicParameters();
-            parametersNone.Add("video_url", "none"); 
+            parametersNone.Add("video_url", "none");
             connection.Execute(query, parametersNone);
             return Ok();
         }
@@ -120,7 +121,9 @@ namespace ClassHub.Server.Controllers {
         // 생성할때 blob에 동영상을 업로드 및 url작업
         [HttpPost("{RoomId}/upload/{LectureId}")]
         public async Task<IActionResult> UploadLectureFiles(int RoomId, int LectureId, List<IFormFile> files) {
+
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecture");
+
             using (var memoryStream = new MemoryStream()) {
                 await files[0].CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
@@ -133,20 +136,16 @@ namespace ClassHub.Server.Controllers {
 
             await Console.Out.WriteLineAsync("Blob Upload Success!");
 
-            // url및 동영상 길이 구하고 db에 넣는 작업
+
+            // url를 구한다
+
             string secretName = "StorageAccountKey";
             KeyVaultSecret secret = _secretClient.GetSecret(secretName);
             var storageAccountKey = secret.Value;
 
             BlobClient blobClienturl = containerClient.GetBlobClient(files[0].FileName);
 
-            // 동영상 길이를 구한다. 
-            var properties = await blobClienturl.GetPropertiesAsync();
-            var contentLengthInBytes = properties.Value.ContentLength; // 파일 크기 (바이트)
-            var contentLengthInSeconds = contentLengthInBytes / (1024 * 1024); // 파일 크기를 초 단위로 변환
-
-            var minutes = (int)Math.Ceiling((double)contentLengthInSeconds / 60); // 분 (반올림)
-
+            // Blob에서 동영상 파일 읽어오기
             // url을 구한다.
             BlobSasBuilder sasBuilder = new BlobSasBuilder() {
                 BlobContainerName = containerClient.Name,
@@ -162,25 +161,26 @@ namespace ClassHub.Server.Controllers {
                 Query = sasToken
             };
             string downloadUrl = sasUri.ToString();
-            string encodedUrl =  Uri.EscapeUriString(downloadUrl);
+            string encodedUrl = Uri.EscapeUriString(downloadUrl);
             Console.WriteLine(downloadUrl);
+            Console.WriteLine(encodedUrl);
             await Console.Out.WriteLineAsync("sasBuild and getTime Success!");
 
             using var connection = new NpgsqlConnection(connectionString);
-         
-            string query = "UPDATE lecture SET video_url = @video_url, learning_time = @learning_time WHERE room_id = @room_id AND lecture_id = @lecture_id ";
+
+            string query = "UPDATE lecture SET video_url = @video_url WHERE room_id = @room_id AND lecture_id = @lecture_id ";
             var parametersUpdate = new DynamicParameters();
             parametersUpdate.Add("room_id", RoomId);
             parametersUpdate.Add("lecture_id", LectureId);
             parametersUpdate.Add("video_url", encodedUrl);
-            parametersUpdate.Add("learning_time", minutes);
+
             connection.Execute(query, parametersUpdate);
 
             await Console.Out.WriteLineAsync("db update Success!");
             return Ok();
         }
 
-      
+
         // 학생이 해당 강의 진행률을 가지고 있는지 확인 후 없으면 생성한다.
         [HttpPost("hasprogress/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}/student_name/{student_name}")]
         public void CheckLectureProgress(int room_id, int lecture_id, int student_id, string student_name) {
@@ -212,6 +212,23 @@ namespace ClassHub.Server.Controllers {
             List<LectureProgress> lectureProgressList = connection.Query<LectureProgress>(query, parametersProgress).ToList();
 
             return lectureProgressList;
+        }
+
+        // 학생의 해당 강의가 enrolled인지 확인한다
+        //  bool is_enrolled = await Http.GetFromJsonAsync<bool>($"api/lecture/isenrolled/room_id/{RoomId}/lecture_id/{lecture.LectureId}/student_id/{student.student_id}");
+        [HttpGet("isenrolled/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}")]
+        public bool IsLectureProgressEnrolled(int room_id, int lecture_id, int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "SELECT * FROM lectureprogress WHERE lecture_id = @lecture_id AND student_id = @student_id;";
+            var parametersProgress = new DynamicParameters();
+            parametersProgress.Add("lecture_id", lecture_id);
+            parametersProgress.Add("student_id", student_id);
+            var lectureProgress = connection.QuerySingleOrDefault<LectureProgress>(query, parametersProgress);
+            if (lectureProgress == null || lectureProgress.is_enroll == false) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
     }

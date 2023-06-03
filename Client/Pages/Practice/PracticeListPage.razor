@@ -3,14 +3,17 @@
 @using ClassHub.Client.Models
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
-
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <SubmissionList Title="실습" Role = "@role" Submissions="@practices" />
-
+}
 @code {
     [Parameter]
     public int RoomId { get; set; }
     private List<Submission>? practices  = new List<Submission>();
     private string role;
+    bool dataLoaded = false;
     protected async override void OnInitialized(){
         // RoomId와 매칭되는 실습의 정보를 가져옵니다.
         role = await UserInfo.GetRoleAsync(JSRuntime);
@@ -19,6 +22,7 @@
         } else {
             practices = await Http.GetFromJsonAsync<List<Submission>>($"api/practicelist/professor/room_id/{RoomId}");
         }
+        dataLoaded = true;
         StateHasChanged();
     }
     

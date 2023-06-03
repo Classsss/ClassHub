@@ -246,5 +246,49 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("message", Message);
             connection.Execute(modifyQuery, parameters);
         }
+
+        // 해당 과제의 제출 내역이 있는지 체크한후 bool 반환
+        [HttpGet("room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
+        public bool IsAssignmentSubmit(int room_id, int assignment_id, int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query;
+
+            // 과제 제출 내역이 있는지 check
+            query = "SELECT * FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
+            var parametersSubmit = new DynamicParameters();
+            parametersSubmit.Add("room_id", room_id);
+            parametersSubmit.Add("assignment_id", assignment_id);
+            parametersSubmit.Add("student_id", student_id);
+            var assignmentSubmit = connection.QueryFirstOrDefault<AssignmentSubmit>(query, parametersSubmit);
+
+            if (assignmentSubmit == null) {
+                return false;
+            }
+            return true;
+        }
+
+        // 해당 과제의 학생의 점수를 알아낸다.
+        [HttpGet("getscore/room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
+        public int GetAssignmentSubmitScore(int room_id, int assignment_id, int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query;
+
+            // 과제 제출 내역이 있는지 check
+            query = "SELECT * FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
+            var parametersSubmit = new DynamicParameters();
+            parametersSubmit.Add("room_id", room_id);
+            parametersSubmit.Add("assignment_id", assignment_id);
+            parametersSubmit.Add("student_id", student_id);
+            var assignmentSubmit = connection.QueryFirstOrDefault<AssignmentSubmit>(query, parametersSubmit);
+
+            //제출 내역 없으면 0점
+            if (assignmentSubmit == null) {
+                return 0;
+            }
+            return assignmentSubmit.score;
+        }
+
+
+
     }
 }

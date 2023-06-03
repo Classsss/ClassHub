@@ -8,7 +8,9 @@
 
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
-
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <Modal>
     <ModalBody>
         <div class="form-group">
@@ -45,7 +47,7 @@
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
-            <DragDropUpload @bind-droppedFiles="file" IsMultiple=false />
+                   <DragDropUpload @bind-droppedFiles="file" IsMultiple=false />
         </div>
     </ModalBody>
     <ModalFooter>
@@ -56,13 +58,13 @@
         </div>
     </ModalFooter>
 </Modal>
-
+}
 
 
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
     [Parameter] public Lecture lecture { get; set; }
-
+    bool dataLoaded = false;
     public List<int> selectedWeek = new List<int> { };
 
     private List<IBrowserFile> file = new List<IBrowserFile>();
@@ -72,7 +74,8 @@
     }
 
     protected override async Task OnInitializedAsync() {
-        selectedWeek.Add(lecture.Week);    
+        selectedWeek.Add(lecture.Week);
+        dataLoaded = true;
     }
 
     // 주차 고르기
@@ -109,7 +112,7 @@
             Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
             Http.PostAsync($"api/lecture/{lecture.RoomId}/upload/{lecture.LectureId}", content);
         }
-        await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 10초정도 소모됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 몇 초 소모됩니다.");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 

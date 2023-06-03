@@ -11,33 +11,35 @@
 @using Microsoft.AspNetCore.SignalR.Client
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<div class="container-fluid d-flex justify-content-between" style="height: 100vh; width: 100vw">
-    <div id="sidebar" style= " width : 15%; height : 100%;">
-        <div class="card bg-dark text-white">
-            <div class="card-header d-flex justify-content-between">
-                <h5 class="mb-0">@(Week)주차 강의</h5>
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
+    <div class="container-fluid d-flex justify-content-between" style="height: 100vh; width: 100vw">
+        <div id="sidebar" style= " width : 15%; height : 100%;">
+            <div class="card bg-dark text-white">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0">@(Week)주차 강의</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var lecture in lectures) {
+                        <a class="list-group-item list-group-item-action @(lecture.Chapter == Chapter ? "active" : "")" @onclick="@(() => ShowLecture(lecture.Chapter))" style="cursor:pointer;">@lecture.Title</a>
+                    }
+                </ul>
             </div>
-            <ul class="list-group list-group-flush">
-                @foreach (var lecture in lectures) {
-                    <a class="list-group-item list-group-item-action @(lecture.Chapter == Chapter ? "active" : "")" @onclick="@(() => ShowLecture(lecture.Chapter))" style="cursor:pointer;">@lecture.Title</a>
-                }
-            </ul>
         </div>
+        <div class="card-body p-0  bg-dark ">
+                <video style="width: 100%; height: 95%;" controls>
+                    <source src=@SelectedLecture.VideoUrl type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="d-flex justify-content-end p-2 bg-secondary" style="height: 5%">
+                    <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="@(() => ShowLecture(Chapter - 1))" disabled="@IsPrevDisabled">이전</button>
+                    <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="@(() => ShowLecture(Chapter + 1))" disabled="@IsNextDisabled">다음</button>
+                    <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="GoBack">종료</button>
+                </div>
+            </div>
     </div>
-    <div class="card-body p-0  bg-dark ">
-            <video style="width: 100%; height: 95%;" controls>
-                <source src=@SelectedLecture.VideoUrl type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <div class="d-flex justify-content-end p-2 bg-secondary" style="height: 5%">
-                <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="@(() => ShowLecture(Chapter - 1))" disabled="@IsPrevDisabled">이전</button>
-                <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="@(() => ShowLecture(Chapter + 1))" disabled="@IsNextDisabled">다음</button>
-                <button class="btn btn-light btn-sm" style="margin-right : 5px" @onclick="GoBack">종료</button>
-            </div>
-        </div>
-</div>
-
+}
        
 <style>
 
@@ -83,18 +85,17 @@
     private Models.Lecture SelectedLecture { get; set; }
     HubConnection connection;
     private string role;
-
+    bool dataLoaded = false;
     private bool IsPrevDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter - 1) == null;
     private bool IsNextDisabled => lectures.FirstOrDefault(lecture => lecture.Chapter == Chapter + 1) == null;
 
     const string CLASSHUB_UPDATE_LECTUREPROGRESS = "https://classhub.azurewebsites.net/lecturehub";
 
-
-
     protected async override void OnInitialized(){   
         role = await UserInfo.GetRoleAsync(JSRuntime);
         await CheckExistProgress();
         SetSignalRConnection();
+
     }
 
     protected override async Task OnInitializedAsync() {
@@ -107,6 +108,7 @@
         } 
         // signalR 연결 끊는 함수를 등록한다
         NavigationManager.LocationChanged += HandleLocationChanged;
+        dataLoaded = true;
     }
 
     protected async Task CheckExistProgress() {
