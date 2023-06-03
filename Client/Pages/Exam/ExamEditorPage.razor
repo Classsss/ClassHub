@@ -181,17 +181,13 @@
     // 이전 문제로 돌아갈 수 있는지 여부
     private bool isBackToPreviousProblem = true;
 
-    List<ExamProblem> problems;
+    List<ExamProblem> problems = new List<ExamProblem>();
 
     private int maxDisplayLength = 70;
 
     protected override async Task OnInitializedAsync() {
         startDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
         endDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
-
-        problems = new List<ExamProblem>();
-
-        Console.WriteLine("ExamId : " + ExamId);
 
         // 시험 등록
         if (ExamId == null) {
@@ -337,12 +333,12 @@
             }
         };
 
-        // TODO : exam_id를 채워서 보내도록 수정필요
         foreach (var problem in problems) {
             // 객관식 문제
             if (problem is MultipleChoiceProblem) {
                 MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)problem;
                 ClassHub.Shared.MultipleChoiceProblem multipleChoiceProblemForDB = new ClassHub.Shared.MultipleChoiceProblem {
+                    exam_id = examContainer.Exam.exam_id,
                     problem_id = multipleChoiceProblem.ProblemId,
                     description = multipleChoiceProblem.Description,
                     answer = multipleChoiceProblem.Answer,
@@ -353,6 +349,7 @@
                 foreach (var choice in multipleChoiceProblem.Choices) {
                     multipleChoicesForDB.Add(new ClassHub.Shared.MultipleChoice {
                         choice_id = choice.ChoiceId,
+                        exam_id = examContainer.Exam.exam_id,
                         problem_id = multipleChoiceProblem.ProblemId,
                         description = choice.Description
                     });
@@ -367,6 +364,7 @@
             else if (problem is ShortAnswerProblem) {
                 ShortAnswerProblem shortAnswerProblem = (ShortAnswerProblem)problem;
                 examContainer.ShortAnswerProblems.Add(new ClassHub.Shared.ShortAnswerProblem {
+                    exam_id = examContainer.Exam.exam_id,
                     problem_id = shortAnswerProblem.ProblemId,
                     description = shortAnswerProblem.Description,
                     answer = shortAnswerProblem.Answer,
@@ -377,6 +375,7 @@
             else if (problem is CodingProblem) {
                 CodingProblem codingProblem = (CodingProblem)problem;
                 examContainer.CodingExamProblems.Add(new ClassHub.Shared.CodingExamProblem {
+                    exam_id = examContainer.Exam.exam_id,
                     problem_id = codingProblem.ProblemId,
                     description = codingProblem.Description,
                     example_code = codingProblem.Example,
