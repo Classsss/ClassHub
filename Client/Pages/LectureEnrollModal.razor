@@ -43,9 +43,17 @@
                    @bind="lecture.EndDate"
                    class="form-control" />
         </div>
-
         <div class="form-group" style="margin-top: 10px;">
-            <DragDropUpload @bind-droppedFiles="file" IsMultiple=false/>
+            <label for="endTime">수강 인정 시간:</label>
+            <div style="display: flex; align-items: center;">
+                <input type="number" @bind="hours" min="0" max="23" style="width: 40px;   height: 25px; margin-right: 0.5em;" /> 시간
+                <input type="number" @bind="minutes" min="0" max="59" style="width: 40px; height: 25px;margin-left: 0.5em; margin-right: 0.5em;" /> 분
+                <input type="number" @bind="seconds" min="1" max="59"  style="width: 40px;  height: 25px; margin-left: 0.5em; margin-right: 0.5em;" /> 초
+            </div>
+
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+                <DragDropUpload @bind-droppedFiles="file" IsMultiple=false  />
         </div>
     </ModalBody>
     <ModalFooter>
@@ -65,6 +73,9 @@
     public List<int> selectedWeek = new List<int> {};
     private List<IBrowserFile> file = new List<IBrowserFile>();
     private Models.Lecture lecture = new Models.Lecture();
+    private int hours;
+    private int minutes;
+    private int seconds = 1;
 
     protected async override void OnInitialized() {
         lecture.StartDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
@@ -101,7 +112,7 @@
                 start_date = lecture.StartDate,
                 end_date = lecture.EndDate,
                 video_url = "none",
-                learning_time = 0
+                learning_time = (hours * 3600) + (minutes * 60) + seconds
         });
 
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
@@ -115,7 +126,7 @@
         await file[0].OpenReadStream().ReadAsync(buffer);
         content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{lecture_id}/{file[0].Name}");
         var responsefile = Http.PostAsync($"api/lecture/{RoomId}/upload/{lecture_id}", content);
-        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 10여 초 후에 동영상 강의가 등록됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 몇 초 후에 동영상 강의가 등록됩니다.");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 

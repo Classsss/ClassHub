@@ -14,6 +14,9 @@
 
 @*todo : 중간에 리사이즈 선 구현, 브라우저 사이즈에 따라 유연하게 대처 *@
 
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <BackButton />
 <div class="container-fluid">
     <div class="d-flex flex-column justify-content-between">
@@ -73,7 +76,7 @@
         </div>
     </div>
 </div>
-
+}
 
 @code {
     [Parameter]
@@ -85,11 +88,12 @@
 
     // MonacoEditor 컴포넌트 참조 변수
     private MonacoEditor? MonacoEditorReference;
-
+    bool dataLoaded = false;
     // 초기화 할때 실습 데이터를 받아온다.
     protected override async Task OnParametersSetAsync(){
         role = await UserInfo.GetRoleAsync(JSRuntime);
         practice = await Http.GetFromJsonAsync<Practice>($"api/practice/room_id/{RoomId}/practice_id/{PracticeId}");
+        dataLoaded = true;
         StateHasChanged();
     }
 

@@ -25,6 +25,9 @@
 </style>
 
 <BackButton />
+@if (!dataLoaded) {
+    <LoadingBar />
+} else {
 <div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
     <h1>
         <span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
@@ -139,7 +142,7 @@
     </AuthorizeView>
     <button class="btn btn-primary" @onclick="GoBack">목록</button>
 </div>
-
+}
 
 
 @code {
@@ -155,11 +158,12 @@
     private Models.Assignment assignment = new Models.Assignment();
     private AssignmentSubmit assignmentSubmit = new AssignmentSubmit();
     private string role;
-
+    bool dataLoaded = false;
     protected override async Task OnInitializedAsync() {
         role = await UserInfo.GetRoleAsync(JSRuntime);
         assignment = await Http.GetFromJsonAsync<Models.Assignment>($"api/assignment/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
         assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        dataLoaded = true;
         StateHasChanged();
         LoadAttachments();
     }
@@ -248,7 +252,7 @@
         } 
         Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{SubmitId}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 완료하였습니다! 파일은 십여초 후에 등록됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "과제 등록 완료하였습니다! 파일은 몇 초 후에 등록됩니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 
@@ -291,7 +295,7 @@
         }
         Http.PostAsync($"api/assignmentsubmit/{RoomId}/upload/{AssignmentId}/submitid/{assignmentSubmit.submit_id}", content);
 
-        await JSRuntime.InvokeVoidAsync("alert", "과제 수정 완료하였습니다! 파일은 십여초 후에 수정됩니다.");
+        await JSRuntime.InvokeVoidAsync("alert", "과제 수정 완료하였습니다! 파일은 몇 초 후에 수정됩니다.");
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
         
     }

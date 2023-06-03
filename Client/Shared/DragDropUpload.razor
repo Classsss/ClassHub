@@ -98,9 +98,11 @@
 
         } else {
             DroppedFiles.Clear();
-            if (e.FileCount > 0) {
+            if (e.FileCount == 1) {
                 DroppedFiles.Add(e.File);
                 DroppedFilesChanged.InvokeAsync(DroppedFiles);
+            }else if (e.FileCount > 1) {
+                JSRuntime.InvokeVoidAsync("alert", "하나의 파일만 등록이 가능합니다.");
             }
         }
     }

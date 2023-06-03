@@ -62,5 +62,24 @@ namespace ClassHub.Server.Controllers {
           
                 return practice;      
         }
+
+        // 학생이 해당 과제를 했는지 여부
+        [HttpGet("room_id/{room_id}/practice_id/{practice_id}/student_id/{student_id}")]
+        public bool IsPracticeSubmit(int room_id, int practice_id, int student_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query;
+
+            // 해당 실습에 대한 제출 내역을 찾습니다
+            query = "SELECT COUNT(*) FROM codesubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
+            var parametersSubmit = new DynamicParameters();
+            parametersSubmit.Add("room_id", room_id);
+            parametersSubmit.Add("assignment_id", practice_id);
+            parametersSubmit.Add("student_id", student_id);
+            if (connection.QueryFirstOrDefault<int>(query, parametersSubmit) == 0) { 
+                return false; 
+            }
+            return true;
+        }
+
     }
 }
