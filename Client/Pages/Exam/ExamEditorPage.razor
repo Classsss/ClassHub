@@ -209,7 +209,7 @@
                         new MultipleChoice { Description = "Daegu" },
                         new MultipleChoice { Description = "Incheon" }
                     },
-                    Answer = "seoul"
+                    Answer = "Busan"
                 });
             problems.Add(new ShortAnswerProblem {
                     ProblemId = 2,
@@ -265,6 +265,8 @@
                 problems.Add(problem);
             }
         }
+
+        StateHasChanged();
     }
 
     private async Task ModifyProblem(int index, ExamProblem selectedProblem) {
@@ -281,10 +283,11 @@
                     problem.ProblemId = selectedProblem.ProblemId;
 
                     problems[index] = problem;
-                    StateHasChanged(); // Notify the UI to update
                 }
             }
         }
+
+        StateHasChanged();
     }
 
     private async Task DeleteProblem(int index, ExamProblem selectedProblem) {
@@ -299,8 +302,8 @@
                     }
                 }
             }
-        } else {
-            return;
+
+            StateHasChanged();
         }
     }
 

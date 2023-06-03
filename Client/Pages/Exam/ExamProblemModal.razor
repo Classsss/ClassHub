@@ -212,9 +212,10 @@
                 else {
                     multipleChoices.Add(choice);
                 }
-
             }
         }
+
+        StateHasChanged();
     }
 
     private async Task ModifyChoice(int index, MultipleChoice selectedChoice) {
@@ -243,10 +244,11 @@
                         ChoiceId = selectedChoice.ChoiceId,
                         Description = choiceDesc
                     };
-                    StateHasChanged();
                 }
             }
         }
+        
+        StateHasChanged();
     }
 
     private async Task DeleteChoice(int index, string selectedQuestion) {
