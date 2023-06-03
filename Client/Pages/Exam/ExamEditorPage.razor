@@ -140,12 +140,16 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer d-flex justify-content-end">
+        <div class="card-footer d-flex justify-content-between">
+            <div>
+                <p class="card-text">총점: @(GetTotalScore())</p>
+            </div>
             <button class="btn" @onclick="AddProblem">
                 <i class="oi oi-plus" style="background-color: transparent; color: blue;" />
             </button>
         </div>
     </div>
+
 
     <div class="d-flex justify-content-end">
         <button class="btn btn-success" @onclick="Submit">시험 등록</button>
@@ -298,6 +302,16 @@
         } else {
             return;
         }
+    }
+
+    private int GetTotalScore() {
+        int totalScore = 0;
+
+        foreach (var problem in problems) {
+            totalScore += problem.Score;
+        }
+
+        return totalScore;
     }
 
     private async Task Submit() {
