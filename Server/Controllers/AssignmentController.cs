@@ -2,15 +2,11 @@
 using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
-using ClassHub.Client.Models;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Npgsql;
-
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -22,8 +18,13 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
-        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly SecretClient _secretClient;
+
+        public AssignmentController(BlobServiceClient blobServiceClient, SecretClient secretClient) {
+            _blobServiceClient = blobServiceClient;
+            _secretClient = secretClient;
+        }
 
         // 해당 과제를 보여줍니다.
         [HttpGet("room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
@@ -31,14 +32,14 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
             string query;
 
-            Shared.Assignment dbAssignment = new Shared.Assignment();
+            Assignment dbAssignment = new Assignment();
 
             // db에서 해당 과제를 찾습니다
             query = "SELECT * FROM assignment WHERE room_id = @room_id AND assignment_id = @assignment_id;";
             var parametersAssignment = new DynamicParameters();
             parametersAssignment.Add("room_id", room_id);
             parametersAssignment.Add("assignment_id", assignment_id);
-            dbAssignment = connection.Query<Shared.Assignment>(query, parametersAssignment).FirstOrDefault();
+            dbAssignment = connection.QuerySingle<Assignment>(query, parametersAssignment);
 
             // 과제 제출 내역이 있는지 check
             query = "SELECT  COUNT(*) FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
@@ -103,8 +104,8 @@ namespace ClassHub.Server.Controllers {
                     return BadRequest();
                 }
             }
+            connection.Dispose();
             return new ObjectResult(assignment.assignment_id);
-
         }
 
         // 과제 db를 수정합니다
@@ -131,13 +132,8 @@ namespace ClassHub.Server.Controllers {
             // url db를 생성하기위함
             using var connection = new NpgsqlConnection(connectionString);
             connection.Open();
-
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(blobStorageUri),
-                new DefaultAzureCredential()
-            );
             
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("assignmentmaterial");
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("assignmentmaterial");
             await Console.Out.WriteLineAsync($"files count: {files.Count}");
 
             foreach (var file in files) {
@@ -155,12 +151,8 @@ namespace ClassHub.Server.Controllers {
                 await Console.Out.WriteLineAsync("Blob Upload Success!");
 
                 // 업로드한 blob의 url을 구한다.
-                var secretClient = new SecretClient(
-                vaultUri: new Uri(vaultStorageUri),
-                credential: new DefaultAzureCredential()
-                );
                 string secretName = "StorageAccountKey";
-                KeyVaultSecret secret = secretClient.GetSecret(secretName);
+                KeyVaultSecret secret = _secretClient.GetSecret(secretName);
                 var storageAccountKey = secret.Value;
 
                 BlobClient blobClienturl = containerClient.GetBlobClient(file.FileName);
@@ -211,6 +203,7 @@ namespace ClassHub.Server.Controllers {
                 await Console.Out.WriteLineAsync("DB update Success!");
             }
             await Console.Out.WriteLineAsync("All file processing completed!");
+            connection.Dispose();
 
             return Ok();
         }
@@ -264,15 +257,9 @@ namespace ClassHub.Server.Controllers {
         // 특정 자료파일을 삭제합니다 (blob)
         [HttpDelete("{RoomId}/removeblob/{AssignmentId}/filename/{*FileName}")]
         public async Task removeAssignmentBlobFileOne(int RoomId, int AssignmentId, string FileName) {
-            // blob의 파일 삭제
-            var blobServiceClient = new BlobServiceClient(
-            new Uri("https://classhubfilestorage.blob.core.windows.net"),
-            new DefaultAzureCredential()
-            );
-
             // 과제 자료 파일 삭제
             string folderPath = $"{RoomId}/{AssignmentId}";
-            BlobContainerClient containerClientMaterial = blobServiceClient.GetBlobContainerClient("assignmentmaterial");
+            BlobContainerClient containerClientMaterial = _blobServiceClient.GetBlobContainerClient("assignmentmaterial");
             BlobClient blobClient = containerClientMaterial.GetBlobClient(FileName);
 
             await Console.Out.WriteLineAsync("Deleting blob...");
@@ -280,21 +267,12 @@ namespace ClassHub.Server.Controllers {
             await Console.Out.WriteLineAsync($"\tResponse Status: {response.Status}\n");
         }
 
-       
-
         // 과제 자료파일과 제출자의 파일까지 삭제합니다 (blob)
         [HttpDelete("{RoomId}/removeblob/{AssignmentId}")]
         public async Task removeAssignmentBlobFile(int RoomId, int AssignmentId) {
-            // blob의 파일 삭제
-            var blobServiceClient = new BlobServiceClient(
-            new Uri("https://classhubfilestorage.blob.core.windows.net"),
-            new DefaultAzureCredential()
-            );
-
-
             // 과제 자료 파일 삭제
             string folderPath = $"{RoomId}/{AssignmentId}";
-            BlobContainerClient containerClientMaterial = blobServiceClient.GetBlobContainerClient("assignmentmaterial");
+            BlobContainerClient containerClientMaterial = _blobServiceClient.GetBlobContainerClient("assignmentmaterial");
             List<BlobClient> blobClientsMaterial = containerClientMaterial.GetBlobs(prefix: folderPath)
                 .Select(blobItem => containerClientMaterial.GetBlobClient(blobItem.Name))
                 .ToList();
@@ -306,7 +284,7 @@ namespace ClassHub.Server.Controllers {
             }
 
             // 제출 자료 파일 삭제
-            BlobContainerClient containerClientSubmit = blobServiceClient.GetBlobContainerClient("assignmentsubmit");
+            BlobContainerClient containerClientSubmit = _blobServiceClient.GetBlobContainerClient("assignmentsubmit");
             List<BlobClient> blobClientsSubmit = containerClientSubmit.GetBlobs(prefix: folderPath)
                 .Select(blobItem => containerClientSubmit.GetBlobClient(blobItem.Name))
                 .ToList();
@@ -317,6 +295,5 @@ namespace ClassHub.Server.Controllers {
                 await Console.Out.WriteLineAsync($"\tResponse Status: {response.Status}\n");
             }
         }
-
     }
 }

@@ -325,6 +325,7 @@ namespace ClassHub.Server.Controllers {
                     return BadRequest();
                 }
             }
+            connection.Dispose();
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = lectureMaterial.room_id,
@@ -518,6 +519,7 @@ namespace ClassHub.Server.Controllers {
                     return;
                 }
             }
+            connection.Dispose();
 
             InsertNotificationWithStudent(new ClassRoomNotification {
                 room_id = notice.room_id,
