@@ -72,7 +72,10 @@ namespace ClassHub.Server.Controllers {
                 var dbMultipleChoices = await connection.QueryAsync<Shared.MultipleChoice>(query, parametersMultipleChoice);
 
                 foreach (var dbMultipleChoice in dbMultipleChoices) {
-                    problem.Questions.Add(dbMultipleChoice.description);
+                    problem.Choices.Add(new Client.Models.MultipleChoice { 
+                        ChoiceId = dbMultipleChoice.choice_id,
+                        Description = dbMultipleChoice.description
+                    });
                 }
 
                 clientExam.Problems.Add(problem);

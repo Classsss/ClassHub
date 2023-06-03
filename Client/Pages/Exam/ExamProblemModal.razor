@@ -53,28 +53,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var question in multipleChoiceQuestions.Select((value, index) => new { Value = value, Index = index })) {
+                                @foreach (var choice in multipleChoices.Select((value, index) => new { Value = value, Index = index })) {
                                     <tr style="vertical-align: middle;">
                                         <td>
                                             @{
-                                                string modifiedQuestion = question.Value;
+                                                string modifiedQuestion = choice.Value.Description;
                                                 if (modifiedQuestion.Length > maxDisplayLength) {
                                                     modifiedQuestion = $"{modifiedQuestion.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
                                                 }
                                             }
                                             <span>@modifiedQuestion</span>
-                                            @if (question.Value.Length > maxDisplayLength) {
+                                            @if (choice.Value.Description.Length > maxDisplayLength) {
                                                 // 일정 길이 이상일 경우 "더 보기" 버튼 추가
-                                                <button class="btn btn-link" @onclick="() => ShowFullContent(question.Value)">더 보기</button>
+                                                <button class="btn btn-link" @onclick="() => ShowFullContent(choice.Value.Description)">더 보기</button>
                                             }
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm" @onclick="() => ModifyQuestion(question.Index, question.Value)">
+                                            <button class="btn btn-sm" @onclick="() => ModifyChoice(choice.Index, choice.Value)">
                                                 <i class="oi oi-pencil" style="background-color: transparent; color: black;" />
                                             </button>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm" @onclick="() => DeleteQuestion(question.Index, question.Value)">
+                                            <button class="btn btn-sm" @onclick="() => DeleteChoice(choice.Index, choice.Value.Description)">
                                                 <i class="oi oi-x" style="background-color: transparent; color: red;" />
                                             </button>
                                         </td>
@@ -84,7 +84,7 @@
                         </table>
                     </div>
                     <div class="card-footer d-flex justify-content-end">
-                        <button class="btn" @onclick="AddQuestion">
+                        <button class="btn" @onclick="AddChoice">
                             <i class="oi oi-plus" style="background-color: transparent; color: blue;" />
                         </button>
                     </div>
@@ -140,7 +140,7 @@
 
     private int maxDisplayLength = 70;
 
-    private List<string> multipleChoiceQuestions = new List<string>();
+    private List<MultipleChoice> multipleChoices = new List<MultipleChoice>();
     private string multipleChoiceAnswer = string.Empty;
 
     private string shortAnswer = string.Empty;
@@ -159,7 +159,7 @@
             case "MultipleChoiceProblem":
                 MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)Problem;
                 if (multipleChoiceProblem != null) {
-                    multipleChoiceQuestions = multipleChoiceProblem.Questions.ToList();
+                    multipleChoices = multipleChoiceProblem.Choices;
                     multipleChoiceAnswer = multipleChoiceProblem.Answer;
                 }
                 break;
@@ -179,53 +179,60 @@
         }
     }
 
-    private async Task AddQuestion() {
+    private async Task AddChoice() {
         var parameters = new ModalParameters();
-        parameters.Add("Question", string.Empty);
+        parameters.Add("choiceDesc", string.Empty);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
-        var modalReference = ModalService.Show<MultipleChoiceQuestionModal>("보기 추가", parameters, modalOptions);
+        var modalReference = ModalService.Show<MultipleChoiceModal>("보기 추가", parameters, modalOptions);
 
         var result = await modalReference.Result;
         if (result.Confirmed && result.Data != null) {
-            string? question = result.Data.ToString();
-            if (question != null) {
+            string? choiceDesc = result.Data.ToString();
+            if (choiceDesc != null) {
+                MultipleChoice choice = new MultipleChoice {
+                    Description = choiceDesc
+                };
+
                 // 추가하려는 보기와 동일한 보기가 이미 존재할 경우 반려
-                if (multipleChoiceQuestions.Contains(question)) {
+                if (multipleChoices.Contains(choice)) {
                     await JSRuntime.InvokeVoidAsync("alert", "이미 존재하는 보기입니다.");
                 } 
                 // 보기 추가 가능
                 else {
-                    multipleChoiceQuestions.Add(question);
+                    multipleChoices.Add(choice);
                 }
 
             }
         }
     }
 
-    private async Task ModifyQuestion(int index, string selectedQuestion) {
+    private async Task ModifyChoice(int index, MultipleChoice selectedChoice) {
         var parameters = new ModalParameters();
-        parameters.Add("Question", selectedQuestion);
+        parameters.Add("choiceDesc", selectedChoice.Description);
         var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
-        var modalReference = ModalService.Show<MultipleChoiceQuestionModal>("보기 수정", parameters, modalOptions);
+        var modalReference = ModalService.Show<MultipleChoiceModal>("보기 수정", parameters, modalOptions);
 
         var result = await modalReference.Result;
         if (result.Confirmed && result.Data != null) {
-            string? question = result.Data.ToString();
-            if (question != null) {
+            string? choiceDesc = result.Data.ToString();
+            if (choiceDesc != null) {
                 if (index != -1) {
-                    multipleChoiceQuestions[index] = question;
+                    multipleChoices[index] = new MultipleChoice {
+                        ChoiceId = selectedChoice.ChoiceId,
+                        Description = choiceDesc
+                    };
                     StateHasChanged();
                 }
             }
         }
     }
 
-    private async Task DeleteQuestion(int index, string selectedQuestion) {
+    private async Task DeleteChoice(int index, string selectedQuestion) {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "해당 문제가 제거됩니다.");
         if (confirmed) {
             if (selectedQuestion != null) {
                 if (index != -1) {
-                    multipleChoiceQuestions.RemoveAt(index);
+                    multipleChoices.RemoveAt(index);
                 }
             }
         } else {
@@ -251,7 +258,7 @@
             return;
         }
 
-        if (type == "MultipleChoiceProblem" && multipleChoiceQuestions.Count <= 0) {
+        if (type == "MultipleChoiceProblem" && multipleChoices.Count <= 0) {
             await JSRuntime.InvokeVoidAsync("alert", "보기를 입력하세요.");
             return;
         }
@@ -260,7 +267,7 @@
             case "MultipleChoiceProblem":
                 MultipleChoiceProblem multipleChoiceProblem = new MultipleChoiceProblem();
 
-                multipleChoiceProblem.Questions = multipleChoiceQuestions;
+                multipleChoiceProblem.Choices = multipleChoices;
 
                 multipleChoiceProblem.Description = description;
                 multipleChoiceProblem.Score = score;

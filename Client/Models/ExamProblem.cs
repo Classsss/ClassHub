@@ -19,13 +19,20 @@ namespace ClassHub.Client.Models {
     // 객관식
     public class MultipleChoiceProblem : ExamProblem {
         // 문제에 대한 보기들
-        public List<string> Questions { get; set; } = new List<string>();
+        public List<MultipleChoice> Choices { get; set; } = new List<MultipleChoice>();
 
         // 문제에 대한 답안
         public string Answer { get; set; } = string.Empty;
 
         // 학생이 제출한 답안
         public string StudentAnswer { get; set; } = string.Empty;
+    }
+
+    // 객관식 문제 보기
+    public class MultipleChoice {
+        public int ChoiceId { get; set; } = -1;
+
+        public string Description { get; set;} = string.Empty;
     }
 
     // 단답형

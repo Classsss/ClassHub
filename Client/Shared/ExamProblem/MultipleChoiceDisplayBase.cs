@@ -14,7 +14,7 @@ namespace ClassHub.Client.Shared.ExamProblem {
             if (IsRandomChoice) {
                 // 보기 순서 무작위 셔플
                 var rnd = new Random();
-                Problem.Questions = Problem.Questions.OrderBy(item => rnd.Next()).ToList();
+                Problem.Choices = Problem.Choices.OrderBy(item => rnd.Next()).ToList();
             }
         }
 
