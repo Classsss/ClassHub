@@ -111,8 +111,66 @@
         }
     }
 
-    private void FinishExam() {
-        Console.WriteLine("응시 완료");
+    private async Task SubmitExam() {
+        problem = null;
+        StateHasChanged();
+
+        // 컨트롤러에 보낼 데이터 다듬기
+        ClassHub.Shared.ExamSubmitContainer examSubmitContainer = new ClassHub.Shared.ExamSubmitContainer {
+                ExamSubmit = new ClassHub.Shared.ExamSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    room_id = RoomId,
+                    student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                    student_name = await UserInfo.GetUserNameAsync(JSRuntime),
+                    score = 0,
+                    submit_date = DateTime.Now
+                }
+            };
+
+        foreach (var problem in problems) {
+            // 객관식 문제
+            if (problem is MultipleChoiceProblem) {
+                MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)problem;
+
+                examSubmitContainer.MultipleChoiceProblemSubmits.Add(new ClassHub.Shared.MultipleChoiceProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = multipleChoiceProblem.ProblemId,
+                    answer = multipleChoiceProblem.StudentAnswer
+                });
+            }
+            // 단답형 문제
+            else if (problem is ShortAnswerProblem) {
+                ShortAnswerProblem shortAnswerProblem = (ShortAnswerProblem)problem;
+
+                examSubmitContainer.ShortAnswerProblemSubmits.Add(new ClassHub.Shared.ShortAnswerProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = shortAnswerProblem.ProblemId,
+                    answer = shortAnswerProblem.StudentAnswer
+                });
+            }
+            // 코드형 문제
+            else if (problem is CodingProblem) {
+                CodingProblem codingProblem = (CodingProblem)problem;
+
+                examSubmitContainer.CodingExamProblemSubmits.Add(new ClassHub.Shared.CodingExamProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = codingProblem.ProblemId,
+                    answer_code = codingProblem.StudentAnswer
+                });
+            }
+        }
+
+        string jsonString = JsonSerializer.Serialize(examSubmitContainer);
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+
+        var responsePost = await Http.PostAsync("/api/examsubmit/register", httpContent);
+        if (!responsePost.IsSuccessStatusCode) Console.WriteLine("시험 제출 실패");
+
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
 
     /// <summary>
@@ -132,7 +190,7 @@
             if (sender != null) {
                 ((Timer)sender).Stop();
 
-                FinishExam();
+                SubmitExam();
             }
         }
     }
