@@ -798,5 +798,76 @@ namespace ClassHub.Server.Controllers {
 
             return toDoList;
         }
+
+        // Param으로 받은 ID를 가진 강의실의 출석 대상들을 불러온다
+        // 실제 요청 url 예시 : 'api/classroom/attendent'
+        [HttpGet("attendent")]
+        public List<AttendanceItem> GetAttendent([FromQuery] int room_id, [FromQuery] int student_id) {
+            List<AttendanceItem> attendanceItems = new List<AttendanceItem>() { };
+
+            //오프라인 출석 불러오기
+            for (int i = 1; i <= 14; i++) {
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
+            }
+
+            //강의자료 불러오기
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = @"SELECT title, week, material_id
+                FROM LectureMaterial
+                WHERE room_id = @room_id;
+            ";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+
+            
+            var lecureMaterials = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach(var i in lecureMaterials) {
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "링크" });
+            }
+
+            //시험 불러오기
+            query = @"SELECT title, start_date AS startdate, exam_id
+                FROM exam
+                WHERE room_id = @room_id;
+            ";
+
+            var exam = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach (var i in exam) {
+                DateTime semester_startDate = new DateTime(2023, 3, 2);
+                TimeSpan duration = i.startDate - semester_startDate;
+                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = "미완료", DetailLink = "링크" });
+            }
+
+            //실습 불러오기
+            query = @"SELECT codeproblem.title AS title, week, assignment_id
+                FROM codeassignment, codeproblem
+                WHERE room_id = @room_id AND codeassignment.problem_id = codeproblem.problem_id
+            ";
+
+            var codeProblem = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach (var i in codeProblem) {
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "실습", AttendProgress = "미완료", DetailLink = "링크" });
+            }
+
+            //과제 불러오기
+            query = @"SELECT title AS title, start_date as startDate, assignment_id
+                FROM assignment
+                WHERE room_id = @room_id
+            ";
+
+            var assignment = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach (var i in assignment) {
+                DateTime semester_startDate = new DateTime(2023, 3, 2);
+                TimeSpan duration = i.startDate - semester_startDate;
+                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = "미완료", DetailLink = "링크" });
+            }
+
+            return attendanceItems;
+        }
     }
 }
