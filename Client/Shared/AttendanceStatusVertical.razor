@@ -2,9 +2,10 @@
 @using ClassHub.Shared
 
 <div class="row">
-    <div class="col-md-auto" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
+    <div class="col-auto summary" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
         <span style="font-weight:bold;">출결 상태 : </span>
-         <span>출석 <span style="color: green;">30</span> | 지각 <span style="color: orange;">0</span> | 결석 <span style="color: red;">0</span> | 미결 <span style="color: gray;">0</span> | 예정 <span style="color: blue;">0</span></span>
+        <span>
+            <span>출석 <span style="color: green;">30</span></span> | <span>지각 <span style="color: orange;">0</span></span> | 결석 <span style="color: red;">0</span> | 미결 <span style="color: gray;">0</span> | 예정 <span style="color: blue;">0</span></span>
         <br />
         <span style="font-weight:bold;">학습 상태 : </span>
         <span>완료 <span style="color: green;">101</span> | 미완료 <span style="color: gray;">16</span> | 예정 <span style="color: blue;">0</span></span>
@@ -15,42 +16,40 @@
 @foreach (var item in attendanceStatus.GroupBy(x => new { x.Week, x.Lesson })) {
     if(--MaxCount < 0) break;
     <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차 @(item.Key.Lesson)차시</i>
-    
-    <table class="table table-bordered table-hover" style="text-align: center;">
-        <thead style="font-size: 120%; font-weight: bold;">
-            <tr>
-                <th style="width: 60%;">학습 내용</th>
-                <th style="width: 10%;">학습 유형</th>
-                <th style="width: 10%;">학습 진행 상태</th>
-                <th style="width: 10%;">출석 진행 상태</th>
-                <th style="width: 10%;">상세</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var subItem in item)
-            {
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" style="text-align: center;">
+            <thead style="font-size: 120%; font-weight: bold;">
                 <tr>
-                    <td>@subItem.Title</td>
-                    <td>@subItem.LearningType</td>
-                    <td class="@(getClassForLearningStatus(subItem.LearningProgress))">
-                        <i class="@((subItem.LearningProgress == "완료") ? "oi oi-circle-check" : "oi oi-x")"></i>
-                        @subItem.LearningProgress
-                    </td>
-                    <td class="@(getClassForAttendanceStatus(subItem.AttendProgress))">
-                        @if (subItem.AttendProgress == "출석")
-                        {
-                            <i class="oi oi-circle-check"/>
-                        }else if (subItem.AttendProgress == "미출석")
-                        {
-                            <i class="oi oi-x" />
-                        }
-                        @(" " + subItem.AttendProgress)
-                    </td>
-                    <td><button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right">@(" " + "확인")</button></td>
+                    <th style="width: 50%;">학습 내용</th>
+                    <th style="width: 20%;">학습 유형</th>
+                    <th style="width: 15%;">완료 여부</th>
+                    <th style="width: 15%;">상세</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var subItem in item)
+                {
+                    <tr>
+                        <td>@subItem.Title</td>
+                        <td>@subItem.LearningType</td>
+                        <td class="@(getClassForAttendanceStatus(subItem.AttendProgress))">
+                            @if (subItem.AttendProgress == "출석"){
+                                <i class="mobile-icon oi oi-circle-check" />
+                            } else if (subItem.AttendProgress == "미출석"){
+                                <i class="mobile-icon oi oi-x" />
+                            } else if (subItem.AttendProgress == "완료"){
+                                <i class="mobile-icon oi oi-circle-check" />
+                            } else if (subItem.AttendProgress == "미완료") {
+                                <i class="mobile-icon oi oi-x" />
+                            }
+                            <span class="desktop">@(" " + subItem.AttendProgress)</span>
+                        </td>
+                        <td><button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right"><span class="desktop">@(" " + "확인")</span></button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
     <br />
 
 }
@@ -80,6 +79,38 @@
         background-color: #FF8A8A !important;
         color: #8C3032 !important;
     }
+
+    @@media (min-width: 1200px) {
+        table {
+            font-size: 14px;
+        }
+    }
+
+    @@media (max-width: 1200px) {
+        table {
+            font-size: calc(7px);
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .desktop {
+            display: none;
+        }
+
+        .mobile-icon {
+            font-size:15px;
+        }
+
+        .summary {
+            font-size: calc(2vw);
+        }
+    }
+
+    @@media (min-width: 900px) {
+        .mobile {
+            display: none;
+        }
+    }
 </style>
 
 @code {
@@ -91,48 +122,35 @@
     //출결 항목 리스트
     public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>
     {
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "1주차 1차시 수업", LearningType = "오프라인 출결", LearningProgress = "완료", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의자료1", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의OT", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "1주차 1차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의자료1", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 1, Title = "강의OT", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
 
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "1주차 2차시 수업", LearningType = "오프라인 출결", LearningProgress = "완료", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "강의자료2", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 1, Lesson = 2, Title = "몸풀기 퀴즈", LearningType = "퀴즈", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "1주차 2차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "강의자료2", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 1, Lesson = 2, Title = "몸풀기 퀴즈", LearningType = "퀴즈", AttendProgress = "대상아님", DetailLink = "링크" },
 
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "2주차 1차시 수업", LearningType = "오프라인 출결", LearningProgress = "미완료", AttendProgress = "출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "강의자료3", LearningType = "PDF", LearningProgress = "완료", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 실습", LearningType = "실습", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 과제", LearningType = "과제", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "2주차 1차시 수업", LearningType = "오프라인 출결", AttendProgress = "출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "강의자료3", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 실습", LearningType = "실습", AttendProgress = "미완료", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 1, Title = "배열 과제", LearningType = "과제", AttendProgress = "완료", DetailLink = "링크" },
 
-        new AttendanceItem { Week = 2, Lesson = 2, Title = "2주차 2차시 수업", LearningType = "오프라인 출결", LearningProgress = "미완료", AttendProgress = "미출석", DetailLink = "링크" },
-        new AttendanceItem { Week = 2, Lesson = 2, Title = "강의자료4", LearningType = "PDF", LearningProgress = "미완료", AttendProgress = "대상아님", DetailLink = "링크" }
+        new AttendanceItem { Week = 2, Lesson = 2, Title = "2주차 2차시 수업", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" },
+        new AttendanceItem { Week = 2, Lesson = 2, Title = "강의자료4", LearningType = "PDF", AttendProgress = "대상아님", DetailLink = "링크" }
     };
 
     //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
-    string getClassForAttendanceStatus(string status)
-    {
-        if (status == "출석")
-        {
-            return "attendance-status-yes";
-        }else if (status == "미출석")
-        {
-            return "attendance-status-no";
-        }
-        else 
-        {
-            return "attendance-status-no-target";
-        }
-    }
-
-    //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
-    string getClassForLearningStatus(string status)
-    {
-        if (status == "완료")
-        {
+    string getClassForAttendanceStatus(string status) {
+        if (status == "완료"){
             return "learning-status-yes";
-        }
-        else{
+        } else if (status == "미완료"){
             return "learning-status-no";
+        } else if (status == "출석") {
+            return "attendance-status-yes";
+        } else if (status == "미출석") {
+            return "attendance-status-no";
+        } else {
+            return "attendance-status-no-target";
         }
     }
 }
