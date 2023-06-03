@@ -215,8 +215,9 @@ namespace ClassHub.Server.Controllers {
         }
 
         // 학생의 해당 강의가 enrolled인지 확인한다
+        //  bool is_enrolled = await Http.GetFromJsonAsync<bool>($"api/lecture/isenrolled/room_id/{RoomId}/lecture_id/{lecture.LectureId}/student_id/{student.student_id}");
         [HttpGet("isenrolled/room_id/{room_id}/lecture_id/{lecture_id}/student_id/{student_id}")]
-        public bool CheckLectureProgress(int room_id, int lecture_id, int student_id) {
+        public bool IsLectureProgressEnrolled(int room_id, int lecture_id, int student_id) {
             using var connection = new NpgsqlConnection(connectionString);
             string query = "SELECT * FROM lectureprogress WHERE lecture_id = @lecture_id AND student_id = @student_id;";
             var parametersProgress = new DynamicParameters();
