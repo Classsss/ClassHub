@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 namespace ClassHub.Client.Shared.ExamProblem {
     public class CodeProblemDisplayBase : ComponentBase {
         [Parameter]
-        public CodeProblem Problem { get; set; }
+        public CodingProblem Problem { get; set; }
     }
 
 }

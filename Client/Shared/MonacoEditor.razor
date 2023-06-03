@@ -2,14 +2,16 @@
 
 <!--코드 에디터를 변경시키는 드롭다운 메뉴-->
 <div>
-    <div style="margin:10px 0;">
-        Theme:
-        <select @onchange="ChangeTheme">
-            <option value="vs">Visual Studio</option>
-            <option value="vs-dark">Visual Studio Dark</option>
-            <option value="hc-black">High Contrast Black</option>
-        </select>
-    </div>
+    @if (EnableThemeChange) {
+        <div style="margin:10px 0;">
+            Theme:
+            <select @onchange="ChangeTheme">
+                <option value="vs">Visual Studio</option>
+                <option value="vs-dark">Visual Studio Dark</option>
+                <option value="hc-black">High Contrast Black</option>
+            </select>
+        </div>
+    }
     <div style="margin:10px 0;">
         Language:
         <select id = "languageSelect" @onchange="ChangeLanguage">
@@ -24,7 +26,7 @@
 </div>
 
 <!--Monaco Editor 컴포넌트 생성-->
-<StandaloneCodeEditor  id="editor" @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
+<StandaloneCodeEditor  id=@EditorID @ref="editor" CssClass="my-editor-class" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit" OnContextMenu="OnContextMenu" />
 
 <!--Monaco Editor css 설정-->
 <style>
@@ -42,6 +44,12 @@
 @code {
     [Parameter]
     public string? InitCode { get; set; }
+
+    [Parameter]
+    public string EditorID { get; set; } = "editor";
+
+    [Parameter]
+    public bool EnableThemeChange { get; set; } = true;
 
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;

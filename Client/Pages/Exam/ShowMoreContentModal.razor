@@ -1,0 +1,24 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+
+<Modal>
+    <ModalContent>
+        <div class="card mb-4">
+            <div class="card-body d-flex flex-column align-items-stretch">
+                <p>@Content</p>
+            </div>
+        </div>
+    </ModalContent>
+    <ModalFooter>
+        <button class="btn btn-secondary" @onclick="CloseModal">닫기</button>
+    </ModalFooter>
+</Modal>
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Parameter] public string Content { get; set; }
+
+    private async Task CloseModal() {
+        await ModalInstance.CloseAsync();
+    }
+}

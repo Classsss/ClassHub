@@ -1,7 +1,11 @@
-﻿namespace ClassHub.Client.Models {
+﻿using System.Text.Json.Serialization;
+
+namespace ClassHub.Client.Models {
     /// <summary>
     /// 무언가를 제출해야 하는 과제, 실습, 시험 등의 모델을 정의하는 클래스 입니다.
     /// </summary>
+    [JsonDerivedType(typeof(Submission), typeDiscriminator: "base")]
+    [JsonDerivedType(typeof(Exam), typeDiscriminator: "exam")]
     public class Submission {
         public int Id { get; set; }
         /// <summary>작성자</summary>
@@ -35,9 +39,17 @@
     public class Exam : Submission {
         /// <summary>문제 순서 랜덤 여부</summary>
         public bool IsRandomProblem { get; set; } = false;
+
+        /// <summary>보기 순서 랜덤 여부</summary>
+        public bool IsRandomChoice { get; set; } = false;
+
         /// <summary>제한 시간 표시 여부</summary>
         public bool IsShowTimeLimit { get; set; } = false;
+
         /// <summary>이전 문제로 돌아갈 수 있는지 여부</summary>
         public bool IsBackToPreviousProblem { get; set; } = false;
+
+        /// <summary>시험 문제들</summary>
+        public List<ExamProblem> Problems { get; set; } = new List<ExamProblem>();
     }
 }

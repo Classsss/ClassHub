@@ -1,30 +1,39 @@
-﻿@page "/classroom/{roomid:int}/exam/{examid:int}"
+﻿@page "/classroom/{roomid:int}/exam/{examid:int}/start"
 @using ClassHub.Client.Models
 @using ClassHub.Client.Shared.ExamProblem
+@using System.Text.Json;
+@using System.Text;
+@using System.Timers;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@implements IDisposable
 
-@switch(problem) {
+@switch (problem) {
     case MultipleChoiceProblem multipleChoiceProblem:
-        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" />
+        <MultipleChoiceDisplay Problem="@multipleChoiceProblem" IsRandomChoice="@paramIsRandomChoice" />
         break;
     case ShortAnswerProblem shortAnswerProblem:
         <ShortAnswerDisplay Problem="@shortAnswerProblem" />
         break;
-    case CodeProblem codeProblem:
-        <CodeProblemDisplay Problem="@codeProblem" />
+    case CodingProblem codingProblem:
+        <CodeProblemDisplay Problem="@codingProblem" />
         break;
 }
 
 <div class="container">
     <div class="row justify-content-center align-items-center">
         <div class="col text-center">
-            <button class="btn btn-primary @((currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
+            <button class="btn btn-primary @((paramIsBackToPreviousProblem == false || currentProblemIndex <= 0) ? "d-none" : "")" @onclick="PrevProblem">이전 문제</button>
         </div>
         <div class="col text-center">
-            <p>@(currentProblemIndex+1) / @(problems.Count)</p>
-            <p>남은 시간: 10:00</p>
+            <p>@(currentProblemIndex + 1) / @(problems.Count)</p>
+            @if (paramIsShowTimeLimit) {
+                <p>남은 시간: @TimeLeft</p>
+            }
         </div>
         <div class="col text-center">
-            <button class="btn btn-primary" @onclick="NextProblem">
+            <button class="btn btn-primary" @onclick="NextOrSubmit">
                 @((currentProblemIndex == problems.Count - 1) ? "응시 완료" : "다음 문제")
             </button>
         </div>
@@ -37,46 +46,67 @@
     [Parameter]
     public int ExamId { get; set; }
 
-    [Parameter]
-    public Exam examInfo { get; set; }
+    private Exam examInfo = new Exam();
+
     private int currentProblemIndex;
-    private List<ExamProblem> problems;
-    private ExamProblem problem;
+    private List<ExamProblem> problems = new List<ExamProblem>();
+    private ExamProblem problem = new ExamProblem();
 
-    protected override void OnInitialized() {
-        examInfo = new Exam {
-            Id = 1,
-            StartDate = DateTime.Today.AddDays(-1),
-            EndDate = DateTime.Today.AddDays(1),
-            IsRandomProblem = true,
-            IsShowTimeLimit = true,
-            IsBackToPreviousProblem = true
-        };
+    private bool paramIsRandomChoice;
+    private bool paramIsShowTimeLimit;
+    private bool paramIsBackToPreviousProblem;
 
-        problems = new List<ExamProblem> {
-            new MultipleChoiceProblem {
-                ProblemId = 1,
-                Description = "What is the capital city of France?",
-                Questions = new string[] { "London", "Paris", "Berlin", "Madrid" },
-            },
-            new ShortAnswerProblem {
-                ProblemId = 2,
-                Description = "무엇이 의미 있는 삶인가? (10자 이내)"
-            },
-            new CodeProblem {
-                ProblemId = 3,
-                Description = "아래 코드를 수정하여 a와 b를 더한 값을 ans에 저장하여 출력하도록 하시오.",
-                Example = @"int a, b;
-int ans;
-Console.WriteLine(ans);",
-            }
-        };
+    private string TimeLeft { get; set; } = string.Empty;
+    private Timer? timeLeftUpdateTimer;
 
-        var rnd = new Random();
-        problems = problems.OrderBy(item => rnd.Next()).ToList(); // 무작위 셔플
+    private string role = string.Empty;
+
+    protected override async Task OnInitializedAsync() {
+        // db에서 Exam 모델을 받아온다.
+        role = await UserInfo.GetRoleAsync(JSRuntime);
+        examInfo = await Http.GetFromJsonAsync<Models.Exam>($"api/exam/room_id/{RoomId}/exam_id/{ExamId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        //assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+
+        paramIsRandomChoice = examInfo.IsRandomChoice;
+        paramIsBackToPreviousProblem = examInfo.IsBackToPreviousProblem;
+        paramIsShowTimeLimit = examInfo.IsShowTimeLimit;
+
+        problems = examInfo.Problems;
+
+        // 문제 순서 무작위 셔플
+        if (examInfo.IsRandomProblem) {
+            var rnd = new Random();
+            problems = problems.OrderBy(item => rnd.Next()).ToList();
+        }
 
         currentProblemIndex = 0;
         problem = problems[currentProblemIndex];
+
+        // 초기 시간 저장
+        // 남은 시간 계산
+        var remainingTime = examInfo.EndDate - DateTime.Now;
+
+        // 시간을 mm:ss 형식으로 변환
+        TimeLeft = $"{remainingTime:hh\\:mm\\:ss}";
+
+        // 타이머 생성
+        timeLeftUpdateTimer = new Timer(1000); // 1초마다 이벤트 발생
+
+        // 이벤트 핸들러 등록
+        timeLeftUpdateTimer.Elapsed += UpdateTimeLeft;
+
+        // 타이머 시작
+        timeLeftUpdateTimer.Start();
+    }
+
+    private async Task NextOrSubmit() {
+        if (currentProblemIndex == problems.Count - 1) {
+            Console.WriteLine("시험 제출");
+            await SubmitExam();
+        } else {
+            Console.WriteLine("다음 문제");
+            NextProblem();
+        }
     }
 
     private void NextProblem() {
@@ -89,5 +119,94 @@ Console.WriteLine(ans);",
         if(currentProblemIndex > 0) {
             problem = problems[--currentProblemIndex];
         }
+    }
+
+    private async Task SubmitExam() {
+        problem = null;
+        StateHasChanged();
+
+        // 컨트롤러에 보낼 데이터 다듬기
+        ClassHub.Shared.ExamSubmitContainer examSubmitContainer = new ClassHub.Shared.ExamSubmitContainer {
+                ExamSubmit = new ClassHub.Shared.ExamSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    room_id = RoomId,
+                    student_id = await UserInfo.GetUserIdAsync(JSRuntime),
+                    student_name = await UserInfo.GetUserNameAsync(JSRuntime),
+                    score = 0,
+                    submit_date = DateTime.Now
+                }
+            };
+
+        foreach (var problem in problems) {
+            // 객관식 문제
+            if (problem is MultipleChoiceProblem) {
+                MultipleChoiceProblem multipleChoiceProblem = (MultipleChoiceProblem)problem;
+
+                examSubmitContainer.MultipleChoiceProblemSubmits.Add(new ClassHub.Shared.MultipleChoiceProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = multipleChoiceProblem.ProblemId,
+                    answer = multipleChoiceProblem.StudentAnswer
+                });
+            }
+            // 단답형 문제
+            else if (problem is ShortAnswerProblem) {
+                ShortAnswerProblem shortAnswerProblem = (ShortAnswerProblem)problem;
+
+                examSubmitContainer.ShortAnswerProblemSubmits.Add(new ClassHub.Shared.ShortAnswerProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = shortAnswerProblem.ProblemId,
+                    answer = shortAnswerProblem.StudentAnswer
+                });
+            }
+            // 코드형 문제
+            else if (problem is CodingProblem) {
+                CodingProblem codingProblem = (CodingProblem)problem;
+
+                examSubmitContainer.CodingExamProblemSubmits.Add(new ClassHub.Shared.CodingExamProblemSubmit {
+                    submit_id = -1,
+                    exam_id = ExamId,
+                    problem_id = codingProblem.ProblemId,
+                    answer_code = codingProblem.StudentAnswer
+                });
+            }
+        }
+
+        string jsonString = JsonSerializer.Serialize(examSubmitContainer);
+        HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+
+        var responsePost = await Http.PostAsync("/api/examsubmit/register", httpContent);
+        if (!responsePost.IsSuccessStatusCode) Console.WriteLine("시험 제출 실패");
+
+        NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
+    }
+
+    /// <summary>
+    /// 타이머에 등록되어 화면에 표시하는 TimeLeft를 업데이트하는 함수
+    /// </summary>
+    private void UpdateTimeLeft(object? sender, ElapsedEventArgs e) {
+        // 남은 시간 계산
+        TimeSpan remainingTime = examInfo.EndDate - DateTime.Now;
+
+        // 시간을 mm:ss 형식으로 변환
+        TimeLeft = $"{remainingTime:hh\\:mm\\:ss}";
+
+        InvokeAsync(StateHasChanged).Wait();
+
+        if (DateTime.Now >= examInfo.EndDate) {
+            // 타이머 중지
+            if (sender != null) {
+                ((Timer)sender).Stop();
+
+                SubmitExam();
+            }
+        }
+    }
+
+    public void Dispose() {
+        // 페이지를 빠져나올 때 타이머 제거
+        timeLeftUpdateTimer?.Dispose();
     }
 }
