@@ -47,6 +47,54 @@
 		background-color: lightblue;
 		cursor: pointer;
 	}
+
+	@@media (max-width: 760px) {
+		.title {
+			font-size: calc(10px + 1vw);
+			font-weight: bold;
+		}
+
+		.content {
+			font-size: calc(7px + 1vw);
+			font-weight: normal;
+		}
+
+		.info {
+			float: right;
+		}
+
+		.mobile-btn {
+
+		}
+
+		.pc-btn {
+			display: none;
+		}
+	}
+
+	@@media (min-width: 760px) {
+		.title {
+			font-size: 25px;
+			font-weight: bold;
+		}
+
+		.content {
+			font-size: 15px;
+			font-weight: normal;
+		}
+
+		.info {
+			float: right;
+		}
+
+		.mobile-btn {
+			display: none;
+		}
+
+		.pc-btn {
+
+		}
+	}
 </style>
 
 
@@ -61,17 +109,23 @@
 	<div style="min-height: 100vh;">
 		<div class="d-flex flex-column justify-content-between">
 			<div>
-				<div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
+				<div style="padding-bottom:10px;">
+					<AuthorizeView Roles="professor">
+						<button class="mobile-btn btn btn-sm btn-warning" @onclick="Modify">수정</button>
+						<button class="mobile-btn btn btn-sm btn-warning" @onclick="Delete">삭제</button>
+					</AuthorizeView>
+					<button style="float:right;" class="mobile-btn btn-sm btn btn-primary" @onclick="GoBack">목록</button>
+				</div>
+				<div style="background-color: whitesmoke; border-top:2px solid black; border-bottom: 1px solid grey">
 					<h1>
-						<span class="oi oi-bullhorn" aria-hidden="true" style="margin-right: 10px;"></span>
-						@boardContent.title
+						<span class="title oi oi-bullhorn" aria-hidden="true" style="margin-left: 15px;"></span>
+						<span class="title">@boardContent.title</span>
 					</h1>
 				</div>
-				<div style="margin-top: 1rem; overflow: hidden; border-bottom : 1px solid grey; margin-bottom: 3rem;">
-					<p style="float: left; margin-right: 50px;">작성자: @boardContent.author</p>
-					<div style="float: right;">
-						<span class="oi oi-eye" aria-hidden="true"></span>
-						<span style="margin-left: 5px;">@(boardContent.view_count + 1)</span>
+				<div class ="content" style="overflow: hidden; border-bottom : 1px solid grey;">
+					<p style="float: left;">작성자: @boardContent.author</p>
+					<div class="info">
+						<span style="margin-left: 5px;"><i class="oi oi-eye" /> @(boardContent.view_count + 1)</span>
 						<span style="margin-left: 10px; margin-right: 10px;">|</span>
 						<span class="oi oi-clock" aria-hidden="true"></span>
 						@if(boardContent.publish_date.Date == DateTime.Today) { // 글이 올라온 시간이 오늘일 경우 시간만 표시
@@ -81,6 +135,7 @@
 						}
 					</div>
 				</div>
+				<br/>
 				<img src="@ImageUrl" style="margin-bottom: 15px; max-width: 100%;" />
 				<div>
 					@((MarkupString)boardContent.contents) <!--보안에 취약?-->
@@ -88,7 +143,7 @@
 				
 				@if(type == BoardType.LectureMaterial) {
 					<hr />
-					<h4>첨부 파일 목록:</h4>
+					<h4 stlye="font-weight:bold;">첨부 파일 목록:</h4>
 					@if(attachmentList != null) {
 						@if(attachmentList.Count == 0) {
 							<h6>첨부 파일이 없습니다.</h6>
@@ -115,7 +170,7 @@
 					<p style="display: inline-block; margin-right: 10px;">다음글</p>
 					@if(nextContent != null) {
 						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{nextContent.content_id}")">@nextContent.title</a>
-						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+						<span class="pc-btn" style="float: right; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
 							@if(nextContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@nextContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
@@ -133,7 +188,7 @@
 					<p style="display: inline-block; margin-right: 10px;">이전글</p>
 					@if(prevContent != null) {
 						<a class="custom-link" href="@($"/classroom/{RoomId}/{(type.ToString().ToLower())}/{prevContent.content_id}")">@prevContent.title</a>
-						<span style="float: right; width: 150px; display: inline-block; text-align: right;">
+						<span class="pc-btn" style="float: right; display: inline-block; text-align: right;">
 							<span class="oi oi-clock" aria-hidden="true"></span>
 							@if(prevContent.publish_date.Date == DateTime.Today) {
 								<span style="margin-left :5px; margin-right:11px;">@prevContent.publish_date.ToString("tt hh:mm", new System.Globalization.CultureInfo("en-US"))</span>
@@ -152,11 +207,11 @@
 			<div class="d-flex align-items-center justify-content-between mb-2">
 				<AuthorizeView Roles="professor">
 					<div>
-						<button class="btn btn-warning" @onclick="Modify">수정</button>
-						<button class="btn btn-warning" @onclick="Delete">삭제</button>
+						<button class="pc-btn btn btn-warning" @onclick="Modify">수정</button>
+						<button class="pc-btn btn btn-warning" @onclick="Delete">삭제</button>
 					</div>
 				</AuthorizeView>
-				<button class="btn btn-primary" @onclick="GoBack">목록</button>
+				<button class="pc-btn btn btn-primary" @onclick="GoBack">목록</button>
 			</div>
 		</div>
 	</div>
