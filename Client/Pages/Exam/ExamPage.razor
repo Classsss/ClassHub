@@ -5,6 +5,17 @@
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 
+<style>
+    .bg-inProgress {
+        color: #27ae60;
+        font-weight: bold;
+    }
+
+    .bg-plan {
+        color: #3498db;
+    }
+</style>
+
 <BackButton />
 <div style="background-color: whitesmoke; padding: 1rem; border-top:2px solid black; border-bottom: 1px solid grey">
     <h1>
@@ -26,7 +37,27 @@
             </div>
         </div>
     </div>
+    <hr style="margin-top: 0; border: 0; border-top: solid 1px grey;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        @if (role == "student") {
+            <div style="display: flex; align-items: center;">
+                <p class="align-middle" style="margin: 0;">제출 여부: </p>
+                <span class="oi oi-@(examInfo.IsSubmitted ? "check" : "x")" style="color: @(examInfo.IsSubmitted ? "#27ae60" : "#e74c3c");" />
+            </div>
+        } else {
+            
+        }
+        <div style="display: flex; align-items: center; margin-right: 20px;">
+            @{
+                // 0 종료, 1 예정, 2 진행 중
+                int state = (examInfo.EndDate < DateTime.Now) ? 0 : (DateTime.Now < examInfo.StartDate) ? 1 : 2;
+            }
+            <p class="align-middle" style="margin: 0;">진행: </p>
+            <p class="align-middle @((state == 0) ? "" : (state == 1) ? "bg-plan" : "bg-inProgress")" style="margin: 0;">@((state == 0) ? "종료" : (state == 1) ? "예정" : "진행 중")</p>
+        </div>
+    </div>
 </div>
+<p></p>
 <hr style="margin-top: 0; border: 0; border-top: solid 1px grey;">
 <div class="d-flex align-items-center justify-content-between mb-2" style="margin-top: 1em;">
     <AuthorizeView Roles="professor">
