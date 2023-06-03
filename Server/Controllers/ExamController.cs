@@ -221,56 +221,121 @@ namespace ClassHub.Server.Controllers {
             // 객관식 문제 업데이트
             foreach (var container in multipleChoiceProblemContainers) {
                 Shared.MultipleChoiceProblem newProblem = container.MultipleChoiceProblem;
-                query = "UPDATE MultipleChoiceProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
-                var multipleChoiceProblemparameters = new DynamicParameters();
-                multipleChoiceProblemparameters.Add("description", newProblem.description);
-                multipleChoiceProblemparameters.Add("answer", newProblem.answer);
-                multipleChoiceProblemparameters.Add("score", newProblem.score);
-                multipleChoiceProblemparameters.Add("exam_id", newExam.exam_id);
-                multipleChoiceProblemparameters.Add("problem_id", newProblem.problem_id);
-                multipleChoiceProblemparameters.Add("room_id", newExam.room_id);
-                await connection.ExecuteAsync(query, multipleChoiceProblemparameters);
+
+                // 현재 시험 문제가 디비에 존재하는지 확인
+                query = "SELECT COUNT(*) FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var checkParameters = new DynamicParameters();
+                checkParameters.Add("exam_id", newExam.exam_id);
+                checkParameters.Add("problem_id", newProblem.problem_id);
+                checkParameters.Add("room_id", newExam.room_id);
+                int examCount = await connection.QueryFirstOrDefaultAsync<int>(query, checkParameters);
+
+                // 이미 디비에 존재함
+                if (examCount > 0) {
+                    query = "UPDATE MultipleChoiceProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    var multipleChoiceProblemparameters = new DynamicParameters();
+                    multipleChoiceProblemparameters.Add("description", newProblem.description);
+                    multipleChoiceProblemparameters.Add("answer", newProblem.answer);
+                    multipleChoiceProblemparameters.Add("score", newProblem.score);
+                    multipleChoiceProblemparameters.Add("exam_id", newExam.exam_id);
+                    multipleChoiceProblemparameters.Add("problem_id", newProblem.problem_id);
+                    multipleChoiceProblemparameters.Add("room_id", newExam.room_id);
+                    await connection.ExecuteAsync(query, multipleChoiceProblemparameters);
+                }
+                // 디비에 존재하지 않는 새로운 문제
+                else {
+                    string insertProblemQuery = "INSERT INTO MultipleChoiceProblem (exam_id, problem_id, description, answer, score) VALUES (@exam_id, @problem_id, @description, @answer, @score);";
+                    await connection.ExecuteAsync(insertProblemQuery, newProblem);
+                }
 
                 // 객관식 문제에 대한 보기 업데이트
                 List<Shared.MultipleChoice> multipleChoices = container.MultipleChoices;
                 foreach (var newChoice in multipleChoices) {
-                    Console.WriteLine("보기 : "  + newChoice.description);
-                    query = "UPDATE MultipleChoice SET description = @description WHERE exam_id = @exam_id AND problem_id = @problem_id AND choice_id = @choice_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
-                    var multipleChoiceParameters = new DynamicParameters();
-                    multipleChoiceParameters.Add("description", newChoice.description);
-                    multipleChoiceParameters.Add("exam_id", newExam.exam_id);
-                    multipleChoiceParameters.Add("problem_id", newProblem.problem_id);
-                    multipleChoiceParameters.Add("choice_id", newChoice.choice_id);
-                    multipleChoiceParameters.Add("room_id", newExam.room_id);
-                    await connection.ExecuteAsync(query, multipleChoiceParameters);
+                    // 현재 문제 보기가 디비에 존재하는지 확인
+                    query = "SELECT COUNT(*) FROM MultipleChoice WHERE choice_id = @choice_id AND exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    checkParameters = new DynamicParameters();
+                    checkParameters.Add("choice_id", newChoice.choice_id);
+                    checkParameters.Add("exam_id", newExam.exam_id);
+                    checkParameters.Add("problem_id", newProblem.problem_id);
+                    checkParameters.Add("room_id", newExam.room_id);
+                    examCount = await connection.QueryFirstOrDefaultAsync<int>(query, checkParameters);
+
+                    // 이미 디비에 존재함
+                    if (examCount > 0) {
+                        query = "UPDATE MultipleChoice SET description = @description WHERE exam_id = @exam_id AND problem_id = @problem_id AND choice_id = @choice_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                        var multipleChoiceParameters = new DynamicParameters();
+                        multipleChoiceParameters.Add("description", newChoice.description);
+                        multipleChoiceParameters.Add("exam_id", newExam.exam_id);
+                        multipleChoiceParameters.Add("problem_id", newProblem.problem_id);
+                        multipleChoiceParameters.Add("choice_id", newChoice.choice_id);
+                        multipleChoiceParameters.Add("room_id", newExam.room_id);
+                        await connection.ExecuteAsync(query, multipleChoiceParameters);
+                    }
+                    // 디비에 존재하지 않는 새로운 보기
+                    else {
+                        string insertChoiceQuery = "INSERT INTO MultipleChoice (exam_id, problem_id, description) VALUES (@exam_id, @problem_id, @description);";
+                        await connection.ExecuteAsync(insertChoiceQuery, newChoice);
+                    }
                 }
             }
 
             // 단답형 문제 업데이트
             foreach (var newProblem in shortAnswerProblems) {
-                query = "UPDATE ShortAnswerProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
-                var shortAnswerProblemParameters = new DynamicParameters();
-                shortAnswerProblemParameters.Add("description", newProblem.description);
-                shortAnswerProblemParameters.Add("answer", newProblem.answer);
-                shortAnswerProblemParameters.Add("score", newProblem.score);
-                shortAnswerProblemParameters.Add("exam_id", newExam.exam_id);
-                shortAnswerProblemParameters.Add("problem_id", newProblem.problem_id);
-                shortAnswerProblemParameters.Add("room_id", newExam.room_id);
-                await connection.ExecuteAsync(query, shortAnswerProblemParameters);
+                // 현재 시험 문제가 디비에 존재하는지 확인
+                query = "SELECT COUNT(*) FROM ShortAnswerProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var checkParameters = new DynamicParameters();
+                checkParameters.Add("exam_id", newExam.exam_id);
+                checkParameters.Add("problem_id", newProblem.problem_id);
+                checkParameters.Add("room_id", newExam.room_id);
+                int examCount = await connection.QueryFirstOrDefaultAsync<int>(query, checkParameters);
+
+                // 이미 디비에 존재함
+                if (examCount > 0) {
+                    query = "UPDATE ShortAnswerProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    var shortAnswerProblemParameters = new DynamicParameters();
+                    shortAnswerProblemParameters.Add("description", newProblem.description);
+                    shortAnswerProblemParameters.Add("answer", newProblem.answer);
+                    shortAnswerProblemParameters.Add("score", newProblem.score);
+                    shortAnswerProblemParameters.Add("exam_id", newExam.exam_id);
+                    shortAnswerProblemParameters.Add("problem_id", newProblem.problem_id);
+                    shortAnswerProblemParameters.Add("room_id", newExam.room_id);
+                    await connection.ExecuteAsync(query, shortAnswerProblemParameters);
+                }
+                // 디비에 존재하지 않는 새로운 문제
+                else {
+                    string insertProblemQuery = "INSERT INTO ShortAnswerProblem (exam_id, problem_id, description, answer, score) VALUES (@exam_id, @problem_id, @description, @answer, @score);";
+                    await connection.ExecuteAsync(insertProblemQuery, newProblem);
+                }
             }
 
             // 코드형 문제 업데이트
             foreach (var newProblem in codingExamProblems) {
-                query = "UPDATE CodingExamProblem SET description = @description, example_code = @example_code, answer_code = @answer_code, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
-                var codingExamProblemParameters = new DynamicParameters();
-                codingExamProblemParameters.Add("description", newProblem.description);
-                codingExamProblemParameters.Add("example_code", newProblem.example_code);
-                codingExamProblemParameters.Add("answer_code", newProblem.answer_code);
-                codingExamProblemParameters.Add("score", newProblem.score);
-                codingExamProblemParameters.Add("exam_id", newExam.exam_id);
-                codingExamProblemParameters.Add("problem_id", newProblem.problem_id);
-                codingExamProblemParameters.Add("room_id", newExam.room_id);
-                await connection.ExecuteAsync(query, codingExamProblemParameters);
+                // 현재 시험 문제가 디비에 존재하는지 확인
+                query = "SELECT COUNT(*) FROM CodingExamPRoblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                var checkParameters = new DynamicParameters();
+                checkParameters.Add("exam_id", newExam.exam_id);
+                checkParameters.Add("problem_id", newProblem.problem_id);
+                checkParameters.Add("room_id", newExam.room_id);
+                int examCount = await connection.QueryFirstOrDefaultAsync<int>(query, checkParameters);
+
+                // 이미 디비에 존재함
+                if (examCount > 0) {
+                    query = "UPDATE CodingExamProblem SET description = @description, example_code = @example_code, answer_code = @answer_code, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    var codingExamProblemParameters = new DynamicParameters();
+                    codingExamProblemParameters.Add("description", newProblem.description);
+                    codingExamProblemParameters.Add("example_code", newProblem.example_code);
+                    codingExamProblemParameters.Add("answer_code", newProblem.answer_code);
+                    codingExamProblemParameters.Add("score", newProblem.score);
+                    codingExamProblemParameters.Add("exam_id", newExam.exam_id);
+                    codingExamProblemParameters.Add("problem_id", newProblem.problem_id);
+                    codingExamProblemParameters.Add("room_id", newExam.room_id);
+                    await connection.ExecuteAsync(query, codingExamProblemParameters);
+                }
+                // 디비에 존재하지 않는 새로운 문제
+                else {
+                    string insertProblemQuery = "INSERT INTO CodingExamProblem (exam_id, problem_id, description, example_code, answer_code, score) VALUES (@exam_id, @problem_id, @description, @example_code, @answer_code, @score);";
+                    await connection.ExecuteAsync(insertProblemQuery, newProblem);
+                }
             }
         }
 
