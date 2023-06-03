@@ -1,4 +1,5 @@
 ﻿@page "/classroom/{roomid:int}/exam/editor"
+@page "/classroom/{roomid:int}/exam/{examid:int}/editor"
 @layout MainLayout
 @using Blazored.Modal
 @using Blazored.Modal.Services
@@ -157,8 +158,10 @@
 @code {
     [Parameter]
     public int RoomId { get; set; }
+    [Parameter]
+    public int? ExamId { get; set; } = null;
 
-    Exam exam;
+    private Exam examInfo = new Exam();
 
     private string? title = null;
 
@@ -182,32 +185,59 @@
     private int maxDisplayLength = 70;
 
     protected override async Task OnInitializedAsync() {
-        exam = new Exam();
-
         startDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
         endDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul"));
 
         problems = new List<ExamProblem>();
-        problems.Add(new MultipleChoiceProblem {
-            ProblemId = 1,
-            Description = "What is the capital of South Korea?",
-            Score = 10,
-            Questions = new List<string> { "Seoul", "Busan", "Daegu", "Incheon" },
-            Answer = "seoul"
-        });
-        problems.Add(new ShortAnswerProblem {
-            ProblemId = 2,
-            Description = "What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?",
-            Score = 10,
-            Answer = "Seoul"
-        });
-        problems.Add(new CodingProblem {
-            ProblemId = 3,
-            Description = "What is the capital of South Korea?",
-            Score = 10,
-            Example = "Example",
-            Answer = "Seoul"
-        });
+
+        Console.WriteLine("ExamId : " + ExamId);
+
+        // 시험 등록
+        if (ExamId == null) {
+            // 테스트를 위한 샘플 데이터
+            problems.Add(new MultipleChoiceProblem {
+                    ProblemId = 1,
+                    Description = "What is the capital of South Korea?",
+                    Score = 10,
+                    Choices = new List<MultipleChoice> { 
+                        new MultipleChoice { Description = "Seoul" },
+                        new MultipleChoice { Description = "Busan" },
+                        new MultipleChoice { Description = "Daegu" },
+                        new MultipleChoice { Description = "Incheon" }
+                    },
+                    Answer = "seoul"
+                });
+            problems.Add(new ShortAnswerProblem {
+                    ProblemId = 2,
+                    Description = "What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?What is the capital of South Korea?",
+                    Score = 10,
+                    Answer = "Seoul"
+                });
+            problems.Add(new CodingProblem {
+                    ProblemId = 3,
+                    Description = "What is the capital of South Korea?",
+                    Score = 10,
+                    Example = "Example",
+                    Answer = "Seoul"
+                });
+        }
+        // 시험 수정
+        else {
+            // 원본을 로드하여 화면에 표시
+            examInfo = await Http.GetFromJsonAsync<Models.Exam>($"api/exam/room_id/{RoomId}/exam_id/{ExamId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+
+            title = examInfo.Title;
+
+            startDate = examInfo.StartDate;
+            endDate = examInfo.EndDate;
+
+            isRandomProblem = examInfo.IsRandomProblem;
+            isRandomChoice = examInfo.IsRandomChoice;
+            isShowTimeLimit = examInfo.IsShowTimeLimit;
+            isBackToPreviousProblem = examInfo.IsBackToPreviousProblem;
+
+            problems = examInfo.Problems;
+        }
     }
 
     private void ShowFullContent(string content) {
@@ -279,7 +309,7 @@
         // 컨트롤러에 보낼 데이터 다듬기
         ClassHub.Shared.ExamContainer examContainer = new ClassHub.Shared.ExamContainer {
             Exam = new ClassHub.Shared.Exam {
-                exam_id = -1,
+                exam_id = ExamId ?? -1,
                 room_id = RoomId,
                 week = 1,
                 title = title,
@@ -305,10 +335,11 @@
                 };
 
                 List<ClassHub.Shared.MultipleChoice> multipleChoicesForDB = new List<ClassHub.Shared.MultipleChoice>();
-                foreach (var question in multipleChoiceProblem.Questions) {
+                foreach (var choice in multipleChoiceProblem.Choices) {
                     multipleChoicesForDB.Add(new ClassHub.Shared.MultipleChoice {
+                        choice_id = choice.ChoiceId,
                         problem_id = multipleChoiceProblem.ProblemId,
-                        description = question
+                        description = choice.Description
                     });
                 }
 
@@ -341,25 +372,21 @@
         }
 
         string jsonString = JsonSerializer.Serialize(examContainer);
-        int type = 2;
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
-        if (type == 1) { // 게시글 수정
 
-            //await Http.PutAsync($"api/assignment/{RoomId}/modifydb/{AssignmentId}", httpContent);
-            //// 원래 첨부파일에서 삭제하는게 있을 때
-            //if (excludeAttachments.Count > 0) {
-            //    foreach (AssignmentMaterialUrl excludeAttachment in excludeAttachments) {
-            //        Http.DeleteAsync($"api/assignment/{RoomId}/removeblob/{AssignmentId}/filename/{excludeAttachment.file_name}");
-            //        Http.DeleteAsync($"api/assignment/{RoomId}/removedb/{AssignmentId}/filename/{excludeAttachment.file_name}");
-            //    }
-            //}
-        } else {  //게시글 등록
+        // 시험 등록
+        if (ExamId == null) {
             var responsePost = await Http.PostAsync("/api/exam/register", httpContent);
             if (!responsePost.IsSuccessStatusCode) Console.WriteLine("시험 등록 실패");
             else {
                 string json = await responsePost.Content.ReadAsStringAsync();
                 int ExamId = JsonSerializer.Deserialize<int>(json);
             }
+        } 
+        // 시험 수정
+        else {
+            Console.WriteLine("수정요청");
+            await Http.PutAsync($"api/exam/modify", httpContent);
         }
 
         // 목록 또는 게시글 페이지로 돌아감
