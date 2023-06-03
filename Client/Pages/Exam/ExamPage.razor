@@ -45,7 +45,9 @@
                 <span class="oi oi-@(examInfo.IsSubmitted ? "check" : "x")" style="color: @(examInfo.IsSubmitted ? "#27ae60" : "#e74c3c");" />
             </div>
         } else {
-            
+            <div style="display: flex; align-items: center;">
+                <p class="align-middle" style="margin: 0;">제출 인원 : @examInfo.TotalSubmitters</p>
+            </div>
         }
         <div style="display: flex; align-items: center; margin-right: 20px;">
             @{
