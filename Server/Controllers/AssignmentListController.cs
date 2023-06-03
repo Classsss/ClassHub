@@ -1,13 +1,7 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
-using Azure.Storage;
-using Azure.Storage.Blobs;
-using Azure.Storage.Sas;
-using ClassHub.Client.Models;
+﻿using ClassHub.Client.Models;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 
 
@@ -36,7 +30,6 @@ namespace ClassHub.Server.Controllers {
             parameters.Add("room_id", room_id);
             var Assignments = connection.Query<Shared.Assignment>(query, parameters);
 
-       
             foreach (Shared.Assignment Assignment in Assignments) {
                 query = "SELECT  COUNT(*) FROM assignmentsubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
                 var parametersSubmit = new DynamicParameters();

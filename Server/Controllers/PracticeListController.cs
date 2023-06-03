@@ -35,7 +35,7 @@ namespace ClassHub.Server.Controllers {
                 query = "SELECT * FROM codeproblem WHERE problem_id = @problem_id;";
                 var parametersProblem = new DynamicParameters();
                 parametersProblem.Add("problem_id", codeAssignment.problem_id);
-                Shared.CodeProblem codeProblem = connection.Query<Shared.CodeProblem>(query, parametersProblem).FirstOrDefault();
+                Shared.CodeProblem codeProblem = connection.QuerySingle<Shared.CodeProblem>(query, parametersProblem);
 
                 query = "SELECT COUNT(*) FROM codesubmit WHERE room_id = @room_id AND assignment_id = @assignment_id AND student_id = @student_id;";
                 var parametersSubmit = new DynamicParameters();
@@ -70,7 +70,7 @@ namespace ClassHub.Server.Controllers {
                 query = "SELECT * FROM codeproblem WHERE problem_id = @problem_id;";
                 var parametersProblem = new DynamicParameters();
                 parametersProblem.Add("problem_id", codeAssignment.problem_id);
-                Shared.CodeProblem codeProblem = connection.Query<Shared.CodeProblem>(query, parametersProblem).FirstOrDefault();
+                Shared.CodeProblem codeProblem = connection.QuerySingle<Shared.CodeProblem>(query, parametersProblem);
 
                 query = "SELECT COUNT(DISTINCT student_id) FROM codesubmit WHERE room_id = @room_id AND assignment_id = @assignment_id;";
                 var parametersSubmit = new DynamicParameters();
