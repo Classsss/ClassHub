@@ -1,9 +1,34 @@
-﻿@page "/classroom/{id:int}/statistics"
+﻿@page "/classroom/{RoomId:int}/statistics"
 @layout MainLayout
+@using ClassHub.Shared;
+@inject HttpClient Http
 
-<h3>StatisticsPage</h3>
+@if(studentList == null) {
+    <LoadingBar />
+} else {
+    <table>
+        <thead>
+            <tr>
+                <th>학생</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var student in studentList) {
+                <tr>
+                    <td>@student.name (@student.student_id)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
     [Parameter]
-    public int id { get; set; }
+    public int RoomId { get; set; }
+
+    private List<Student>? studentList;
+
+    protected override async Task OnInitializedAsync() {
+        studentList = await Http.GetFromJsonAsync<List<Student>>($"api/classroom/students?room_id={RoomId}");
+    }
 }

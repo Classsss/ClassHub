@@ -869,5 +869,15 @@ namespace ClassHub.Server.Controllers {
 
             return attendanceItems;
         }
+
+        [HttpGet("students")]
+        public List<Student> GetStudentList([FromQuery] int room_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "SELECT * FROM Student WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            List<Student> studentList = connection.Query<Student>(query, parameters).ToList();
+            return studentList;
+        }
     }
 }
