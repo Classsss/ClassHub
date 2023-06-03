@@ -274,7 +274,7 @@
             return;
         }
 
-        if (multipleChoiceAnswer == string.Empty) {
+        if (type == "MultipleChoiceProblem" && multipleChoiceAnswer == string.Empty) {
             await JSRuntime.InvokeVoidAsync("alert", "보기 중 정답을 선택하세요.");
             return;
         }
