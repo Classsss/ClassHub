@@ -80,60 +80,67 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-9 col-12 desktop">
+            <AuthorizeView Roles="professor">
+                <button class="btn btn-success" style="float:right; margin-left:10px; margin-bottom:12px; width:200px;" @onclick="OpenBatchPostingList"><i class="oi oi-basket" /> 일괄 게시</button>
+            </AuthorizeView>
+        </div>
+        <div class="row">
+            <AuthorizeView Roles="professor">
                 <Timetable ClassRoomList="classRoomList" />
-            </div>
-            <div class="col-lg-3 col-12">
-                <div class="row mb-4">
-                    <AuthorizeView Roles="professor">
-                        <button class="btn btn-success" @onclick="OpenBatchPostingList">일괄 게시</button>
-                    </AuthorizeView>
+            </AuthorizeView>
+            <AuthorizeView Roles="student">
+                <div class="col-lg-9 col-12 desktop">
+                    <Timetable ClassRoomList="classRoomList" />
                 </div>
-                <div class="row">
-                    <h3 class="text-center col-12">알림 목록</h3>
-                    @if(notificationList.Count == 0) {
-                        <div class="alert alert-secondary" role="alert">
-                            알림이 없습니다.
-                        </div>
-                    } else {
-                        <div class="col-12 border" style="overflow: auto; max-height: 300px;">
-                            <ul class="list-group">
-                                @foreach(var notification in notificationList) {
-                                    <li class="list-group-item" @onclick="@(() => GoTo(notification.uri))" style="cursor:pointer;">
-                                        <div>@notification.title</div>
-                                        <div>@notification.message</div>
-                                        <div>@notification.GetNotifyDate()</div>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-                    }
+                <div class="col-lg-3 col-12">
+                    <div class="row">
+                            <h3 class="text-center col-12">알림 목록</h3>
+                            @if(notificationList.Count == 0) {
+                                <div class="alert alert-secondary" role="alert">
+                                    알림이 없습니다.
+                                </div>
+                            } else {
+                                <div class="col-12 border" style="overflow: auto; max-height: 300px;">
+                                    <ul class="list-group">
+                                        @foreach(var notification in notificationList) {
+                                            <li class="list-group-item" @onclick="@(() => GoTo(notification.uri))" style="cursor:pointer;">
+                                                <div>@notification.title</div>
+                                                <div>@notification.message</div>
+                                                <div>@notification.GetNotifyDate()</div>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                    </div>
+                    <br />
+                    <div class="row">
+                    
+                            <h3 class="text-center col-12">할 일 목록</h3>
+                            @if(toDoList.Count == 0) {
+                                <div class="alert alert-secondary" role="alert">
+                                    할 일이 없습니다.
+                                </div>
+                            } else {
+                                <div class="col-12 border" style="overflow: auto; max-height: 300px; margin-bottom: 30px;">
+                                    <ul class="list-group">
+                                        @foreach(var toDo in toDoList) {
+                                            <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">
+                                                <div>@toDo.GetTitle()</div>
+                                                <div>@toDo.EndTime</div>
+                                                <div>@toDo.GetDDay()</div>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                    
+                    </div>
                 </div>
-                <br />
-                <div class="row">
-                    <h3 class="text-center col-12">할 일 목록</h3>
-                    @if(toDoList.Count == 0) {
-                        <div class="alert alert-secondary" role="alert">
-                            할 일이 없습니다.
-                        </div>
-                    } else {
-                        <div class="col-12 border" style="overflow: auto; max-height: 300px;">
-                            <ul class="list-group">
-                                @foreach(var toDo in toDoList) {
-                                    <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">
-                                        <div>@toDo.GetTitle()</div>
-                                        <div>@toDo.EndTime</div>
-                                        <div>@toDo.GetDDay()</div>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-                    }
+                <div class="col-lg-9 col-12 mobile">
+                    <Timetable ClassRoomList="classRoomList" />
                 </div>
-            </div>
-            <div class="col-lg-9 col-12 mobile">
-                <Timetable ClassRoomList="classRoomList" />
-            </div>
+            </AuthorizeView>
         </div>
     </div>
 }

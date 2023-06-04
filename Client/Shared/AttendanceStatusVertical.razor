@@ -3,14 +3,16 @@
 @inject NavigationManager NavigationManager
 @using ClassHub.Shared
 
-<div class="row">
-    <div class="col-auto summary" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
-        <span style="font-weight:bold;">출결 상태 : </span>
-        <span>
-            <span>출석 <span style="color: green;">@summary.attend</span></span> | <span>지각 <span style="color: orange;">@summary.late</span></span> | 결석 <span style="color: red;">@summary.absent</span> | 미결 <span style="color: gray;">@summary.no_target_attendance</span> | 총계 <span style="color: blue;">@summary.total_attendance</span></span>
-        <br />
+@if (showSum) {
+    <div class="row">
+        <div class="col-auto summary" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
+            <span style="font-weight:bold;">출결 상태 : </span>
+            <span>
+                <span>출석 <span style="color: green;">@summary.attend</span></span> | <span>지각 <span style="color: orange;">@summary.late</span></span> | 결석 <span style="color: red;">@summary.absent</span> | 미결 <span style="color: gray;">@summary.no_target_attendance</span> | 총계 <span style="color: blue;">@summary.total_attendance</span></span>
+            <br />
+        </div>
     </div>
-</div>
+}
 <br />
 @{
     var sortedAttendanceStatus = orderByAscend ? attendanceStatus.OrderBy(x => x.Week) : attendanceStatus.OrderByDescending(x => x.Week);
@@ -125,6 +127,8 @@
     public int roomId { get; set; } //강의실 번호
     [Parameter]
     public bool orderByAscend { get; set; } //오름차순 여부
+    [Parameter]
+    public bool showSum { get; set; } //써머리 출력 여부
 
     AttendanceSummary summary = new AttendanceSummary();
 

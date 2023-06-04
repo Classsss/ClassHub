@@ -37,47 +37,57 @@
 } else {
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-9 col-12 desktop">
-                <AttendanceStatusVertical roomId="@Id" orderByAscend=false />
-            </div>
-            <div class="col-lg-3 col-12">
-                <div class="row">
-                    <h3 class="text-center col-12 taggy" style="">공지사항</h3>
-
-                        @if(contents.Count == 0) {
-                            <div class="alert alert-secondary" role="alert">
-                                공지사항이 없습니다.
-                            </div>
-                        } else{
-                            <div class="col-12 border mb-3" style="overflow: auto; max-height: 300px;">
-                                <ul class="list-group">
-                                    @foreach(var content in contents) {
-                                        <li class="list-group-item" @onclick="@(() => ShowContents(content))" style="cursor:pointer; block-size : auto;">@content.title</li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+            <AuthorizeView Roles="professor">
+                <AttendanceStatusVertical roomId="@Id" orderByAscend=false showSum=false />
+            </AuthorizeView>
+            <AuthorizeView Roles="student">
+                <div class="col-lg-9 col-12 desktop">
+                    <AttendanceStatusVertical roomId="@Id" orderByAscend=false showSum=false/>
                 </div>
-                <div class="row">
-                    <h3 class="text-center col-12">할 일 목록</h3>
-                        @if(toDoList.Count == 0){
-                            <div class="alert alert-secondary" role="alert">
-                                할 일이 없습니다.
-                            </div>
-                        } else{
-                            <div class="col-12 border" style="overflow: auto; max-height: 300px;">
-                                <ul class="list-group">
-                                    @foreach(var toDo in toDoList) {
-                                        <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">@toDo.GetTitle()</li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+            
+                    <div class="col-lg-3 col-12">
+                        <div class="row">
+                            <h3 class="text-center col-12 taggy" style="">공지사항</h3>
+                                @if(contents.Count == 0) {
+                                    <div class="alert alert-secondary" role="alert">
+                                        공지사항이 없습니다.
+                                    </div>
+                                } else{
+                                    <div class="col-12 border mb-3" style="overflow: auto; max-height: 300px;">
+                                        <ul class="list-group">
+                                            @foreach(var content in contents) {
+                                                <li class="list-group-item" @onclick="@(() => ShowContents(content))" style="cursor:pointer; block-size : auto;">@content.title</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                        </div>
+                        <div class="row">
+                            <h3 class="text-center col-12" style="margin-bottom: 10px;">할 일 목록</h3>
+                            @if (toDoList.Count == 0) {
+                                <div class="alert alert-secondary" role="alert">
+                                    할 일이 없습니다.
+                                </div>
+                            } else {
+                                <div class="col-12 border" style="overflow: auto; max-height: 300px;">
+                                    <ul class="list-group">
+                                        @foreach (var toDo in toDoList) {
+                                            <li class="list-group-item" @onclick="@(() => GoTo(toDo.Uri))" style="cursor:pointer;">
+                                                <div>@toDo.GetTitle()</div>
+                                                <div>@toDo.EndTime</div>
+                                                <div>@toDo.GetDDay()</div>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+            
+                <div class="col-lg-9 col-12 mobile">
+                    <AttendanceStatusVertical roomId="@Id" orderByAscend=false />
                 </div>
-            </div>
-            <div class="col-lg-9 col-12 mobile">
-                <AttendanceStatusVertical roomId="@Id" orderByAscend=false />
-            </div>
+            </AuthorizeView>
         </div>
     </div>
 }
