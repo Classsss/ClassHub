@@ -8,34 +8,115 @@
 @using ClassHub.Shared;
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
-
-<style>
-     .attachment-item:hover span {
-        color: blue;
-        cursor: pointer;
-    }
-</style>
+@inject Blazored.Modal.Services.IModalService ModalService
 
 <Modal>
     <ModalBody>
-          @if (!dataLoaded) {
-    <LoadingBar />
-} else {
-        <div class="p-3 border-4 rounded-3" style="background-color: #F7F7F7;">
-            <div class="form-group mb-4">
-                <label for="title" class="mb-2">평가</label>
+        <div> 
+            <select class="form-select" id="problem" @onchange="OnProblemSelected">
+                @foreach (var problem in Exam.Problems) {
+                    <option value="@problem.ProblemId">@problem.ProblemId</option>
+                }
+            </select>
+        </div>
+        <div>
+            <p></p>
+            <div>
+                @{
+                    string modifiedQuestion = selectedProblem.Description;
+                    if (modifiedQuestion.Length > maxDisplayLength) {
+                        modifiedQuestion = $"{modifiedQuestion.Substring(0, maxDisplayLength)}..."; // 일정 길이 이상일 경우 일부만 표시
+                    }
+                }
+                <h3>
+                    <span>@modifiedQuestion</span>
+                    @if (selectedProblem.Description.Length > maxDisplayLength) {
+                        // 일정 길이 이상일 경우 "더 보기" 버튼 추가
+                        <button class="btn btn-link" @onclick="() => ShowFullContent(selectedProblem.Description)">더 보기</button>
+                    }
+                </h3>
+                <p>배점: @selectedProblem.Score</p>
             </div>
-            <div class="form-group">
-                <label for="score">점수</label>
-                <input type="number" class="form-control" id="score" name="score" @bind="score" />
+            @if (selectedProblem is Models.MultipleChoiceProblem multipleChoiceProblem) {
+                <div class="d-inline-block text-left">
+                    @foreach (var choice in multipleChoiceProblem.Choices.Select((value, index) => new { Value = value, Index = index })) {
+                        var multipleChoiceSubmit = multipleChoiceProblemSubmits.Find(p => p.problem_id == multipleChoiceProblem.ProblemId);
+
+                        // 현재 보기가 학생이 제출한 답안인지
+                        bool isStudentAnswer = choice.Value.Description == multipleChoiceSubmit.answer;
+
+                        // 현재 보기가 학생이 제출한 답안이고 맞았는지
+                        bool isCorrect = multipleChoiceSubmit.answer == multipleChoiceProblem.Answer;
+
+                        <div class="form-check" style="margin: 10px;">
+                            <input class="form-check-input" type="radio" name="multipleChoice" id="@choice.Value.ChoiceId" checked="@(isStudentAnswer)" style="pointer-events: none; background-color: @(isStudentAnswer ? (isCorrect ? "green" : "red") : "")" />
+                            <label class="form-check-label" for="@choice.Index">
+                                @choice.Value.Description
+                            </label>
+                        </div>
+                    }
+                </div>
+            } else if (selectedProblem is Models.ShortAnswerProblem shortAnswerProblem) {
+                var shortAnswerSubmit = shortAnswerProblemSubmits.Find(p => p.problem_id == shortAnswerProblem.ProblemId);
+
+                <div class="card mb-2">
+                    <div class="card-header">
+                        학생 제출 답안
+                    </div>
+                    <div class="card-body">
+                        <p>@shortAnswerSubmit.answer</p>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        모범 답안
+                    </div>
+                    <div class="card-body">
+                        <p>@shortAnswerProblem.Answer</p>
+                    </div>
+                </div>
+            } else if (selectedProblem is Models.CodingProblem codingProblem) {
+                var codingSubmit = codingExamProblemSubmits.Find(p => p.problem_id == codingProblem.ProblemId);
+
+                <div class="card mb-2">
+                    <div class="card-header">
+                        학생 제출 답안
+                    </div>
+                    <div class="card-body">
+                        <MonacoEditor EditorID="exampleEditor" EnableThemeChange="false" EnableLanguageChange="false" InitCode="@codingSubmit.answer_code" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        모범 답안
+                    </div>
+                    <div class="card-body">
+                        <MonacoEditor EditorID="AnswerEditor" EnableThemeChange="false" EnableLanguageChange="false" InitCode="@codingProblem.Answer" ReadOnly="true" />
+                    </div>
+                </div>
+            }
+
+            <div class="input-group">
+                <input type="number" class="form-control mr-3" id="score" placeholder="숫자만 입력 가능합니다." @bind="selectedProblemScore">
+                <div class="input-group-append mr-3">
+                    <button class="btn btn-primary" type="button" @onclick="PutScoreToProblem">점수 입력</button>
+                </div>
             </div>
         </div>
-        }
     </ModalBody>
     <ModalFooter>
+        <p></p>
+        <div class="card mb-2" style="vertical-align: middle;">
+            <div class="card-header">
+                점수
+            </div>
+            <div class="card-body">
+                <p>@GetScore() / @totalScore</p>
+            </div>
+        </div>
         <div style="margin-top: 2em;">
             <button class="btn btn-danger" @onclick="HandleClose">닫기</button>
-            <button class="btn btn-success" @onclick="() => putScore()">채점</button>
+            <button class="btn btn-success" @onclick="() => PutScore()">채점</button>
         </div>
     </ModalFooter>
 </Modal>
@@ -43,11 +124,26 @@
 @code {
     [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
 
-    [Parameter] public ExamSubmit examSubmit{ get; set; }
+    [Parameter] public ClassHub.Shared.ExamSubmitContainer ExamSubmitContainer { get; set; }
+    [Parameter] public Client.Models.Exam Exam { get; set; }
 
-    int score;
+    private ClassHub.Shared.ExamSubmit examSubmit;
+    private List<ClassHub.Shared.MultipleChoiceProblemSubmit> multipleChoiceProblemSubmits = new List<ClassHub.Shared.MultipleChoiceProblemSubmit>();
+    private List<ClassHub.Shared.ShortAnswerProblemSubmit> shortAnswerProblemSubmits = new List<ClassHub.Shared.ShortAnswerProblemSubmit>();
+    private List<ClassHub.Shared.CodingExamProblemSubmit> codingExamProblemSubmits = new List<ClassHub.Shared.CodingExamProblemSubmit>();
 
-    bool dataLoaded = true;
+    private ExamProblem selectedProblem;
+
+    private int maxDisplayLength = 70;
+
+    // 총점
+    private int totalScore = 0;
+
+    // 현재 채점중인 문제의 점수
+    private int selectedProblemScore = 0;
+
+    // 각 문제들의 점수
+    private Dictionary<int, int> gainedScore = new Dictionary<int, int>();
 
     protected override async Task OnInitializedAsync() {
         //submitAttachments = await Http.GetFromJsonAsync<List<AssignmentSubmitAttachment>>($"api/assignmentsubmit/attachments?room_id={assignmentSubmit.room_id}&submit_id={assignmentSubmit.submit_id}");
@@ -55,13 +151,75 @@
         //message = assignmentSubmit.message;
         //dataLoaded = true;
         //StateHasChanged();
+
+        examSubmit = ExamSubmitContainer.ExamSubmit;
+        multipleChoiceProblemSubmits = ExamSubmitContainer.MultipleChoiceProblemSubmits;
+        shortAnswerProblemSubmits = ExamSubmitContainer.ShortAnswerProblemSubmits;
+        codingExamProblemSubmits = ExamSubmitContainer.CodingExamProblemSubmits;
+
+        // 총점 계산
+        foreach (var problem in Exam.Problems) {
+            totalScore += problem.Score;
+            gainedScore.Add(problem.ProblemId, 0);
+        }
+
+        // 객관식 문제 자동채점
+        foreach (var problem in Exam.Problems) {
+            if (problem is Client.Models.MultipleChoiceProblem multipleChoiceProblem) {
+                // problem과 동일한 문제를 찾는다.
+                var multipleChoiceProblemSubmit = multipleChoiceProblemSubmits.Find(p => p.problem_id == problem.ProblemId);
+                if (multipleChoiceProblemSubmit != null) {
+                    // 맞음
+                    if (multipleChoiceProblemSubmit.answer == multipleChoiceProblem.Answer) {
+                        gainedScore[multipleChoiceProblem.ProblemId] = multipleChoiceProblem.Score;
+                    } 
+                }
+            }
+        }
+
+        selectedProblem = Exam.Problems[0];
+        selectedProblemScore = gainedScore[selectedProblem.ProblemId];
+    }
+
+    private void ShowFullContent(string content) {
+        var parameters = new ModalParameters();
+        parameters.Add("Content", content);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
+        var modalReference = ModalService.Show<ShowMoreContentModal>("문제 더보기", parameters, modalOptions);
+    }
+
+    private async void OnProblemSelected(ChangeEventArgs e) {
+        int selectedProblemId;
+        int.TryParse(e.Value.ToString(), out selectedProblemId);
+
+        selectedProblem = Exam.Problems.Find(p => p.ProblemId == selectedProblemId);
+        selectedProblemScore = gainedScore[selectedProblem.ProblemId];
+    }
+
+    private async Task PutScoreToProblem() {
+        if (selectedProblemScore > selectedProblem.Score) {
+            await JSRuntime.InvokeVoidAsync("alert", "해당 문제의 배점보다 큰 점수는 입력할 수 없습니다.");
+            return;
+        }
+
+        gainedScore[selectedProblem.ProblemId] = selectedProblemScore;
+    }
+
+    private int GetScore() {
+        int score = 0;
+
+        foreach (var scoreEntry in gainedScore) {
+            score += scoreEntry.Value;
+        }
+
+        return score;
     }
 
     // 점수를 넣는다.
-    private async void putScore() {
-        //await Http.PutAsync($"api/assignmentsubmit/{assignmentSubmit.submit_id}/score/{score}/message/{message}", null);
-        //await JSRuntime.InvokeVoidAsync("alert", "점수 수정완료하였습니다!");
-        //await ModalInstance.CloseAsync(ModalResult.Ok());
+    private async void PutScore() {
+        await Http.PutAsync($"api/examsubmit/submit_id/{examSubmit.submit_id}/score/{GetScore()}/", null);
+        //await JSRuntime.InvokeVoidAsync("alert", "채점이 완료");
+        await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 
     // 파일 다운창을 종료한다.
