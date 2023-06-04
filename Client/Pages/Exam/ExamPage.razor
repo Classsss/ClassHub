@@ -95,6 +95,12 @@
     }
 
     private async Task Modify() {
+        // 시작 예정인 시험만 수정할 수 있도록
+        if (DateTime.Now >= examInfo.StartDate) {
+            await JSRuntime.InvokeVoidAsync("alert", "시작 예정인 시험만 수정할 수 있습니다.");
+            return;
+        }
+
         NavigationManager.NavigateTo(NavigationManager.Uri + $"/editor");
     }
 
@@ -113,7 +119,11 @@
     }
 
     private async Task StartExam() {
-        NavigationManager.NavigateTo(NavigationManager.Uri + $"/start");
+        // 이미 제출했으면 다시 제출못하도록
+        if (examInfo.IsSubmitted) {
+            await JSRuntime.InvokeVoidAsync("alert", "이미 제출한 시험입니다.");
+            return;
+        }
 
         DateTime Now = DateTime.Now;
 

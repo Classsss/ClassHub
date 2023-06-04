@@ -72,9 +72,13 @@
 
     // 채점창을 띄운다.
     private async Task ShowJudgeModal(ExamSubmit examSubmit) {
+        ClassHub.Shared.ExamSubmitContainer examSubmitContainer = await Http.GetFromJsonAsync<ClassHub.Shared.ExamSubmitContainer>($"api/examsubmit/room_id/{RoomId}/exam_id/{ExamId}/submit_id/{examSubmit.submit_id}");
+        Client.Models.Exam exam = await Http.GetFromJsonAsync<Models.Exam>($"api/exam/room_id/{RoomId}/exam_id/{ExamId}/student_id/{examSubmit.student_id}");
+
         var parameters = new ModalParameters();
-        parameters.Add("ExamSubmit", examSubmit);
-        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.Large, DisableBackgroundCancel = true };
+        parameters.Add("ExamSubmitContainer", examSubmitContainer);
+        parameters.Add("Exam", exam);
+        var modalOptions = new ModalOptions() { Size = Blazored.Modal.ModalSize.ExtraLarge, DisableBackgroundCancel = true };
         var modalReference = ModalService.Show<ExamJudgeModal>("시험 채점", parameters, modalOptions);
         var result = await modalReference.Result;
         if (result.Confirmed) { await JSRuntime.InvokeVoidAsync("location.reload"); }

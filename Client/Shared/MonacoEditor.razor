@@ -12,17 +12,19 @@
             </select>
         </div>
     }
-    <div style="margin:10px 0;">
-        Language:
-        <select id = "languageSelect" @onchange="ChangeLanguage">
-            <!--TODO : Language 옵션 추가-->
-            <option value="c">C</option>
-            <option value="cpp">C++</option>
-            <option value="csharp">C#</option>
-            <option value="java">Java</option>
-            <option value="python">Python</option>
-        </select>
-    </div>
+    @if (EnableLanguageChange) {
+        <div style="margin:10px 0;">
+            Language:
+            <select id="languageSelect" @onchange="ChangeLanguage">
+                <!--TODO : Language 옵션 추가-->
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="csharp">C#</option>
+                <option value="java">Java</option>
+                <option value="python">Python</option>
+            </select>
+        </div>
+    }
 </div>
 
 <!--Monaco Editor 컴포넌트 생성-->
@@ -51,6 +53,12 @@
     [Parameter]
     public bool EnableThemeChange { get; set; } = true;
 
+    [Parameter]
+    public bool EnableLanguageChange { get; set; } = true;
+
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
     // monaco editor 참조 변수
     public StandaloneCodeEditor editor = null;
     private string[] decorationIds = new string[0];
@@ -64,7 +72,8 @@
                 GlyphMargin = true,
                 Value = "",
                 AutomaticLayout = true,
-                Minimap = new EditorMinimapOptions { Enabled = false }
+                Minimap = new EditorMinimapOptions { Enabled = false },
+                ReadOnly = ReadOnly
             };
     }
 

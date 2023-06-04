@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using ClassHub.Shared;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
@@ -14,11 +15,11 @@ namespace ClassHub.Server.Controllers {
 
         // 해당 시험의 모든 제출을 가져옴
         [HttpGet("room_id/{room_id}/exam_id/{exam_id}")]
-        public async Task<List<Shared.ExamSubmit>> GetExamSubmit(int room_id, int exam_id) {
+        public async Task<List<Shared.ExamSubmit>> GetExamSubmits(int room_id, int exam_id) {
             List<Shared.ExamSubmit> submitList = new List<Shared.ExamSubmit>();
 
             using var connection = new NpgsqlConnection(connectionString);
-            string query = "SELECT * FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id";
+            string query = "SELECT * FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id;";
             var submitParameters = new DynamicParameters();
             submitParameters.Add("room_id", room_id);
             submitParameters.Add("exam_id", exam_id);
@@ -26,6 +27,48 @@ namespace ClassHub.Server.Controllers {
             submitList = examSubmits.ToList();
 
             return submitList;
+        }
+
+        // 해당 시험을 제출한 특정 학생의 특정 제출을 가져옴
+        [HttpGet("room_id/{room_id}/exam_id/{exam_id}/submit_id/{submit_id}")]
+        public async Task<Shared.ExamSubmitContainer> GetExamSubmit(int room_id, int exam_id, int submit_id) {
+            Shared.ExamSubmitContainer examSubmitContainer = new Shared.ExamSubmitContainer();
+
+            using var connection = new NpgsqlConnection(connectionString);
+
+            // 시험 제출 가져오기
+            string query = "SELECT * FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND submit_id = @submit_id;";
+            var submitParameters = new DynamicParameters();
+            submitParameters.Add("room_id", room_id);
+            submitParameters.Add("exam_id", exam_id);
+            submitParameters.Add("submit_id", submit_id);
+            var examSubmit = await connection.QueryFirstOrDefaultAsync<Shared.ExamSubmit>(query, submitParameters);
+
+            examSubmitContainer.ExamSubmit = examSubmit;
+
+            // 객관식 문제 제출 가져오기
+            query = "SELECT * FROM MultipleChoiceProblemSubmit WHERE submit_id = @submit_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
+            var problemParameters = new DynamicParameters();
+            problemParameters.Add("submit_id", submit_id);
+            problemParameters.Add("exam_id", exam_id);
+            problemParameters.Add("room_id", room_id);
+            var multipleChoiceSubmits = await connection.QueryAsync<Shared.MultipleChoiceProblemSubmit>(query, problemParameters);
+
+            examSubmitContainer.MultipleChoiceProblemSubmits = multipleChoiceSubmits.ToList();
+
+            // 단답형 문제 제출 가져오기
+            query = "SELECT * FROM ShortAnswerProblemSubmit WHERE submit_id = @submit_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
+            var shortAnswerSubmits = await connection.QueryAsync<Shared.ShortAnswerProblemSubmit>(query, problemParameters);
+
+            examSubmitContainer.ShortAnswerProblemSubmits = shortAnswerSubmits.ToList();
+
+            // 코드형 문제 제출 가져오기
+            query = "SELECT * FROM CodingExamProblemSubmit WHERE submit_id = @submit_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
+            var codingExamSubmits = await connection.QueryAsync<Shared.CodingExamProblemSubmit>(query, problemParameters);
+
+            examSubmitContainer.CodingExamProblemSubmits = codingExamSubmits.ToList();
+
+            return examSubmitContainer;
         }
 
         // 시험을 제출함
@@ -74,6 +117,18 @@ namespace ClassHub.Server.Controllers {
             }
 
             return Ok(examSubmit.submit_id);
+        }
+
+        // 제출한 시험을 채점
+        [HttpPut("submit_id/{submit_id}/score/{score}")]
+        public async Task ModifyScore(int submit_id, int score) {
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = "UPDATE ExamSubmit SET score = @score WHERE submit_id = @submit_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("score", score);
+            parameters.Add("submit_id", submit_id);
+            await connection.ExecuteAsync(query, parameters);
         }
     }
 }

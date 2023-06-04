@@ -25,22 +25,22 @@ namespace ClassHub.Server.Controllers {
 
         const string academicServerUri = "https://academicinfo.azurewebsites.net/";
 
-		private readonly ILogger<ClassRoomController> _logger;
+        private readonly ILogger<ClassRoomController> _logger;
         private readonly BlobServiceClient _blobServiceClient;
-        private readonly SecretClient _secretClient; 
+        private readonly SecretClient _secretClient;
 
         public ClassRoomController(ILogger<ClassRoomController> logger, BlobServiceClient blobServiceClient, SecretClient secretClient) {
-			_logger = logger;
+            _logger = logger;
             _blobServiceClient = blobServiceClient;
             _secretClient = secretClient;
-		}
+        }
 
-		// Param으로 받은 ID를 가진 강의실의 정보를 불러옴
-		// 실제 요청 url 예시 : 'api/classroom/1'
-		[HttpGet("{room_id}")]
+        // Param으로 받은 ID를 가진 강의실의 정보를 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/1'
+        [HttpGet("{room_id}")]
         public ClassRoom GetClassRoom(int room_id) {
             using var connection = new NpgsqlConnection(connectionString);
-            var query = 
+            var query =
                 "SELECT * " +
                 "FROM classroom " +
                 "WHERE room_id = @room_id;";
@@ -53,7 +53,7 @@ namespace ClassHub.Server.Controllers {
         public async Task<List<ClassRoomDetail>> GetClassRoomDetailList(List<ClassRoom> classRoomList, string accessToken) {
             // 학사정보DB로부터 시간표 정보를 가져온다
             List<ClassRoomDetail> classRoomDetailList = new List<ClassRoomDetail>();
-            foreach(var classRoom in classRoomList) {
+            foreach (var classRoom in classRoomList) {
                 using var academicClient = new HttpClient {
                     BaseAddress = new Uri(academicServerUri)
                 };
@@ -73,7 +73,7 @@ namespace ClassHub.Server.Controllers {
                     classRoomDetail.year = classRoom.year;
                     classRoomDetail.title = classRoom.title;
                     classRoomDetailList.Add(classRoomDetail);
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     _logger.LogError($"학사정보DB에서 강의실 세부정보를 불러오는데 실패");
                     _logger.LogError(ex.Message);
                 }
@@ -114,7 +114,7 @@ namespace ClassHub.Server.Controllers {
 
             // 각 room_id에 대해 강의실 정보를 불러온다
             List<ClassRoom> classRoomList = new List<ClassRoom>();
-            foreach(var roomId in roomIdList) {
+            foreach (var roomId in roomIdList) {
                 query =
                     "SELECT * " +
                     "FROM classroom " +
@@ -136,12 +136,13 @@ namespace ClassHub.Server.Controllers {
             _logger.LogInformation($"GetTeachesClassRoomList?instructor_id={instructor_id}");
             string requestUri = $"teaches/all?id={instructor_id}&accessToken={accessToken}";
             List<ClassRoom>? classRoomList = new List<ClassRoom>();
-            using(var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
+            using (var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
                 classRoomList = await academicClient.GetFromJsonAsync<List<ClassRoom>>(requestUri);
-                if(classRoomList == null) classRoomList = new List<ClassRoom>();
-                for(int i = 0; i < classRoomList.Count; i++) {
+                if (classRoomList == null)
+                    classRoomList = new List<ClassRoom>();
+                for (int i = 0; i < classRoomList.Count; i++) {
                     var classRoom = classRoomList[i];
-                    switch(int.Parse(classRoom.semester)) {
+                    switch (int.Parse(classRoom.semester)) {
                         case 1:
                             classRoom.semester = "Spring";
                             break;
@@ -164,19 +165,20 @@ namespace ClassHub.Server.Controllers {
             return Ok(classRoomList);
         }
 
-		// 교수가 강의 중인 강의실 리스트를 시간표 출력에 필요한 정보를 함께 담아 불러옴
-		// 실제 요청 url 예시 : 'api/classroom/teaches/detail'
-		[HttpGet("teaches/detail")]
+        // 교수가 강의 중인 강의실 리스트를 시간표 출력에 필요한 정보를 함께 담아 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/teaches/detail'
+        [HttpGet("teaches/detail")]
         public async Task<IActionResult> GetTeachesClassRoomDetailList([FromQuery] int instructor_id, [FromQuery] string accessToken) {
             _logger.LogInformation($"GetTeachesClassRoomListDetail?instructor_id={instructor_id}");
             string requestUri = $"teaches/all?id={instructor_id}&accessToken={accessToken}";
             List<ClassRoom>? classRoomList = new List<ClassRoom>();
-            using(var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
+            using (var academicClient = new HttpClient { BaseAddress = new Uri(academicServerUri) }) {
                 classRoomList = await academicClient.GetFromJsonAsync<List<ClassRoom>>(requestUri);
-                if(classRoomList == null) classRoomList = new List<ClassRoom>();
-                for(int i = 0; i < classRoomList.Count; i++) {
+                if (classRoomList == null)
+                    classRoomList = new List<ClassRoom>();
+                for (int i = 0; i < classRoomList.Count; i++) {
                     var classRoom = classRoomList[i];
-                    switch(int.Parse(classRoom.semester)) {
+                    switch (int.Parse(classRoom.semester)) {
                         case 1:
                             classRoom.semester = "Spring";
                             break;
@@ -198,14 +200,14 @@ namespace ClassHub.Server.Controllers {
 
             var classRoomDetailList = await GetClassRoomDetailList(classRoomList, accessToken);
             return Ok(classRoomDetailList);
-		}
+        }
 
-		// Param으로 받은 ID를 가진 강의실의 모든 강의자료를 불러옴
-		// 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all'
-		[HttpGet("{room_id}/lecturematerial/all")]
+        // Param으로 받은 ID를 가진 강의실의 모든 강의자료를 불러옴
+        // 실제 요청 url 예시 : 'api/classroom/1/lecturematerial/all'
+        [HttpGet("{room_id}/lecturematerial/all")]
         public IEnumerable<LectureMaterial> GetLectureMaterialListInClassRoom(int room_id) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = 
+            string query =
                 "SELECT * " +
                 "FROM lecturematerial " +
                 "WHERE room_id = @room_id;";
@@ -246,7 +248,7 @@ namespace ClassHub.Server.Controllers {
 
             List<DisplayStudentNotification> result = new List<DisplayStudentNotification>();
 
-            foreach(var item in studentNotifications) {
+            foreach (var item in studentNotifications) {
                 query =
                     "SELECT * " +
                     "FROM classroomnotification " +
@@ -267,8 +269,9 @@ namespace ClassHub.Server.Controllers {
 
             // DB 중복 참조를 막기 위해 강의실번호 순으로 나열 뒤 이미 구한 Title을 재사용
             result.Sort((a, b) => a.room_id.CompareTo(b.room_id));
-            for(int i = 0; i < result.Count; i++) {
-                if(i != 0 && result[i - 1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
+            for (int i = 0; i < result.Count; i++) {
+                if (i != 0 && result[i - 1].room_id == result[i].room_id)
+                    result[i].title = result[i - 1].title;
                 else {
                     query =
                         "SELECT title " +
@@ -287,7 +290,7 @@ namespace ClassHub.Server.Controllers {
         [HttpPut("modify/lecturematerial")]
         public void PutLectureMaterial([FromBody] LectureMaterial lectureMaterial) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = 
+            string query =
                 "UPDATE lecturematerial " +
                 "SET (week, title, contents, up_date) = (@week, @title, @contents, @up_date) " +
                 "WHERE room_id = @room_id AND material_id = @material_id;";
@@ -309,7 +312,7 @@ namespace ClassHub.Server.Controllers {
             connection.Open();
 
             // material_id 시퀀스를 가져오던 중 다른 사용자가 INSERT 작업을 수행하면 곤란하기 때문에 하나의 트랜잭션으로 묶음
-            using(var transaction = connection.BeginTransaction()) {
+            using (var transaction = connection.BeginTransaction()) {
                 try {
                     string query1 = // 다음 material_id 시퀀스를 가져옴.
                         "SELECT nextval('lecturematerial_material_id_seq');";
@@ -323,7 +326,7 @@ namespace ClassHub.Server.Controllers {
                     connection.Execute(query2, lectureMaterial);
 
                     transaction.Commit();
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     _logger.LogError("강의자료 게시 중 문제가 발생하여 RollBack 합니다.");
                     _logger.LogError($"msg :\n{ex.Message}");
                     transaction.Rollback();
@@ -350,21 +353,21 @@ namespace ClassHub.Server.Controllers {
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
 
             List<Attachment> attachments = GetLectureMaterialAttachments(room_id, material_id);
-            foreach(var file in files) {
+            foreach (var file in files) {
                 string query;
                 var blobClient = containerClient.GetBlobClient($"{room_id}/{material_id}/{file.FileName}");
                 var parameters = new DynamicParameters();
-                
+
                 parameters.Add("file_size", file.Length);
                 parameters.Add("up_date", DateTime.UtcNow);
-                if(attachments.Select((x) => x.file_name).Contains(file.FileName)) {
+                if (attachments.Select((x) => x.file_name).Contains(file.FileName)) {
                     query =
                         "UPDATE lecturematerialattachment " +
                         "SET file_size = @file_size, up_date = @up_date " +
                         "WHERE attachment_id = @attachment_id;";
                     parameters.Add("attachment_id", attachments.Find((x) => x.file_name == file.FileName).attachment_id);
                 } else {
-                    query = 
+                    query =
                         "INSERT INTO lecturematerialattachment (material_id, file_name, file_size, up_date, download_url) " +
                         "VALUES (@material_id, @file_name, @file_size, @up_date, @download_url)";
                     parameters.Add("material_id", material_id);
@@ -375,12 +378,12 @@ namespace ClassHub.Server.Controllers {
 
                 _ = Task.Run(async () => {
                     try {
-                        using(var memoryStream = new MemoryStream()) {
+                        using (var memoryStream = new MemoryStream()) {
                             await file.CopyToAsync(memoryStream);
                             memoryStream.Position = 0;
                             await blobClient.UploadAsync(memoryStream, overwrite: true);
                         }
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         // 콘솔에 예외 로그를 출력합니다.
                         Console.WriteLine($"File upload failed: {e.Message}");
                     }
@@ -408,21 +411,21 @@ namespace ClassHub.Server.Controllers {
             return sasUri;
         }
 
-		// 강의자료 첨부파일 목록을 불러옵니다.
-		// 실제 요청 url 예시 : 'api/classroom/attachments/lecturematerial'
-		[HttpGet("attachments/lecturematerial")]
+        // 강의자료 첨부파일 목록을 불러옵니다.
+        // 실제 요청 url 예시 : 'api/classroom/attachments/lecturematerial'
+        [HttpGet("attachments/lecturematerial")]
         public List<Attachment> GetLectureMaterialAttachments([FromQuery] int room_id, [FromQuery] int material_id) {
-			using var connection = new NpgsqlConnection(connectionString);
+            using var connection = new NpgsqlConnection(connectionString);
             string query =
                 "SELECT a.* " +
                 "FROM lecturematerial m " +
-				"INNER JOIN lecturematerialattachment a ON m.material_id = a.material_id " +
+                "INNER JOIN lecturematerialattachment a ON m.material_id = a.material_id " +
                 "WHERE m.room_id = @room_id AND m.material_id = @material_id;";
 
             var parameters = new DynamicParameters();
-			parameters.Add("room_id", room_id);
-			parameters.Add("material_id", material_id);
-			List<Attachment> attachments = connection.Query<Attachment>(query, parameters).ToList();
+            parameters.Add("room_id", room_id);
+            parameters.Add("material_id", material_id);
+            List<Attachment> attachments = connection.Query<Attachment>(query, parameters).ToList();
 
             return attachments;
         }
@@ -430,37 +433,37 @@ namespace ClassHub.Server.Controllers {
         // BlobStorage에 저장된 Blob을 다운로드 하는 Url을 생성합니다.
         // 실제 요청 url 예시 : 'api/classroom/download'
         [HttpGet("download")]
-        public string GetAttachmentDownloadUrl ([FromQuery] string container_name, [FromQuery] string blob_name) {
-			string secretName = "StorageAccountKey";
-			KeyVaultSecret secret = _secretClient.GetSecret(secretName);
-			var storageAccountKey = secret.Value;
+        public string GetAttachmentDownloadUrl([FromQuery] string container_name, [FromQuery] string blob_name) {
+            string secretName = "StorageAccountKey";
+            KeyVaultSecret secret = _secretClient.GetSecret(secretName);
+            var storageAccountKey = secret.Value;
 
-			BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(container_name);
-			BlobClient blobClient = containerClient.GetBlobClient(blob_name);
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(container_name);
+            BlobClient blobClient = containerClient.GetBlobClient(blob_name);
 
-			BlobSasBuilder sasBuilder = new BlobSasBuilder() {
-				BlobContainerName = containerClient.Name,
-				BlobName = blobClient.Name,
-				Resource = "b",
-				StartsOn = DateTime.UtcNow,
-				ExpiresOn = DateTime.UtcNow.AddHours(1)
-			};
-			sasBuilder.SetPermissions(BlobSasPermissions.Read);
-			string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(containerClient.AccountName, storageAccountKey)).ToString();
+            BlobSasBuilder sasBuilder = new BlobSasBuilder() {
+                BlobContainerName = containerClient.Name,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                StartsOn = DateTime.UtcNow,
+                ExpiresOn = DateTime.UtcNow.AddHours(1)
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+            string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(containerClient.AccountName, storageAccountKey)).ToString();
 
-			UriBuilder sasUri = new UriBuilder(blobClient.Uri) {
-				Query = sasToken
-			};
-			string downloadUrl = sasUri.ToString();
+            UriBuilder sasUri = new UriBuilder(blobClient.Uri) {
+                Query = sasToken
+            };
+            string downloadUrl = sasUri.ToString();
 
-			return downloadUrl;
-		}
+            return downloadUrl;
+        }
 
-		// 수정 된 Notice 객체를 DB에 UPDATE 합니다.
-		// 실제 요청 url 예시 : 'api/classroom/modify/notice'
-		[HttpPut("modify/notice")]
+        // 수정 된 Notice 객체를 DB에 UPDATE 합니다.
+        // 실제 요청 url 예시 : 'api/classroom/modify/notice'
+        [HttpPut("modify/notice")]
         public void PutNotice([FromBody] Notice notice) {
-            using(var connection = new NpgsqlConnection(connectionString)) {
+            using (var connection = new NpgsqlConnection(connectionString)) {
                 string query =
                 "UPDATE notice " +
                 "SET (title, contents, up_date) = (@title, @contents, @up_date) " +
@@ -480,16 +483,16 @@ namespace ClassHub.Server.Controllers {
         // 실제 요청 url 예시 : 'api/classroom/1/view/notice/1'
         [HttpPut("{room_id}/view/{kind}/{content_id}")]
         public void IncreaseViewCount(int room_id, string kind, int content_id) {
-            if(kind != "notice" && kind != "material") {
+            if (kind != "notice" && kind != "material") {
                 _logger.LogError("예상치 못한 kind 값");
                 return;
             }
-			using var connection = new NpgsqlConnection(connectionString);
+            using var connection = new NpgsqlConnection(connectionString);
             string query =
-				$"UPDATE {((kind == "material") ? "lecturematerial" : kind)} " +
-				$"SET view_count = view_count + 1 " +
-				$"WHERE room_id = @room_id AND {kind}_id = @content_id;";
-			var parameters = new DynamicParameters();
+                $"UPDATE {((kind == "material") ? "lecturematerial" : kind)} " +
+                $"SET view_count = view_count + 1 " +
+                $"WHERE room_id = @room_id AND {kind}_id = @content_id;";
+            var parameters = new DynamicParameters();
             parameters.Add("room_id", room_id);
             parameters.Add("content_id", content_id);
             connection.Execute(query, parameters);
@@ -503,7 +506,7 @@ namespace ClassHub.Server.Controllers {
             connection.Open();
 
             // notice_id 시퀀스를 가져오던 중 다른 사용자가 INSERT 작업을 수행하면 곤란하기 때문에 하나의 트랜잭션으로 묶음
-            using(var transaction = connection.BeginTransaction()) {
+            using (var transaction = connection.BeginTransaction()) {
                 try {
                     string query1 = // 다음 notice_id 시퀀스를 가져옴. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 실제 DB내 시퀀스는 2로 바뀜)
                         "SELECT nextval('notice_notice_id_seq');";
@@ -537,43 +540,42 @@ namespace ClassHub.Server.Controllers {
         // 공지사항을 삭제합니다
         // 실제 요청 url 예시 : 'api/classroom/1/delete/notice/1'
         [HttpDelete("{room_id}/delete/notice/{notice_id}")]
-		public void DeleteNotice(int room_id, int notice_id) {
-			using var connection = new NpgsqlConnection(connectionString);
-			string query =
-				"DELETE FROM notice " +
-				"WHERE room_id = @room_id AND notice_id = @notice_id;";
-			var parameters = new DynamicParameters();
-			parameters.Add("room_id", room_id);
-			parameters.Add("notice_id", notice_id);
-			connection.Execute(query, parameters);
-		}
+        public void DeleteNotice(int room_id, int notice_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query =
+                "DELETE FROM notice " +
+                "WHERE room_id = @room_id AND notice_id = @notice_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("notice_id", notice_id);
+            connection.Execute(query, parameters);
+        }
 
-		// 강의자료를 삭제합니다
-		// 실제 요청 url 예시 : 'api/classroom/1/delete/lecturematerial/1'
-		[HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
-		public void DeleteLectureMaterial(int room_id, int material_id) {
-			using var connection = new NpgsqlConnection(connectionString);
+        // 강의자료를 삭제합니다
+        // 실제 요청 url 예시 : 'api/classroom/1/delete/lecturematerial/1'
+        [HttpDelete("{room_id}/delete/lecturematerial/{material_id}")]
+        public void DeleteLectureMaterial(int room_id, int material_id) {
+            using var connection = new NpgsqlConnection(connectionString);
 
             // 첨부파일 삭제
-			string query =
-				"DELETE FROM lecturematerialattachment " +
-				"WHERE material_id = @material_id;";
-			var parameters = new DynamicParameters();
-			parameters.Add("material_id", material_id);
-			connection.Execute(query, parameters);
+            string query =
+                "DELETE FROM lecturematerialattachment " +
+                "WHERE material_id = @material_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("material_id", material_id);
+            connection.Execute(query, parameters);
 
             // 강의자료 게시글 삭제
-            query = 
+            query =
                 "DELETE FROM lecturematerial " +
-				"WHERE room_id = @room_id AND material_id = @material_id;";
-			parameters.Add("room_id", room_id);
-			connection.Execute(query, parameters);
+                "WHERE room_id = @room_id AND material_id = @material_id;";
+            parameters.Add("room_id", room_id);
+            connection.Execute(query, parameters);
 
-            Task.Run(async () =>
-            {
+            Task.Run(async () => {
                 BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient("lecturematerial");
                 string prefix = $"{room_id}/{material_id}/";
-                await foreach(BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
+                await foreach (BlobItem blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix)) {
                     BlobClient blobClient = containerClient.GetBlobClient(blobItem.Name);
                     await blobClient.DeleteIfExistsAsync();
                 }
@@ -596,7 +598,7 @@ namespace ClassHub.Server.Controllers {
 
             List<DisplayStudentNotification> result = new List<DisplayStudentNotification>();
 
-            foreach(var item in studentNotifications) {
+            foreach (var item in studentNotifications) {
                 query =
                     "SELECT * " +
                     "FROM classroomnotification " +
@@ -617,8 +619,9 @@ namespace ClassHub.Server.Controllers {
 
             // DB 중복 참조를 막기 위해 강의실번호 순으로 나열 뒤 이미 구한 Title을 재사용
             result.Sort((a, b) => a.room_id.CompareTo(b.room_id));
-            for(int i = 0; i < result.Count; i++) {
-                if(i != 0 && result[i - 1].room_id == result[i].room_id) result[i].title = result[i - 1].title;
+            for (int i = 0; i < result.Count; i++) {
+                if (i != 0 && result[i - 1].room_id == result[i].room_id)
+                    result[i].title = result[i - 1].title;
                 else {
                     query =
                         "SELECT title " +
@@ -639,7 +642,7 @@ namespace ClassHub.Server.Controllers {
             connection.Open(); // 트랜잭션을 사용하는 경우 직접 Open() 하는 것을 권장
 
             // 동시성 문제 때문에 여러 개의 쿼리를 마치 하나의 작업처럼 실행시키도록 하기 위해 트랜잭션 단위로 묶습니다.
-            using(var transaction = connection.BeginTransaction()) {
+            using (var transaction = connection.BeginTransaction()) {
                 try {
                     string query1 = // 다음 notification_id 시퀀스를 가져옴. (반환값은 최초일 경우 1이 나오지만, 쿼리가 실행된 직후 실제 DB내 시퀀스는 2로 바뀜)
                         "SELECT nextval('classroomnotification_notification_id_seq');";
@@ -665,7 +668,7 @@ namespace ClassHub.Server.Controllers {
                     query3_params.Add("room_id", roomNotification.room_id);
                     var students = connection.Query<int>(query3, query3_params);
 
-                    foreach(var student_id in students) {
+                    foreach (var student_id in students) {
                         string query4 = // 학번별로 StudentNotification 테이블에 데이터를 INSERT
                             "INSERT INTO studentnotification (room_id, student_id, notification_id, is_read) " +
                             "VALUES (@room_id, @student_id, @notification_id, @is_read);";
@@ -680,7 +683,7 @@ namespace ClassHub.Server.Controllers {
                     // 모든 쿼리가 성공적으로 실행되면 트랜잭션 커밋
                     transaction.Commit();
                     _logger.LogInformation($"{roomNotification.room_id}번 강의실의 {roomNotification.notification_id}번 알림 INSERT");
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     _logger.LogError("알림을 INSERT 하던 중 문제가 발생하여 RollBack 합니다.");
                     _logger.LogError($"msg :\n{ex.Message}");
                     transaction.Rollback();
@@ -731,7 +734,7 @@ namespace ClassHub.Server.Controllers {
                 parameters,
                 splitOn: "problemTitle");
 
-            foreach(var (codeAssignment, problemTitle) in codeAssignments) {
+            foreach (var (codeAssignment, problemTitle) in codeAssignments) {
                 toDoList.Add(new ToDo {
                     RoomTitle = roomTitle,
                     Title = problemTitle,
@@ -750,7 +753,7 @@ namespace ClassHub.Server.Controllers {
 
             var lectures = connection.Query<Shared.Lecture>(query3, parameters);
 
-            foreach(var lecture in lectures) {
+            foreach (var lecture in lectures) {
                 toDoList.Add(new ToDo {
                     RoomTitle = roomTitle,
                     Title = lecture.title,
@@ -814,26 +817,58 @@ namespace ClassHub.Server.Controllers {
                 BaseAddress = new Uri(base_uri)
             };
 
+            using var connection = new NpgsqlConnection(connectionString);
             //오프라인 출석 불러오기
-            for (int i = 1; i <= 14; i++) {
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
+
+            string query = @"SELECT week, chapter, status
+                FROM offlineattendance, offlinelecture
+                WHERE student_id = (
+                    SELECT student_id
+                    FROM student
+                    WHERE room_id = @room_id
+                    AND student_id = @student_id
+                ) 
+                AND offlineattendance.lecture_id = offlinelecture.lecture_id
+                AND offlineattendance.room_id =  offlinelecture.room_id
+                AND offlinelecture.room_id = @room_id;
+            ";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("student_id", student_id);
+
+            var offline_attendance = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach (var i in offline_attendance) {
+                Console.WriteLine(i.Status);
+                string status = "";
+                switch (i.Status) {
+                    case 0:
+                        status = "미결";
+                        break;
+                    case 1:
+                        status = "지각";
+                        break;
+                    case 2:
+                        status = "결석";
+                        break;
+                    case 3:
+                        status = "출석";
+                        break;
+                }
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Chapter = i.Chapter, Title = i.Week + "주차 수업 " + i.Chapter + "차시", LearningType = "오프라인 출결", AttendProgress = status });
             }
 
             //강의자료 불러오기
-            using var connection = new NpgsqlConnection(connectionString);
-            string query = @"SELECT title, week, material_id AS id
+            query = @"SELECT title, week, material_id AS id
                 FROM LectureMaterial
                 WHERE room_id = @room_id;
             ";
-            var parameters = new DynamicParameters();
-            parameters.Add("room_id", room_id);
 
-            
             var lecureMaterials = connection.Query<AttendanceItem>(query, parameters).ToList();
 
-            foreach(var i in lecureMaterials) {
-                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "classroom/"+room_id+"/lecturematerial/"+i.Id });
+            foreach (var i in lecureMaterials) {
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "classroom/" + room_id + "/lecturematerial/" + i.Id });
             }
 
             //시험 불러오기
@@ -845,7 +880,7 @@ namespace ClassHub.Server.Controllers {
             var exam = connection.Query<AttendanceItem>(query, parameters).ToList();
 
             foreach (var i in exam) {
-                try { 
+                try {
                     DateTime semester_startDate = new DateTime(2023, 3, 2);
                     TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
 
@@ -854,16 +889,16 @@ namespace ClassHub.Server.Controllers {
                     var examInfo = await newClient.GetFromJsonAsync<Shared.Exam>($"api/exam/room_id/{room_id}/exam_id/{i.Id}/student_id/{student_id}");
 
                     string progress = "미완료";
-                    if ( examInfo != null && examInfo.isSubmitted ) {
+                    if (examInfo != null && examInfo.isSubmitted) {
                         progress = "완료";
                     }
 
                     attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = progress });
 
-            } catch (Exception e) {
-                Console.WriteLine(e.ToString());
+                } catch (Exception e) {
+                    Console.WriteLine(e.ToString());
+                }
             }
-        }
 
             //실습 불러오기
             query = @"SELECT codeproblem.title AS title, week, assignment_id As Id
@@ -944,7 +979,7 @@ namespace ClassHub.Server.Controllers {
             };
 
             Random rand = new Random();
-            foreach(var student in studentList) {
+            foreach (var student in studentList) {
                 studentGradeList.Add(new StudentGrade(gradeRatio) {
                     student_id = student.student_id,
                     name = student.name,
@@ -960,7 +995,7 @@ namespace ClassHub.Server.Controllers {
         [HttpPost("set/graderatio")]
         public void SetGradeRatio([FromBody] GradeRatio gradeRatio) {
             using var connection = new NpgsqlConnection(connectionString);
-            string query = 
+            string query =
                 "INSERT INTO graderatio (room_id, attendance_ratio, assignment_ratio, practice_ratio, exam_ratio) " +
                 "VALUES (@room_id, @attendance_ratio, @assignment_ratio, @practice_ratio, @exam_ratio);";
             var parameters = new DynamicParameters();
