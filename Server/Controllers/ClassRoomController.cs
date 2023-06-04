@@ -935,11 +935,12 @@ namespace ClassHub.Server.Controllers {
         public List<StudentGrade> GetStudentGradeList(int room_id) {
             List<Student> studentList = GetStudentList(room_id);
             List<StudentGrade> studentGradeList = new List<StudentGrade>();
-            GradeRatio gradeRatio = new GradeRatio {
-                attendance_ratio = 0.1f,
-                assignment_ratio = 0.2f,
-                practice_ratio = 0.1f,
-                exam_ratio = 0.6f
+            GradeRatio gradeRatio = GetGradeRatio(room_id) ?? new GradeRatio() {
+                room_id = room_id,
+                attendance_ratio = 0.25d,
+                assignment_ratio = 0.25d,
+                practice_ratio = 0.25d,
+                exam_ratio = 0.25d
             };
 
             Random rand = new Random();
