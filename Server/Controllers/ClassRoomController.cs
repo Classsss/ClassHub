@@ -844,7 +844,7 @@ namespace ClassHub.Server.Controllers {
                 string status = "";
                 switch (i.Status) {
                     case 0:
-                        status = "대상아님";
+                        status = "미결";
                         break;
                     case 1:
                         status = "지각";

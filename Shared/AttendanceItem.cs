@@ -10,4 +10,28 @@
         public int Status { get; set; } // 오프라인 출결상태
         public DateTime startDate { get; set; } //시작일
     }
+
+    public class AttendanceSummary {
+        public int total_attendance; //모든 출석 차시
+        public int attend; //총 출석
+        public int late; //총 지각
+        public int absent; //총 결석
+        public int no_target_attendance; //총 대상아님
+        public int total_todo; //총 할일
+        public int finished; //총 완료
+        public int not_solved; //총 미완료
+        public int lecturematerials; //총 강의자료
+
+        public AttendanceSummary() {
+            total_attendance = 0;
+            attend = 0;
+            late = 0;
+            absent = 0;
+            no_target_attendance = 0;
+            total_todo = 0;
+            finished = 0;
+            not_solved = 0;
+            lecturematerials = 0;
+        }
+    }
 }

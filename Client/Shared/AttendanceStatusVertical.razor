@@ -7,10 +7,8 @@
     <div class="col-auto summary" style="background-color: #f1f1f1; border-radius: 5px; border: 1px solid #ccc;">
         <span style="font-weight:bold;">출결 상태 : </span>
         <span>
-            <span>출석 <span style="color: green;">30</span></span> | <span>지각 <span style="color: orange;">0</span></span> | 결석 <span style="color: red;">0</span> | 미결 <span style="color: gray;">0</span> | 예정 <span style="color: blue;">0</span></span>
+            <span>출석 <span style="color: green;">@summary.attend</span></span> | <span>지각 <span style="color: orange;">@summary.late</span></span> | 결석 <span style="color: red;">@summary.absent</span> | 미결 <span style="color: gray;">@summary.no_target_attendance</span> | 총계 <span style="color: blue;">@summary.total_attendance</span></span>
         <br />
-        <span style="font-weight:bold;">학습 상태 : </span>
-        <span>완료 <span style="color: green;">101</span> | 미완료 <span style="color: gray;">16</span> | 예정 <span style="color: blue;">0</span></span>
     </div>
 </div>
 <br />
@@ -128,6 +126,8 @@
     [Parameter]
     public bool orderByAscend { get; set; } //오름차순 여부
 
+    AttendanceSummary summary = new AttendanceSummary();
+
     //출결 항목 리스트
     public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>() { };
 
@@ -138,8 +138,26 @@
         foreach(var i in result) {
             var k = new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = i.LearningType, AttendProgress = i.AttendProgress, DetailLink = i.DetailLink };
 
+            if (i.AttendProgress == "완료") {
+                summary.finished++;
+            } else if (i.AttendProgress == "미완료") {
+                summary.not_solved++;
+            } else if (i.AttendProgress == "결석") {
+                summary.absent++;
+            } else if (i.AttendProgress == "지각") {
+                summary.late++;
+            } else if (i.AttendProgress == "출석") {
+                summary.attend++;
+            } else if (i.AttendProgress == "대상아님") {
+                summary.lecturematerials++;
+            } else if (i.AttendProgress == "미결") {
+                summary.no_target_attendance++;
+            }
             attendanceStatus.Add(k);
         }
+
+        summary.total_attendance = summary.attend + summary.late + summary.absent;
+        summary.total_todo = summary.finished + summary.not_solved;
 
         StateHasChanged();
     }
