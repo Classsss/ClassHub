@@ -1,20 +1,35 @@
 ﻿@page "/classroom/{RoomId:int}/statistics"
 @layout MainLayout
+@using ChartJs.Blazor.BarChart
 @using ClassHub.Shared;
+@using System.Drawing;
+@using ClassHub.Client.Shared.Chart;
 @inject HttpClient Http
 
 @if(studentGradeList == null) {
     <LoadingBar />
 } else {
+    <Chart Config="_config" @ref="_chart"></Chart>
+
     <table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>학생</th>
-                <th>출석</th>
-                <th>과제</th>
-                <th>실습</th>
-                <th>시험</th>
-                <th>최종</th>
+                <th @onclick="SortByAttendance" style="cursor: pointer;">
+                    <span class=@((sortStateAttendance == SortState.Ascending) ? "oi oi-sort-ascending" : (sortStateAttendance == SortState.Descending) ? "oi oi-sort-descending" : "")>출석</span>
+                </th>
+                <th @onclick="SortByAssignment" style="cursor: pointer;">
+                    <span class=@((sortStateAssignment == SortState.Ascending) ? "oi oi-sort-ascending" : (sortStateAssignment == SortState.Descending) ? "oi oi-sort-descending" : "")>과제</span>
+                </th>
+                <th @onclick="SortByPractice" style="cursor: pointer;">
+                    <span class=@((sortStatePractice == SortState.Ascending) ? "oi oi-sort-ascending" : (sortStatePractice == SortState.Descending) ? "oi oi-sort-descending" : "")>실습</span>
+                </th>
+                <th @onclick="SortByExam" style="cursor: pointer;">
+                    <span class=@((sortStateExam == SortState.Ascending) ? "oi oi-sort-ascending" : (sortStateExam == SortState.Descending) ? "oi oi-sort-descending" : "")>시험</span>
+                </th>
+                <th @onclick="SortByFinal" style="cursor: pointer;">
+                    <span class=@((sortStateFinal == SortState.Ascending) ? "oi oi-sort-ascending" : (sortStateFinal == SortState.Descending) ? "oi oi-sort-descending" : "")>최종</span>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -38,7 +53,151 @@
 
     private List<StudentGrade>? studentGradeList;
 
+    // 정렬 상태를 나타내는 열거형
+    enum SortState {
+        None,
+        Ascending,
+        Descending
+    }
+
+    // 각 점수 항목별로 정렬 상태를 나타내는 변수들
+    SortState sortStateAttendance = SortState.None;
+    SortState sortStateAssignment = SortState.None;
+    SortState sortStatePractice = SortState.None;
+    SortState sortStateExam = SortState.None;
+    SortState sortStateFinal = SortState.Descending;
+
+    private BarConfig _config;
+    private Chart _chart;
+
     protected override async Task OnInitializedAsync() {
-        studentGradeList = await Http.GetFromJsonAsync<List<StudentGrade>>($"api/classroom/students/grade?room_id={RoomId}");
+        studentGradeList = (await Http.GetFromJsonAsync<List<StudentGrade>>($"api/classroom/students/grade?room_id={RoomId}")).OrderByDescending(s => s.final_score).ToList();
+        ConfigureChartConfig();
+    }
+
+    private void ConfigureChartConfig() {
+        _config = new BarConfig(horizontal: true) {
+                Options = new BarOptions {
+                    Responsive = true,
+                    Legend = new Legend {
+                        Position = ChartJs.Blazor.Common.Enums.Position.Right
+                    },
+                    Title = new OptionsTitle {
+                        Display = true,
+                        Text = "최종 성적 분포"
+                    }
+                }
+            };
+
+        int[] studentCounts = new int[11];
+        for(int i = 0; i <= 10; i++) {
+            foreach(float score in studentGradeList.Select(x => x.final_score)) {
+                if((int)Math.Floor(score) / 10 == i) studentCounts[10 - i]++;
+            }
+        }
+
+        IDataset<int> dataset = new BarDataset<int>(studentCounts, horizontal: true) {
+            Label = "학생 수",
+            BackgroundColor = ColorUtil.FromDrawingColor(Color.FromArgb(128, ChartUtils.ChartColors.Blue)),
+                BorderColor = ColorUtil.FromDrawingColor(ChartUtils.ChartColors.Blue),
+            BorderWidth = 1
+        };
+
+        for(int i = 100; i >= 0; i -= 10) {
+            _config.Data.Labels.Add(i.ToString() + "점");
+        }
+
+        _config.Data.Datasets.Add(dataset);
+    }
+
+    // 열 헤더 클릭 시 호출되는 메소드들
+    void SortByAttendance() {
+        switch(sortStateAttendance) {
+            case SortState.None:
+            case SortState.Ascending:
+                studentGradeList = studentGradeList.OrderByDescending(s => s.attendance_score).ToList();
+                sortStateAttendance = SortState.Descending;
+                break;
+            case SortState.Descending:
+                studentGradeList = studentGradeList.OrderBy(s => s.attendance_score).ToList();
+                sortStateAttendance = SortState.Ascending;
+                break;
+        }
+        sortStateAssignment = SortState.None;
+        sortStatePractice = SortState.None;
+        sortStateExam = SortState.None;
+        sortStateFinal = SortState.None;
+    }
+
+    void SortByAssignment() {
+        switch(sortStateAssignment) {
+            case SortState.None:
+            case SortState.Ascending:
+                studentGradeList = studentGradeList.OrderByDescending(s => s.assignment_score).ToList();
+                sortStateAssignment = SortState.Descending;
+                break;
+            case SortState.Descending:
+                studentGradeList = studentGradeList.OrderBy(s => s.assignment_score).ToList();
+                sortStateAssignment = SortState.Ascending;
+                break;
+        }
+        sortStateAttendance = SortState.None;
+        sortStatePractice = SortState.None;
+        sortStateExam = SortState.None;
+        sortStateFinal = SortState.None;
+    }
+
+    void SortByPractice() {
+        switch(sortStatePractice) {
+            case SortState.None:
+            case SortState.Ascending:
+                studentGradeList = studentGradeList.OrderByDescending(s => s.practice_score).ToList();
+                sortStatePractice = SortState.Descending;
+                break;
+            case SortState.Descending:
+                studentGradeList = studentGradeList.OrderBy(s => s.practice_score).ToList();
+                sortStatePractice = SortState.Ascending;
+                break;
+        }
+        sortStateAttendance = SortState.None;
+        sortStateAssignment = SortState.None;
+        sortStateExam = SortState.None;
+        sortStateFinal = SortState.None;
+    }
+
+    void SortByExam() {
+        switch(sortStateExam) {
+            case SortState.None:
+            case SortState.Ascending:
+                studentGradeList = studentGradeList.OrderByDescending(s => s.exam_score).ToList();
+                sortStateExam = SortState.Descending;
+                break;
+            case SortState.Descending:
+                studentGradeList = studentGradeList.OrderBy(s => s.exam_score).ToList();
+                sortStateExam = SortState.Ascending;
+                break;
+        }
+        sortStateAttendance = SortState.None;
+        sortStateAssignment = SortState.None;
+        sortStatePractice = SortState.None;
+        sortStateFinal = SortState.None;
+    }
+
+    void SortByFinal() {
+        switch(sortStateFinal) {
+            case SortState.None:
+            case SortState.Ascending:
+                studentGradeList = studentGradeList.OrderByDescending(s => s.final_score).ToList();
+                sortStateFinal = SortState.Descending;
+                break;
+            case SortState.Descending:
+                studentGradeList = studentGradeList.OrderBy(s => s.final_score).ToList();
+                sortStateFinal = SortState.Ascending;
+                break;
+        }
+        sortStateAttendance = SortState.None;
+        sortStateAssignment = SortState.None;
+        sortStatePractice = SortState.None;
+        sortStateExam = SortState.None;
     }
 }
