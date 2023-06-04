@@ -3,10 +3,15 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using ClassHub.Client.Models;
+using ClassHub.Client.Shared;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.JSInterop;
 using Npgsql;
+using static System.Net.WebRequestMethods;
+using System.Reflection;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -743,7 +748,7 @@ namespace ClassHub.Server.Controllers {
                 WHERE L.room_id = @room_id AND (LP.is_enroll IS NULL OR LP.is_enroll = FALSE);
             ";
 
-            var lectures = connection.Query<Lecture>(query3, parameters);
+            var lectures = connection.Query<Shared.Lecture>(query3, parameters);
 
             foreach(var lecture in lectures) {
                 toDoList.Add(new ToDo {
@@ -802,7 +807,7 @@ namespace ClassHub.Server.Controllers {
         // Param으로 받은 ID를 가진 강의실의 출석 대상들을 불러온다
         // 실제 요청 url 예시 : 'api/classroom/attendent'
         [HttpGet("attendent")]
-        public List<AttendanceItem> GetAttendent([FromQuery] int room_id, [FromQuery] int student_id) {
+        public async Task<List<AttendanceItem>> GetAttendentAsync([FromQuery] int room_id, [FromQuery] int student_id, [FromQuery] string base_uri) {
             List<AttendanceItem> attendanceItems = new List<AttendanceItem>() { };
 
             //오프라인 출석 불러오기
@@ -828,7 +833,7 @@ namespace ClassHub.Server.Controllers {
             }
 
             //시험 불러오기
-            query = @"SELECT title, start_date AS startdate, exam_id
+            query = @"SELECT title, start_date AS startdate, exam_id As id
                 FROM exam
                 WHERE room_id = @room_id;
             ";
@@ -838,7 +843,18 @@ namespace ClassHub.Server.Controllers {
             foreach (var i in exam) {
                 DateTime semester_startDate = new DateTime(2023, 3, 2);
                 TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
-                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = "미완료", DetailLink = "링크" });
+
+                var newClient = new HttpClient {
+                    BaseAddress = new Uri(base_uri)
+                };
+                var examInfo = await newClient.GetFromJsonAsync<Shared.Exam>($"api/exam/room_id/{room_id}/exam_id/{i.Id}/student_id/{student_id}");
+
+                string progress = "미완료";
+                if ( examInfo != null && examInfo.isSubmitted ) {
+                    progress = "완료";
+                }
+
+                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = progress, DetailLink = "링크" });
             }
 
             //실습 불러오기

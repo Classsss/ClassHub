@@ -11,5 +11,6 @@
         public bool is_random_choice { get; set; }
         public bool is_show_time_limit { get; set; }
         public bool is_back_to_previous_problem { get; set; }
-    }
+        public bool isSubmitted { get; set; }
+}
 }
