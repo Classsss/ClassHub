@@ -879,5 +879,28 @@ namespace ClassHub.Server.Controllers {
             List<Student> studentList = connection.Query<Student>(query, parameters).ToList();
             return studentList;
         }
+
+        [HttpGet("students/grade")]
+        public List<StudentGrade> GetStudentGradeList(int room_id) {
+            List<Student> studentList = GetStudentList(room_id);
+            List<StudentGrade> studentGradeList = new List<StudentGrade>();
+            GradeRatio gradeRatio = new GradeRatio {
+                attendance_ratio = 0.1f,
+                assignment_ratio = 0.2f,
+                practice_ratio = 0.1f,
+                exam_ratio = 0.6f
+            };
+            foreach(var student in studentList) {
+                studentGradeList.Add(new StudentGrade(gradeRatio) {
+                    student_id = student.student_id,
+                    name = student.name,
+                    attendance_score = 100,
+                    assignment_score = 100,
+                    practice_score = 100,
+                    exam_score = 100
+                });
+            }
+            return studentGradeList;
+        }
     }
 }

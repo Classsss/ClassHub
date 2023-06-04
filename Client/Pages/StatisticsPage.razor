@@ -3,19 +3,29 @@
 @using ClassHub.Shared;
 @inject HttpClient Http
 
-@if(studentList == null) {
+@if(studentGradeList == null) {
     <LoadingBar />
 } else {
-    <table>
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>학생</th>
+                <th>출석</th>
+                <th>과제</th>
+                <th>실습</th>
+                <th>시험</th>
+                <th>최종</th>
             </tr>
         </thead>
         <tbody>
-            @foreach(var student in studentList) {
+            @foreach(var student in studentGradeList) {
                 <tr>
                     <td>@student.name (@student.student_id)</td>
+                    <td>@(Math.Floor(student.attendance_score) == student.attendance_score ? student.attendance_score.ToString("F0") : (Math.Floor(student.attendance_score * 10) / 10).ToString())</td>
+                    <td>@(Math.Floor(student.assignment_score) == student.assignment_score ? student.assignment_score.ToString("F0") : (Math.Floor(student.assignment_score * 10) / 10).ToString())</td>
+                    <td>@(Math.Floor(student.practice_score) == student.practice_score ? student.practice_score.ToString("F0") : (Math.Floor(student.practice_score * 10) / 10).ToString())</td>
+                    <td>@(Math.Floor(student.exam_score) == student.exam_score ? student.exam_score.ToString("F0") : (Math.Floor(student.exam_score * 10) / 10).ToString())</td>
+                    <td>@(Math.Floor(student.final_score) == student.final_score ? student.final_score.ToString("F0") : (Math.Floor(student.final_score * 10) / 10).ToString())</td>
                 </tr>
             }
         </tbody>
@@ -26,9 +36,9 @@
     [Parameter]
     public int RoomId { get; set; }
 
-    private List<Student>? studentList;
+    private List<StudentGrade>? studentGradeList;
 
     protected override async Task OnInitializedAsync() {
-        studentList = await Http.GetFromJsonAsync<List<Student>>($"api/classroom/students?room_id={RoomId}");
+        studentGradeList = await Http.GetFromJsonAsync<List<StudentGrade>>($"api/classroom/students/grade?room_id={RoomId}");
     }
 }
