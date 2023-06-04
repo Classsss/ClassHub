@@ -10,6 +10,26 @@
     li.list-group-item:hover {
         background-color: rgba(0, 0, 0, 0.1);
     }
+
+    @@media (min-width: 1000px) {
+        .mobile {
+            display: none;
+        }
+
+        .taggy {
+            margin-top: 5%;
+        }
+    }
+
+    @@media (max-width: 1000px) {
+        .desktop {
+            display: none;
+        }
+
+        .taggy {
+            margin-top: 5%;
+        }
+    }
 </style>
 
 @if(classRoom == null || toDoList == null) {
@@ -17,12 +37,12 @@
 } else {
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-9 col-12">
+            <div class="col-lg-9 col-12 desktop">
                 <AttendanceStatusVertical roomId="@Id" orderByAscend=false />
             </div>
             <div class="col-lg-3 col-12">
                 <div class="row">
-                    <h3 class="text-center col-12" style="margin-top : 25%;">공지사항</h3>
+                    <h3 class="text-center col-12 taggy" style="">공지사항</h3>
 
                         @if(contents.Count == 0) {
                             <div class="alert alert-secondary" role="alert">
@@ -54,6 +74,9 @@
                             </div>
                         }
                 </div>
+            </div>
+            <div class="col-lg-9 col-12 mobile">
+                <AttendanceStatusVertical roomId="@Id" orderByAscend=false />
             </div>
         </div>
     </div>

@@ -30,9 +30,13 @@
         }
     }
 
-    @@media (max-width: 1000px) {
+    @@media (max-width: 990px) {
         .responsive-font, .button-text {
             font-size: 70%;
+        }
+
+        .desktop {
+            display: none;
         }
     }
 
@@ -45,6 +49,13 @@
     @@media (max-width: 600px) {
         .responsive-font, .button-text {
             font-size: 50%;
+        }
+
+    }
+
+    @@media (min-width: 990px) {
+        .mobile {
+            display: none;
         }
     }
 
@@ -69,7 +80,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-9 col-12">
+            <div class="col-lg-9 col-12 desktop">
                 <Timetable ClassRoomList="classRoomList" />
             </div>
             <div class="col-lg-3 col-12">
@@ -119,6 +130,9 @@
                         </div>
                     }
                 </div>
+            </div>
+            <div class="col-lg-9 col-12 mobile">
+                <Timetable ClassRoomList="classRoomList" />
             </div>
         </div>
     </div>
