@@ -29,7 +29,7 @@ namespace ClassHub.Server.Controllers {
 
             foreach (Shared.Exam exam in exams) {
                 // 해당 시험을 이 학생이 제출했는지 체크
-                query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id";
+                query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id;";
                 var submitParameters = new DynamicParameters();
                 submitParameters.Add("room_id", room_id);
                 submitParameters.Add("exam_id", exam.exam_id);

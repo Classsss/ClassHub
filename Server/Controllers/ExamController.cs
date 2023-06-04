@@ -29,7 +29,7 @@ namespace ClassHub.Server.Controllers {
             dbExam = await connection.QuerySingleAsync<Shared.Exam>(query, parametersExam);
 
             // 해당 시험을 이 학생이 제출했는지 체크
-            query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id";
+            query = "SELECT COUNT(*) FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id AND student_id = @student_id;";
             var submitParameters = new DynamicParameters();
             submitParameters.Add("room_id", room_id);
             submitParameters.Add("exam_id", exam_id);
@@ -74,7 +74,7 @@ namespace ClassHub.Server.Controllers {
                 };
 
                 // 현재 객관식 문제의 MultipleChoice를 찾는다.
-                query = "SELECT * FROM MultipleChoice WHERE problem_id = @problem_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                query = "SELECT * FROM MultipleChoice WHERE problem_id = @problem_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                 var parametersMultipleChoice = new DynamicParameters();
                 parametersMultipleChoice.Add("problem_id", problem.ProblemId);
                 parametersMultipleChoice.Add("exam_id", exam_id);
@@ -203,7 +203,7 @@ namespace ClassHub.Server.Controllers {
             using var connection = new NpgsqlConnection(connectionString);
 
             // Exam 업데이트
-            string query = "UPDATE Exam SET exam_id = @exam_id, room_id = @room_id, week = @week, title = @title, author = @author, start_date = @start_date, end_date = @end_date, is_random_problem = @is_random_problem, is_random_choice = @is_random_choice, is_show_time_limit = @is_show_time_limit, is_back_to_previous_problem = @is_back_to_previous_problem WHERE room_id = @room_id AND exam_id = @exam_id";
+            string query = "UPDATE Exam SET exam_id = @exam_id, room_id = @room_id, week = @week, title = @title, author = @author, start_date = @start_date, end_date = @end_date, is_random_problem = @is_random_problem, is_random_choice = @is_random_choice, is_show_time_limit = @is_show_time_limit, is_back_to_previous_problem = @is_back_to_previous_problem WHERE room_id = @room_id AND exam_id = @exam_id;";
             var examParameters = new DynamicParameters();
             examParameters.Add("exam_id : " + newExam.exam_id);
             examParameters.Add("room_id", newExam.room_id);
@@ -223,7 +223,7 @@ namespace ClassHub.Server.Controllers {
                 Shared.MultipleChoiceProblem newProblem = container.MultipleChoiceProblem;
 
                 // 현재 시험 문제가 디비에 존재하는지 확인
-                query = "SELECT COUNT(*) FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                query = "SELECT COUNT(*) FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                 var checkParameters = new DynamicParameters();
                 checkParameters.Add("exam_id", newExam.exam_id);
                 checkParameters.Add("problem_id", newProblem.problem_id);
@@ -232,7 +232,7 @@ namespace ClassHub.Server.Controllers {
 
                 // 이미 디비에 존재함
                 if (examCount > 0) {
-                    query = "UPDATE MultipleChoiceProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    query = "UPDATE MultipleChoiceProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                     var multipleChoiceProblemparameters = new DynamicParameters();
                     multipleChoiceProblemparameters.Add("description", newProblem.description);
                     multipleChoiceProblemparameters.Add("answer", newProblem.answer);
@@ -252,7 +252,7 @@ namespace ClassHub.Server.Controllers {
                 List<Shared.MultipleChoice> multipleChoices = container.MultipleChoices;
                 foreach (var newChoice in multipleChoices) {
                     // 현재 문제 보기가 디비에 존재하는지 확인
-                    query = "SELECT COUNT(*) FROM MultipleChoice WHERE choice_id = @choice_id AND exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    query = "SELECT COUNT(*) FROM MultipleChoice WHERE choice_id = @choice_id AND exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                     checkParameters = new DynamicParameters();
                     checkParameters.Add("choice_id", newChoice.choice_id);
                     checkParameters.Add("exam_id", newExam.exam_id);
@@ -262,7 +262,7 @@ namespace ClassHub.Server.Controllers {
 
                     // 이미 디비에 존재함
                     if (examCount > 0) {
-                        query = "UPDATE MultipleChoice SET description = @description WHERE exam_id = @exam_id AND problem_id = @problem_id AND choice_id = @choice_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                        query = "UPDATE MultipleChoice SET description = @description WHERE exam_id = @exam_id AND problem_id = @problem_id AND choice_id = @choice_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                         var multipleChoiceParameters = new DynamicParameters();
                         multipleChoiceParameters.Add("description", newChoice.description);
                         multipleChoiceParameters.Add("exam_id", newExam.exam_id);
@@ -282,7 +282,7 @@ namespace ClassHub.Server.Controllers {
             // 단답형 문제 업데이트
             foreach (var newProblem in shortAnswerProblems) {
                 // 현재 시험 문제가 디비에 존재하는지 확인
-                query = "SELECT COUNT(*) FROM ShortAnswerProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                query = "SELECT COUNT(*) FROM ShortAnswerProblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                 var checkParameters = new DynamicParameters();
                 checkParameters.Add("exam_id", newExam.exam_id);
                 checkParameters.Add("problem_id", newProblem.problem_id);
@@ -291,7 +291,7 @@ namespace ClassHub.Server.Controllers {
 
                 // 이미 디비에 존재함
                 if (examCount > 0) {
-                    query = "UPDATE ShortAnswerProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    query = "UPDATE ShortAnswerProblem SET description = @description, answer = @answer, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                     var shortAnswerProblemParameters = new DynamicParameters();
                     shortAnswerProblemParameters.Add("description", newProblem.description);
                     shortAnswerProblemParameters.Add("answer", newProblem.answer);
@@ -311,7 +311,7 @@ namespace ClassHub.Server.Controllers {
             // 코드형 문제 업데이트
             foreach (var newProblem in codingExamProblems) {
                 // 현재 시험 문제가 디비에 존재하는지 확인
-                query = "SELECT COUNT(*) FROM CodingExamPRoblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                query = "SELECT COUNT(*) FROM CodingExamPRoblem WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                 var checkParameters = new DynamicParameters();
                 checkParameters.Add("exam_id", newExam.exam_id);
                 checkParameters.Add("problem_id", newProblem.problem_id);
@@ -320,7 +320,7 @@ namespace ClassHub.Server.Controllers {
 
                 // 이미 디비에 존재함
                 if (examCount > 0) {
-                    query = "UPDATE CodingExamProblem SET description = @description, example_code = @example_code, answer_code = @answer_code, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                    query = "UPDATE CodingExamProblem SET description = @description, example_code = @example_code, answer_code = @answer_code, score = @score WHERE exam_id = @exam_id AND problem_id = @problem_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                     var codingExamProblemParameters = new DynamicParameters();
                     codingExamProblemParameters.Add("description", newProblem.description);
                     codingExamProblemParameters.Add("example_code", newProblem.example_code);
@@ -355,7 +355,7 @@ namespace ClassHub.Server.Controllers {
 
             // 객관식 보기들 삭제
             foreach (var problem_id in problem_ids) {
-                query = "DELETE FROM MultipleChoice WHERE problem_id = @problem_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id)";
+                query = "DELETE FROM MultipleChoice WHERE problem_id = @problem_id AND exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
                 var parametersMultipleChoice = new DynamicParameters();
                 parametersMultipleChoice.Add("problem_id", problem_id);
                 parametersMultipleChoice.Add("exam_id", exam_id);
@@ -376,7 +376,7 @@ namespace ClassHub.Server.Controllers {
             await connection.ExecuteAsync(query, parameters);
 
             // 시험 데이터 삭제
-            query = "DELETE FROM Exam WHERE room_id = @room_id AND exam_id = @exam_id";
+            query = "DELETE FROM Exam WHERE room_id = @room_id AND exam_id = @exam_id;";
             await connection.ExecuteAsync(query, parameters);
         }
     }

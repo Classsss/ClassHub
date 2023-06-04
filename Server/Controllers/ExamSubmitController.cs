@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using ClassHub.Shared;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 
@@ -14,11 +15,11 @@ namespace ClassHub.Server.Controllers {
 
         // 해당 시험의 모든 제출을 가져옴
         [HttpGet("room_id/{room_id}/exam_id/{exam_id}")]
-        public async Task<List<Shared.ExamSubmit>> GetExamSubmit(int room_id, int exam_id) {
+        public async Task<List<Shared.ExamSubmit>> GetExamSubmits(int room_id, int exam_id) {
             List<Shared.ExamSubmit> submitList = new List<Shared.ExamSubmit>();
 
             using var connection = new NpgsqlConnection(connectionString);
-            string query = "SELECT * FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id";
+            string query = "SELECT * FROM ExamSubmit WHERE room_id = @room_id AND exam_id = @exam_id;";
             var submitParameters = new DynamicParameters();
             submitParameters.Add("room_id", room_id);
             submitParameters.Add("exam_id", exam_id);
