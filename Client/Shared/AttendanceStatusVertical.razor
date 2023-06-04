@@ -38,7 +38,9 @@
                         <td class="@(getClassForAttendanceStatus(subItem.AttendProgress))">
                             @if (subItem.AttendProgress == "출석"){
                                 <i class="mobile-icon oi oi-circle-check" />
-                            } else if (subItem.AttendProgress == "미출석"){
+                            } else if (subItem.AttendProgress == "지각") {
+                                <i class="mobile-icon oi oi-clock" />
+                            } else if (subItem.AttendProgress == "결석") {
                                 <i class="mobile-icon oi oi-x" />
                             } else if (subItem.AttendProgress == "완료"){
                                 <i class="mobile-icon oi oi-circle-check" />
@@ -144,13 +146,13 @@
 
     //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
     string getClassForAttendanceStatus(string status) {
-        if (status == "완료"){
+        if (status == "완료" || status == "출석") {
             return "learning-status-yes";
-        } else if (status == "미완료"){
+        } else if (status == "미완료" || status == "결석"){
             return "learning-status-no";
-        } else if (status == "출석") {
+        } else if (status == "") {
             return "attendance-status-yes";
-        } else if (status == "미출석") {
+        } else if (status == "지각") {
             return "attendance-status-no";
         } else {
             return "attendance-status-no-target";

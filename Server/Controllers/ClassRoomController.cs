@@ -814,21 +814,53 @@ namespace ClassHub.Server.Controllers {
                 BaseAddress = new Uri(base_uri)
             };
 
+            using var connection = new NpgsqlConnection(connectionString);
             //오프라인 출석 불러오기
-            for (int i = 1; i <= 14; i++) {
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
+
+            string query = @"SELECT week, chapter, status
+                FROM offlineattendance, offlinelecture
+                WHERE student_id = (
+                    SELECT student_id
+                    FROM student
+                    WHERE room_id = @room_id
+                    AND student_id = @student_id
+                ) 
+                AND offlineattendance.lecture_id = offlinelecture.lecture_id
+                AND offlineattendance.room_id =  offlinelecture.room_id
+                AND offlinelecture.room_id = @room_id;
+            ";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            parameters.Add("student_id", student_id);
+
+            var offline_attendance = connection.Query<AttendanceItem>(query, parameters).ToList();
+
+            foreach (var i in offline_attendance) {
+                Console.WriteLine(i.Status);
+                string status = "";
+                switch (i.Status) {
+                    case 0:
+                        status = "대상아님";
+                        break;
+                    case 1:
+                        status = "지각";
+                        break;
+                    case 2:
+                        status = "결석";
+                        break;
+                    case 3:
+                        status = "출석";
+                        break;
+                }
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Chapter = i.Chapter, Title = i.Week + "주차 수업 " + i.Chapter + "차시", LearningType = "오프라인 출결", AttendProgress = status});
             }
 
             //강의자료 불러오기
-            using var connection = new NpgsqlConnection(connectionString);
-            string query = @"SELECT title, week, material_id AS id
+            query = @"SELECT title, week, material_id AS id
                 FROM LectureMaterial
                 WHERE room_id = @room_id;
             ";
-            var parameters = new DynamicParameters();
-            parameters.Add("room_id", room_id);
-
             
             var lecureMaterials = connection.Query<AttendanceItem>(query, parameters).ToList();
 
