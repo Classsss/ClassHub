@@ -14,6 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CsvHelper">
+      <HintPath>E:\nuget_root\csvhelper\30.0.1\lib\net6.0\CsvHelper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 </Project>

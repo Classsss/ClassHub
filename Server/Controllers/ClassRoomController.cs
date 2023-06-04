@@ -920,5 +920,81 @@ namespace ClassHub.Server.Controllers {
 
             return attendanceItems;
         }
+
+        [HttpGet("students")]
+        public List<Student> GetStudentList([FromQuery] int room_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "SELECT * FROM Student WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            List<Student> studentList = connection.Query<Student>(query, parameters).ToList();
+            return studentList;
+        }
+
+        [HttpGet("students/grade")]
+        public List<StudentGrade> GetStudentGradeList(int room_id) {
+            List<Student> studentList = GetStudentList(room_id);
+            List<StudentGrade> studentGradeList = new List<StudentGrade>();
+            GradeRatio gradeRatio = new GradeRatio {
+                attendance_ratio = 0.1f,
+                assignment_ratio = 0.2f,
+                practice_ratio = 0.1f,
+                exam_ratio = 0.6f
+            };
+
+            Random rand = new Random();
+            foreach(var student in studentList) {
+                studentGradeList.Add(new StudentGrade(gradeRatio) {
+                    student_id = student.student_id,
+                    name = student.name,
+                    attendance_score = rand.Next(0, 101),
+                    assignment_score = rand.Next(0, 101),
+                    practice_score = rand.Next(0, 101),
+                    exam_score = rand.Next(0, 101)
+                });
+            }
+            return studentGradeList;
+        }
+
+        [HttpPost("set/graderatio")]
+        public void SetGradeRatio([FromBody] GradeRatio gradeRatio) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = 
+                "INSERT INTO graderatio (room_id, attendance_ratio, assignment_ratio, practice_ratio, exam_ratio) " +
+                "VALUES (@room_id, @attendance_ratio, @assignment_ratio, @practice_ratio, @exam_ratio);";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", gradeRatio.room_id);
+            parameters.Add("attendance_ratio", gradeRatio.attendance_ratio);
+            parameters.Add("assignment_ratio", gradeRatio.assignment_ratio);
+            parameters.Add("practice_ratio", gradeRatio.practice_ratio);
+            parameters.Add("exam_ratio", gradeRatio.exam_ratio);
+            connection.Execute(query, parameters);
+        }
+
+        [HttpPut("modify/graderatio")]
+        public void PutGradeRatio([FromBody] GradeRatio gradeRatio) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query =
+                "UPDATE graderatio " +
+                "SET attendance_ratio = @attendance_ratio, assignment_ratio = @assignment_ratio, practice_ratio = @practice_ratio, exam_ratio = @exam_ratio " +
+                "WHERE room_id = @room_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", gradeRatio.room_id);
+            parameters.Add("attendance_ratio", gradeRatio.attendance_ratio);
+            parameters.Add("assignment_ratio", gradeRatio.assignment_ratio);
+            parameters.Add("practice_ratio", gradeRatio.practice_ratio);
+            parameters.Add("exam_ratio", gradeRatio.exam_ratio);
+            connection.Execute(query, parameters);
+        }
+
+        [HttpGet("graderatio")]
+        public GradeRatio? GetGradeRatio([FromQuery] int room_id) {
+            using var connection = new NpgsqlConnection(connectionString);
+            string query = "SELECT * FROM graderatio WHERE room_id = @room_id";
+            var parameters = new DynamicParameters();
+            parameters.Add("room_id", room_id);
+            GradeRatio? gradeRatio = connection.QueryFirstOrDefault<GradeRatio>(query, parameters) ?? default(GradeRatio?);
+            return gradeRatio;
+        }
     }
 }
