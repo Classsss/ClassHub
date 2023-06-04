@@ -4,12 +4,21 @@
 @using ClassHub.Shared;
 @using System.Drawing;
 @using ClassHub.Client.Shared.Chart;
+@using CsvHelper;
+@using System.Globalization;
+@using CsvHelper.Configuration;
+@using System.Text;
 @inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
 @if(studentGradeList == null) {
     <LoadingBar />
 } else {
     <Chart Config="_config" @ref="_chart"></Chart>
+    <hr />
+    <button class="btn btn-success float-end mb-2" @onclick="PrintGrade">
+        <span class="oi oi-print"> 성적 출력</span>
+    </button>
 
     <table class="table table-striped table-hover">
         <thead>
@@ -108,6 +117,21 @@
         }
 
         _config.Data.Datasets.Add(dataset);
+    }
+
+    private async Task PrintGrade() {
+        using(var ms = new MemoryStream())
+        using(var sw = new StreamWriter(ms, Encoding.GetEncoding("utf-8")))
+        using(var csv = new CsvWriter(sw, CultureInfo.InvariantCulture)) {
+            csv.Context.RegisterClassMap<StudentGradeMap>();
+            csv.WriteRecords(studentGradeList);
+            await sw.FlushAsync();
+
+            var bytes = ms.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            var url = $"data:text/csv;base64,{base64}";
+            await JSRuntime.InvokeVoidAsync("saveAsFile", "studentgrades.csv", url);
+        }
     }
 
     // 열 헤더 클릭 시 호출되는 메소드들
