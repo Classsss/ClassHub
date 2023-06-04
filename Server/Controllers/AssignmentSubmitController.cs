@@ -28,7 +28,7 @@ namespace ClassHub.Server.Controllers {
         }
 
         // 해당 과제의 제출 내역이 있는지 체크합니다. 
-        [HttpGet("room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
+        [HttpGet("getsubmit/room_id/{room_id}/assignment_id/{assignment_id}/student_id/{student_id}")]
         public AssignmentSubmit GetAssignmentSubmit(int room_id, int assignment_id, int student_id) {
             using var connection = new NpgsqlConnection(connectionString);
             string query;
