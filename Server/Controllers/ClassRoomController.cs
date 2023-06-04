@@ -890,14 +890,16 @@ namespace ClassHub.Server.Controllers {
                 practice_ratio = 0.1f,
                 exam_ratio = 0.6f
             };
+
+            Random rand = new Random();
             foreach(var student in studentList) {
                 studentGradeList.Add(new StudentGrade(gradeRatio) {
                     student_id = student.student_id,
                     name = student.name,
-                    attendance_score = 100,
-                    assignment_score = 100,
-                    practice_score = 100,
-                    exam_score = 100
+                    attendance_score = rand.Next(0, 101),
+                    assignment_score = rand.Next(0, 101),
+                    practice_score = rand.Next(0, 101),
+                    exam_score = rand.Next(0, 101)
                 });
             }
             return studentGradeList;
