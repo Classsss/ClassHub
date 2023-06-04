@@ -344,10 +344,24 @@ namespace ClassHub.Server.Controllers {
         public async Task RemoveExam(int room_id, int exam_id) {
             using var connection = new NpgsqlConnection(connectionString);
 
-            string query = string.Empty;
+            // 객관식 문제 제출 모두 삭제
+            string query = "DELETE FROM MultipleChoiceProblemSubmit WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
             var parameters = new DynamicParameters();
             parameters.Add("room_id", room_id);
             parameters.Add("exam_id", exam_id);
+            await connection.ExecuteAsync(query, parameters);
+
+            // 단답형 문제 제출 모두 삭제
+            query = "DELETE FROM ShortAnswerProblemSubmit WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
+            await connection.ExecuteAsync(query, parameters);
+
+            // 코드형 문제 제출 모두 삭제
+            query = "DELETE FROM CodingExamProblemSubmit WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM ExamSubmit WHERE room_id = @room_id);";
+            await connection.ExecuteAsync(query, parameters);
+
+            // 시험 제출 삭제
+            query = "DELETE FROM ExamSubmit WHERE exam_id = @exam_id AND room_id = @room_id;";
+            await connection.ExecuteAsync(query, parameters);
 
             // 객관식 문제들의 problem_id들을 찾는다.
             query = "SELECT problem_id FROM MultipleChoiceProblem WHERE exam_id = @exam_id AND exam_id IN (SELECT exam_id FROM Exam WHERE room_id = @room_id);";
