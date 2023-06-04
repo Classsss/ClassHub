@@ -87,6 +87,7 @@ namespace ClassHub.Server.Controllers {
                         Description = dbMultipleChoice.description
                     });
                 }
+                problem.Choices = problem.Choices.OrderBy(item => item.ChoiceId).ToList();
 
                 clientExam.Problems.Add(problem);
             }
