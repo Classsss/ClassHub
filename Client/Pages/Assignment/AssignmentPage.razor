@@ -162,7 +162,7 @@
     protected override async Task OnInitializedAsync() {
         role = await UserInfo.GetRoleAsync(JSRuntime);
         assignment = await Http.GetFromJsonAsync<Models.Assignment>($"api/assignment/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
-        assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
+        assignmentSubmit = await Http.GetFromJsonAsync<AssignmentSubmit>($"api/assignmentsubmit/getsubmit/room_id/{RoomId}/assignment_id/{AssignmentId}/student_id/{await UserInfo.GetUserIdAsync(JSRuntime)}");
         dataLoaded = true;
         StateHasChanged();
         LoadAttachments();

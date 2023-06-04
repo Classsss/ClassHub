@@ -5,6 +5,7 @@ namespace ClassHub.Client.Models {
     /// 무언가를 제출해야 하는 과제, 실습, 시험 등의 모델을 정의하는 클래스 입니다.
     /// </summary>
     [JsonDerivedType(typeof(Submission), typeDiscriminator: "base")]
+    [JsonDerivedType(typeof(Assignment), typeDiscriminator: "assignment")]
     [JsonDerivedType(typeof(Exam), typeDiscriminator: "exam")]
     public class Submission {
         public int Id { get; set; }

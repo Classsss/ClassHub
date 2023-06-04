@@ -37,7 +37,7 @@
 
     @@media (max-width: 640.98px) {
         table {
-        font-size: calc(1vw);
+        font-size: calc(2.5vw);
         }
 
         .desktop-date, .view-count, .desktop-submit {
@@ -71,7 +71,7 @@
 
 <AuthorizeView Roles="professor">
     <div class="mobile-submit col-12">
-        <button class="btn btn-sm btn-success float-end" @onclick="Submit">등록</button>
+        <button class="btn btn-sm btn-success float-end" style="margin-top: 10px;" @onclick="Submit">등록</button>
         <br />
     </div>
 </AuthorizeView>

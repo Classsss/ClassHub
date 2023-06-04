@@ -1,5 +1,6 @@
 ﻿namespace ClassHub.Shared {
     public class AttendanceItem {
+        public int Id { get; set; }
         public int Week { get; set; }
         public string Title { get; set; } //학습 제목
         public string LearningType { get; set; } // 학습유형

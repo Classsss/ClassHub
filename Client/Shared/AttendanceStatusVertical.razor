@@ -45,7 +45,11 @@
                             }
                             <span class="desktop">@(" " + subItem.AttendProgress)</span>
                         </td>
-                        <td><button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right"><span class="desktop">@(" " + "확인")</span></button></td>
+                        <td>
+                            @if(subItem.DetailLink != null) {
+                                <button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right" @onclick="(e) => toDetail(subItem.DetailLink)"><span class="desktop">@(" " + "확인")</span></button>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -89,7 +93,7 @@
 
     @@media (max-width: 1200px) {
         table {
-            font-size: calc(7px);
+            font-size: calc(7px + 1vw);
         }
     }
 
@@ -125,7 +129,7 @@
 
     protected override async void OnInitialized() {
         int student_id = await UserInfo.GetUserIdAsync(JSRuntime);
-        var result = await Http.GetFromJsonAsync<List<AttendanceItem>>($"api/classroom/attendent?room_id={roomId}&student_id={student_id}");
+        var result = await Http.GetFromJsonAsync<List<AttendanceItem>>($"api/classroom/attendent?room_id={roomId}&student_id={student_id}&base_uri={NavigationManager.BaseUri}");
 
         foreach(var i in result) {
             var k = new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = i.LearningType, AttendProgress = i.AttendProgress, DetailLink = i.DetailLink };
@@ -149,5 +153,11 @@
         } else {
             return "attendance-status-no-target";
         }
+    }
+
+    public void toDetail(string url) {
+        Console.WriteLine(url);
+        var baseUrl = NavigationManager.BaseUri;
+        NavigationManager.NavigateTo(baseUrl + url);
     }
 }
