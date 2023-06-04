@@ -816,13 +816,13 @@ namespace ClassHub.Server.Controllers {
 
             //오프라인 출석 불러오기
             for (int i = 1; i <= 14; i++) {
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
             }
 
             //강의자료 불러오기
             using var connection = new NpgsqlConnection(connectionString);
-            string query = @"SELECT title, week, material_id
+            string query = @"SELECT title, week, material_id AS id
                 FROM LectureMaterial
                 WHERE room_id = @room_id;
             ";
@@ -833,7 +833,7 @@ namespace ClassHub.Server.Controllers {
             var lecureMaterials = connection.Query<AttendanceItem>(query, parameters).ToList();
 
             foreach(var i in lecureMaterials) {
-                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "링크" });
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "classroom/"+room_id+"/lecturematerial/"+i.Id });
             }
 
             //시험 불러오기
@@ -858,7 +858,7 @@ namespace ClassHub.Server.Controllers {
                         progress = "완료";
                     }
 
-                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = progress, DetailLink = "링크" });
+                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = progress });
 
             } catch (Exception e) {
                 Console.WriteLine(e.ToString());
@@ -883,7 +883,7 @@ namespace ClassHub.Server.Controllers {
                         progress = "완료";
                     }
 
-                    attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "실습", AttendProgress = progress, DetailLink = "링크" });
+                    attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "실습", AttendProgress = progress, DetailLink = "classroom/" + room_id + "/practice/" + i.Id });
 
                 } catch (Exception e) {
                     Console.WriteLine(e.ToString());
@@ -911,7 +911,7 @@ namespace ClassHub.Server.Controllers {
 
                     DateTime semester_startDate = new DateTime(2023, 3, 2);
                     TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
-                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = progress, DetailLink = "링크" });
+                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = progress, DetailLink = "classroom/" + room_id + "/assignment/" + i.Id });
 
                 } catch (Exception e) {
                     Console.WriteLine(e.ToString());
