@@ -45,7 +45,11 @@
                             }
                             <span class="desktop">@(" " + subItem.AttendProgress)</span>
                         </td>
-                        <td><button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right"><span class="desktop">@(" " + "확인")</span></button></td>
+                        <td>
+                            @if(subItem.DetailLink != null) {
+                                <button style="border:0; height:auto; font-size:12px; background-color:#F2F2F2; color:#737373" class="btn btn-secondary oi oi-arrow-circle-right" @onclick="(e) => toDetail(subItem.DetailLink)"><span class="desktop">@(" " + "확인")</span></button>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -149,5 +153,11 @@
         } else {
             return "attendance-status-no-target";
         }
+    }
+
+    public void toDetail(string url) {
+        Console.WriteLine(url);
+        var baseUrl = NavigationManager.BaseUri;
+        NavigationManager.NavigateTo(baseUrl + url);
     }
 }
