@@ -117,5 +117,17 @@ namespace ClassHub.Server.Controllers {
 
             return Ok(examSubmit.submit_id);
         }
+
+        // 제출한 시험을 채점
+        [HttpPut("submit_id/{submit_id}/score/{score}")]
+        public async Task ModifyScore(int submit_id, int score) {
+            using var connection = new NpgsqlConnection(connectionString);
+
+            string query = "UPDATE ExamSubmit SET score = @score WHERE submit_id = @submit_id;";
+            var parameters = new DynamicParameters();
+            parameters.Add("score", score);
+            parameters.Add("submit_id", submit_id);
+            await connection.ExecuteAsync(query, parameters);
+        }
     }
 }
