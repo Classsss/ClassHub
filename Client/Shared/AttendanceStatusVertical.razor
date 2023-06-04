@@ -14,8 +14,10 @@
     </div>
 </div>
 <br />
-
-@foreach (var item in attendanceStatus.GroupBy(x => new { x.Week })) {
+@{
+    var sortedAttendanceStatus = orderByAscend ? attendanceStatus.OrderBy(x => x.Week) : attendanceStatus.OrderByDescending(x => x.Week);
+}
+@foreach (var item in sortedAttendanceStatus.GroupBy(x => new { x.Week })) {
     <i class="oi oi-calendar" style="font-weight:bold; font-size:18px; margin-bottom:10px;">@(" " + item.Key.Week)주차</i>
     <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle" style="text-align: center;">
@@ -36,7 +38,9 @@
                         <td class="@(getClassForAttendanceStatus(subItem.AttendProgress))">
                             @if (subItem.AttendProgress == "출석"){
                                 <i class="mobile-icon oi oi-circle-check" />
-                            } else if (subItem.AttendProgress == "미출석"){
+                            } else if (subItem.AttendProgress == "지각") {
+                                <i class="mobile-icon oi oi-clock" />
+                            } else if (subItem.AttendProgress == "결석") {
                                 <i class="mobile-icon oi oi-x" />
                             } else if (subItem.AttendProgress == "완료"){
                                 <i class="mobile-icon oi oi-circle-check" />
@@ -122,7 +126,7 @@
     [Parameter]
     public int roomId { get; set; } //강의실 번호
     [Parameter]
-    public int MaxCount { get; set; } = 10;
+    public bool orderByAscend { get; set; } //오름차순 여부
 
     //출결 항목 리스트
     public List<AttendanceItem> attendanceStatus = new List<AttendanceItem>() { };
@@ -142,13 +146,13 @@
 
     //해당 status의 값에 따라 태그의 클래스 이름을 부여한다
     string getClassForAttendanceStatus(string status) {
-        if (status == "완료"){
+        if (status == "완료" || status == "출석") {
             return "learning-status-yes";
-        } else if (status == "미완료"){
+        } else if (status == "미완료" || status == "결석"){
             return "learning-status-no";
-        } else if (status == "출석") {
+        } else if (status == "") {
             return "attendance-status-yes";
-        } else if (status == "미출석") {
+        } else if (status == "지각") {
             return "attendance-status-no";
         } else {
             return "attendance-status-no-target";
@@ -156,7 +160,7 @@
     }
 
     public void toDetail(string url) {
-        Console.WriteLine(url);
+        //Console.WriteLine(url);
         var baseUrl = NavigationManager.BaseUri;
         NavigationManager.NavigateTo(baseUrl + url);
     }
