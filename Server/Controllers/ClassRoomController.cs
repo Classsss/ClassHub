@@ -3,10 +3,15 @@ using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using ClassHub.Client.Models;
+using ClassHub.Client.Shared;
 using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.JSInterop;
 using Npgsql;
+using static System.Net.WebRequestMethods;
+using System.Reflection;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -743,7 +748,7 @@ namespace ClassHub.Server.Controllers {
                 WHERE L.room_id = @room_id AND (LP.is_enroll IS NULL OR LP.is_enroll = FALSE);
             ";
 
-            var lectures = connection.Query<Lecture>(query3, parameters);
+            var lectures = connection.Query<Shared.Lecture>(query3, parameters);
 
             foreach(var lecture in lectures) {
                 toDoList.Add(new ToDo {
@@ -802,18 +807,22 @@ namespace ClassHub.Server.Controllers {
         // Param으로 받은 ID를 가진 강의실의 출석 대상들을 불러온다
         // 실제 요청 url 예시 : 'api/classroom/attendent'
         [HttpGet("attendent")]
-        public List<AttendanceItem> GetAttendent([FromQuery] int room_id, [FromQuery] int student_id) {
+        public async Task<List<AttendanceItem>> GetAttendentAsync([FromQuery] int room_id, [FromQuery] int student_id, [FromQuery] string base_uri) {
             List<AttendanceItem> attendanceItems = new List<AttendanceItem>() { };
+
+            var newClient = new HttpClient {
+                BaseAddress = new Uri(base_uri)
+            };
 
             //오프라인 출석 불러오기
             for (int i = 1; i <= 14; i++) {
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
-                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석", DetailLink = "링크" });
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 1차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
+                attendanceItems.Add(new AttendanceItem { Week = i, Title = i + "주차 수업 2차시", LearningType = "오프라인 출결", AttendProgress = "미출석"});
             }
 
             //강의자료 불러오기
             using var connection = new NpgsqlConnection(connectionString);
-            string query = @"SELECT title, week, material_id
+            string query = @"SELECT title, week, material_id AS id
                 FROM LectureMaterial
                 WHERE room_id = @room_id;
             ";
@@ -824,11 +833,11 @@ namespace ClassHub.Server.Controllers {
             var lecureMaterials = connection.Query<AttendanceItem>(query, parameters).ToList();
 
             foreach(var i in lecureMaterials) {
-                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "링크" });
+                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "강의자료", AttendProgress = "대상아님", DetailLink = "classroom/"+room_id+"/lecturematerial/"+i.Id });
             }
 
             //시험 불러오기
-            query = @"SELECT title, start_date AS startdate, exam_id
+            query = @"SELECT title, start_date AS startdate, exam_id As id
                 FROM exam
                 WHERE room_id = @room_id;
             ";
@@ -836,35 +845,77 @@ namespace ClassHub.Server.Controllers {
             var exam = connection.Query<AttendanceItem>(query, parameters).ToList();
 
             foreach (var i in exam) {
-                DateTime semester_startDate = new DateTime(2023, 3, 2);
-                TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
-                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = "미완료", DetailLink = "링크" });
+                try { 
+                    DateTime semester_startDate = new DateTime(2023, 3, 2);
+                    TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
+
+                    //시험을 응시했는가
+
+                    var examInfo = await newClient.GetFromJsonAsync<Shared.Exam>($"api/exam/room_id/{room_id}/exam_id/{i.Id}/student_id/{student_id}");
+
+                    string progress = "미완료";
+                    if ( examInfo != null && examInfo.isSubmitted ) {
+                        progress = "완료";
+                    }
+
+                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "시험", AttendProgress = progress });
+
+            } catch (Exception e) {
+                Console.WriteLine(e.ToString());
             }
+        }
 
             //실습 불러오기
-            query = @"SELECT codeproblem.title AS title, week, assignment_id
+            query = @"SELECT codeproblem.title AS title, week, assignment_id As Id
                 FROM codeassignment, codeproblem
                 WHERE room_id = @room_id AND codeassignment.problem_id = codeproblem.problem_id
             ";
 
             var codeProblem = connection.Query<AttendanceItem>(query, parameters).ToList();
 
+            //실습을 제출했는지 판별
             foreach (var i in codeProblem) {
-                attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "실습", AttendProgress = "미완료", DetailLink = "링크" });
+                try {
+                    var practiceInfo = await newClient.GetFromJsonAsync<bool>($"api/practice/room_id/{room_id}/practice_id/{i.Id}/student_id/{student_id}");
+
+                    string progress = "미완료";
+                    if (practiceInfo) {
+                        progress = "완료";
+                    }
+
+                    attendanceItems.Add(new AttendanceItem { Week = i.Week, Title = i.Title, LearningType = "실습", AttendProgress = progress, DetailLink = "classroom/" + room_id + "/practice/" + i.Id });
+
+                } catch (Exception e) {
+                    Console.WriteLine(e.ToString());
+                }
             }
 
             //과제 불러오기
-            query = @"SELECT title AS title, start_date as startDate, assignment_id
+            query = @"SELECT title AS title, start_date as startDate, assignment_id AS id
                 FROM assignment
                 WHERE room_id = @room_id
             ";
 
             var assignment = connection.Query<AttendanceItem>(query, parameters).ToList();
 
+
+            //과제를 제출했는지 판별
             foreach (var i in assignment) {
-                DateTime semester_startDate = new DateTime(2023, 3, 2);
-                TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
-                attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = "미완료", DetailLink = "링크" });
+                try {
+                    var assignmentInfo = await newClient.GetFromJsonAsync<Client.Models.Assignment>($"api/assignment/room_id/{room_id}/assignment_id/{i.Id}/student_id/{student_id}");
+
+                    string progress = "미완료";
+                    if (assignmentInfo != null && assignmentInfo.IsSubmitted) {
+                        progress = "완료";
+                    }
+
+                    DateTime semester_startDate = new DateTime(2023, 3, 2);
+                    TimeSpan duration = i.startDate - semester_startDate; //주차가 없으니 학기 시작일에서 빼서 계산한다
+                    attendanceItems.Add(new AttendanceItem { Week = (int)Math.Floor(duration.TotalDays / 7) + 1, Title = i.Title, LearningType = "과제", AttendProgress = progress, DetailLink = "classroom/" + room_id + "/assignment/" + i.Id });
+
+                } catch (Exception e) {
+                    Console.WriteLine(e.ToString());
+                }
             }
 
             return attendanceItems;
