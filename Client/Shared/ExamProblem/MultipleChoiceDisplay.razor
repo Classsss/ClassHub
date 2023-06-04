@@ -1,11 +1,12 @@
 ﻿@inherits MultipleChoiceDisplayBase
-<div class="text-center border p-3 rounded">
+
+<div class="d-flex flex-column align-items-center justify-content-center border p-3 rounded">
     <h3>@Problem.Description</h3>
-    <div class="d-inline-block text-left">
+    <div class="d-inline-block">
         @foreach (var choice in Problem.Choices.Select((value, index) => new { Value = value, Index = index })) {
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="multipleChoice" id="@choice.Index" value="@choice.Value.Description" @onchange="OnAnswerSelected" />
-                <label class="form-check-label" for="@choice.Index">
+                <label class="form-check-label text-left" for="@choice.Index">
                     @choice.Value.Description
                 </label>
             </div>

@@ -1,9 +1,7 @@
 ﻿@inherits ShortAnswerDisplayBase
-<div class="text-center border p-3 rounded">
+<div class="d-flex flex-column align-items-center justify-content-center border p-3 rounded">
     <h3>@Problem.Description</h3>
-    <div class="d-inline-block text-left">
-        <div class="form-group">
-            <input class="form-control" @bind="Problem.StudentAnswer" />
-        </div>
+    <div class="form-group text-center">
+        <textarea class="form-control" rows="5" style="width: 60vw; min-width: 200px;" @bind="Problem.StudentAnswer" />
     </div>
 </div>
