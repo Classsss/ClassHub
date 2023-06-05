@@ -101,6 +101,7 @@
             await JSRuntime.InvokeVoidAsync("alert", "동영상파일을 업로드 해주세요."); return;
             return;
         }
+        await JSRuntime.InvokeVoidAsync("showLoadingBar");
 
         // 서버와 통신해 lecture를 db에 등록
         string jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Lecture{
@@ -125,8 +126,9 @@
         var buffer = new byte[file[0].Size];
         await file[0].OpenReadStream().ReadAsync(buffer);
         content.Add(new ByteArrayContent(buffer), "files", $"{RoomId}/{lecture_id}/{file[0].Name}");
-        var responsefile = Http.PostAsync($"api/lecture/{RoomId}/upload/{lecture_id}", content);
-        await JSRuntime.InvokeVoidAsync("alert", "등록 요청 완료하였습니다! 몇 초 후에 동영상 강의가 등록됩니다.");
+        await Http.PostAsync($"api/lecture/{RoomId}/upload/{lecture_id}", content);
+        await JSRuntime.InvokeVoidAsync("alert", "등록을 완료하였습니다.");
+        await JSRuntime.InvokeVoidAsync("hideLoadingBar");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
 

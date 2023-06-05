@@ -200,6 +200,7 @@
     }
 
     private async void RegisterContent() {
+        await JSRuntime.InvokeVoidAsync("showLoadingBar");
         contents = await this.QuillHtml.GetHTML();
         if(type == 1) {
             // 강의자료 수정
@@ -254,7 +255,7 @@
             };
             await notice.PostNoticeAsync();
         }
-
+        await JSRuntime.InvokeVoidAsync("hideLoadingBar");
         // 목록 또는 게시글 페이지로 돌아감
         NavigationManager.NavigateTo(NavigationManager.Uri.Substring(0, NavigationManager.Uri.LastIndexOf("/")));
     }
