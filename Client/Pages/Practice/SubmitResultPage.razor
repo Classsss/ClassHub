@@ -44,12 +44,12 @@
                 <th>학번/이름</th>
              }
             <th>제출 번호</th>
+            <th>상태</th>
             <th>메모리</th>
             <th>시간</th>
             <th>언어</th>
             <th>제출 시간</th>
             <th>코드 확인</th>
-            <th>제출 시간</th>
             @if (role == "student") {
                 <th>GPT조언</th>
             }
@@ -60,8 +60,7 @@
                 @foreach (CodeSubmit submit in submitList) {
                     <tr style="vertical-align: middle; background-color: @(submitList.IndexOf(submit) % 2 == 0 ? "#f2f2f2" : "white")">
                         @if (role == "professor") {
-                            <td style="vertical-align: middle;;">@submit.student_id</td>
-                            <td style="vertical-align: middle;">@submit.student_name</td>
+                            <td style="vertical-align: middle;;">@submit.student_id/@submit.student_name</td>
                         }
                         <td style="vertical-align: middle;">@submit.submit_id</td>
                         <td style="vertical-align: middle;">
