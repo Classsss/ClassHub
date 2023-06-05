@@ -5,7 +5,7 @@ namespace GptServer.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class ChatgptController : ControllerBase {
-        private string API_KEY = "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";
+        private string API_KEY = "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";
         // 교수가 해당 강의실의 실습번호에 해당하는 제출리스트들을 불러온다.
         [HttpPost]
         public async Task<string> AskGptAsync([FromForm] string Code) { 

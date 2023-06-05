@@ -18,13 +18,14 @@ namespace ClassHub.Server.Middleware
             if (id != null && token != null) {
                 Console.WriteLine(id + " " + token);
 
-                ValifyResponse response = await IsValidTokenAsync(id, token);
-
-                if (!response.Result) {
+                //ValifyResponse response = await IsValidTokenAsync(id, token);
+                /*
+                if () {
                     context.Response.StatusCode = 401; // Unauthorized
                     await context.Response.WriteAsync(response.Code.ToString());
                     return;
                 }
+                */
             }
 
             await _next(context);

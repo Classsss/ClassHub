@@ -26,7 +26,7 @@
 
 
     protected override async Task OnInitializedAsync() {  
-#if !DEBUG
+
       var parameters = new Dictionary<string, string>
     {
     { "code", Code }
@@ -36,9 +36,7 @@
 
     var response = await Http.PostAsync($"api/chatgpt", encodedContent);
     Advice = await response.Content.ReadAsStringAsync();
-#else
-        Advice = "디버그 접근 금지";
-#endif
+
     }
     private async Task HandleClose()
     {
