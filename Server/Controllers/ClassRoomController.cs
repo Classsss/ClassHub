@@ -759,7 +759,7 @@ namespace ClassHub.Server.Controllers {
                     Title = lecture.title,
                     Kind = Kind.온라인강의,
                     EndTime = lecture.end_date,
-                    Uri = $"classroom/{room_id}/lecture/{lecture.lecture_id}"
+                    Uri = $"classroom/{room_id}/lecture"
                 });
             }
 
@@ -791,7 +791,7 @@ namespace ClassHub.Server.Controllers {
                     L.title as Title, 
                     '온라인강의' as Kind, 
                     L.end_date as EndTime, 
-                    CONCAT('classroom/', L.room_id, '/lecture/', L.lecture_id) as Uri
+                    CONCAT('classroom/', L.room_id, '/lecture') as Uri
                 FROM Lecture L
                 LEFT JOIN LectureProgress LP ON L.lecture_id = LP.lecture_id AND LP.room_id = L.room_id AND LP.student_id = @student_id
                 INNER JOIN ClassRoom CR ON L.room_id = CR.room_id
