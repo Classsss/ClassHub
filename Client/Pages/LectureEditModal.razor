@@ -87,6 +87,8 @@
 
     // 동영상 강의를 수정한다.
     private async Task HandleModify() {
+        await JSRuntime.InvokeVoidAsync("showLoadingBar");
+
         // 서버와 통신해 db를 수정
         string jsonString = JsonSerializer.Serialize(new ClassHub.Shared.Lecture {
                 room_id = lecture.RoomId,
@@ -101,17 +103,20 @@
         });
         HttpContent httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
         await Http.PutAsync($"api/lecture/{lecture.RoomId}/modifydb/{lecture.LectureId}", httpContent);
- 
+
+        List<Task> taskList = new List<Task>();
         // 동영상 파일까지 수정할 때
         if (file.Count > 0) {
             var content = new MultipartFormDataContent();
             var buffer = new byte[file[0].Size];
             await file[0].OpenReadStream().ReadAsync(buffer);
             content.Add(new ByteArrayContent(buffer), "files", $"{lecture.RoomId}/{lecture.LectureId}/{file[0].Name}");
-            await Http.PutAsync($"api/lecture/{lecture.RoomId}/insertnone/{lecture.LectureId}",null);
-            Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}");
-            Http.PostAsync($"api/lecture/{lecture.RoomId}/upload/{lecture.LectureId}", content);
+            taskList.Add(Http.PutAsync($"api/lecture/{lecture.RoomId}/insertnone/{lecture.LectureId}", null));
+            taskList.Add(Http.DeleteAsync($"api/lecture/{lecture.RoomId}/removeblob/{lecture.LectureId}"));
+            taskList.Add(Http.PostAsync($"api/lecture/{lecture.RoomId}/upload/{lecture.LectureId}", content));
         }
+        await Task.WhenAll(taskList);
+        await JSRuntime.InvokeVoidAsync("hideLoadingBar");
         await JSRuntime.InvokeVoidAsync("alert", "수정 요청 완료하였습니다! 강의 영상도 수정했을시에는 몇 초 소모됩니다.");
         await ModalInstance.CloseAsync(ModalResult.Ok());
     }
