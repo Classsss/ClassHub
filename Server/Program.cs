@@ -1,5 +1,7 @@
+using Azure.Identity;
 using ClassHub.Server.Controllers;
 using ClassHub.Server.Middleware;
+using Microsoft.Extensions.Azure;
 namespace ClassHub {
     public class Program {
         public static void Main(string[] args) {
@@ -9,6 +11,14 @@ namespace ClassHub {
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
             builder.Services.AddSignalR();
+            builder.Services.AddAzureClients(clientBuilder => {
+                // Add a KeyVault client
+                clientBuilder.AddSecretClient(builder.Configuration.GetSection("KeyVault"));
+                // Add a Storage account client
+                clientBuilder.AddBlobServiceClient(builder.Configuration.GetSection("Storage"));
+                // Use DefaultAzureCredential by default
+                clientBuilder.UseCredential(new DefaultAzureCredential());
+            });
 
             var app = builder.Build();
 

@@ -1,6 +1,13 @@
-﻿using ClassHub.Shared;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using ClassHub.Client.Models;
+using ClassHub.Shared;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 
 
@@ -14,6 +21,9 @@ namespace ClassHub.Server.Controllers {
         const string passwd = "Mju12345!#";
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
+
+        const string blobStorageUri = "https://classhubfilestorage.blob.core.windows.net/";
+        const string vaultStorageUri = "https://azureblobsecret.vault.azure.net/";
 
 
         // 해당 강의실의 학생들의 정보를 불러온다.

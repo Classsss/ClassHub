@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Npgsql;
 using Azure.Storage.Blobs.Models;
-using Azure.Identity;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -20,14 +19,13 @@ namespace ClassHub.Server.Controllers {
         const string database = "classdb";
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
-        private readonly BlobServiceClient _blobServiceClient = new BlobServiceClient(
-            new Uri("https://classhubfilestorage.blob.core.windows.net/"),
-            new DefaultAzureCredential()
-        );
-        private readonly SecretClient _secretClient = new SecretClient(
-            new Uri("https://azureblobsecret.vault.azure.net/"),
-            new DefaultAzureCredential()
-        );
+        private readonly BlobServiceClient _blobServiceClient;
+        private readonly SecretClient _secretClient;
+
+        public LectureController(BlobServiceClient blobServiceClient, SecretClient secretClient) {
+            _blobServiceClient = blobServiceClient;
+            _secretClient = secretClient;
+        }
 
         // 동영상 강의 db를 생성한다
         [HttpPost("{RoomId}/createdb")]
