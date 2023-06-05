@@ -12,6 +12,7 @@ using Microsoft.JSInterop;
 using Npgsql;
 using static System.Net.WebRequestMethods;
 using System.Reflection;
+using Azure.Identity;
 
 namespace ClassHub.Server.Controllers {
     [Route("api/[controller]")]
@@ -26,13 +27,17 @@ namespace ClassHub.Server.Controllers {
         const string academicServerUri = "https://academicinfo.azurewebsites.net/";
 
         private readonly ILogger<ClassRoomController> _logger;
-        private readonly BlobServiceClient _blobServiceClient;
-        private readonly SecretClient _secretClient;
+        private readonly BlobServiceClient _blobServiceClient = new BlobServiceClient(
+            new Uri("https://classhubfilestorage.blob.core.windows.net/"),
+            new DefaultAzureCredential()
+        );
+        private readonly SecretClient _secretClient = new SecretClient(
+            new Uri("https://azureblobsecret.vault.azure.net/"),
+            new DefaultAzureCredential()
+        );
 
-        public ClassRoomController(ILogger<ClassRoomController> logger, BlobServiceClient blobServiceClient, SecretClient secretClient) {
+        public ClassRoomController(ILogger<ClassRoomController> logger) {
             _logger = logger;
-            _blobServiceClient = blobServiceClient;
-            _secretClient = secretClient;
         }
 
         // Param으로 받은 ID를 가진 강의실의 정보를 불러옴

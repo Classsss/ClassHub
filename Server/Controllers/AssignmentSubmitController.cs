@@ -1,4 +1,5 @@
-﻿using Azure.Security.KeyVault.Secrets;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
@@ -18,13 +19,17 @@ namespace ClassHub.Server.Controllers {
         const string connectionString = $"Host={host};Username={username};Password={passwd};Database={database}";
 
         private readonly ILogger<AssignmentSubmitController> _logger;
-        private readonly BlobServiceClient _blobServiceClient;
-        private readonly SecretClient _secretClient;
+        private readonly BlobServiceClient _blobServiceClient = new BlobServiceClient(
+            new Uri("https://classhubfilestorage.blob.core.windows.net/"),
+            new DefaultAzureCredential()
+        );
+        private readonly SecretClient _secretClient = new SecretClient(
+            new Uri("https://azureblobsecret.vault.azure.net/"),
+            new DefaultAzureCredential()
+        );
 
-        public AssignmentSubmitController(ILogger<AssignmentSubmitController> logger, BlobServiceClient blobServiceClient, SecretClient secretClient) {
+        public AssignmentSubmitController(ILogger<AssignmentSubmitController> logger) {
             _logger = logger;
-            _blobServiceClient = blobServiceClient;
-            _secretClient = secretClient;
         }
 
         // 해당 과제의 제출 내역이 있는지 체크합니다. 
