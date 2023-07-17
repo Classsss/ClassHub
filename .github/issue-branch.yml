@@ -1,4 +1,4 @@
-defaultBranch: 'release'
+defaultBranch: 'develop'
 autoCloseIssue: true
 openDraftPR: true
 branchName: full
